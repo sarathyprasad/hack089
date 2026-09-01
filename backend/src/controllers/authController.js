@@ -1,0 +1,360 @@
+const bcrypt = require('bcryptjs');
+const { query } = require('../db/connection');
+const { generateToken } = require('../utils/jwt');
+
+/**
+ * POST /api/auth/register
+ * Register a new user (Customer or Worker).
+ */
+async function register(req, res) {
+  try {
+    const { name, email, phone, password, role, district, city, address, pincode } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Name, email, and password are required.',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must be at least 6 characters.',
+      });
+    }
+
+    const allowedRoles = ['CUSTOMER', 'WORKER'];
+    const userRole = role || 'CUSTOMER';
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Role must be CUSTOMER or WORKER. Admin accounts cannot be self-registered.',
+      });
+    }
+
+    // Check if email already exists
+    const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rowCount > 0) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'An account with this email already exists.',
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user and return created record
+    const insertRes = await query(
+      `INSERT INTO users (name, email, phone, password, role, district, city, address, pincode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, name, email, phone, role, district, city, address, pincode, created_at`,
+      [name, email, phone || null, hashedPassword, userRole, district || null, city || null, address || null, pincode || null]
+    );
+
+    const newUser = insertRes.rows[0];
+
+    // If registering as worker, create rich worker profile & application
+    if (userRole === 'WORKER') {
+      const {
+        primaryTrade,
+        subSkills,
+        experienceYears,
+        toolsOwned,
+        bio,
+        certifications,
+        aadhaarNumber,
+        panNumber,
+        rationCard,
+        bankName,
+        bankAccount,
+        bankIfsc,
+        emergencyContactName,
+        emergencyContactPhone,
+        emergencyContactRelation,
+      } = req.body;
+
+      const currentYear = new Date().getFullYear();
+      const applicationNo = `APP-OD-${currentYear}-${String(1000 + newUser.id).padStart(4, '0')}`;
+      const workerCode = `WKR-OD-${String(2000 + newUser.id).padStart(4, '0')}`;
+
+      // Pick matching cooperative by district or default to 1
+      let cooperativeId = 1;
+      if (district === 'Cuttack') cooperativeId = 2;
+      else if (district === 'Puri') cooperativeId = 3;
+
+      const workerInsertRes = await query(
+        `INSERT INTO workers (
+          user_id, worker_code, cooperative_id, service_area, experience_years,
+          latitude, longitude, verification_status, availability, primary_trade,
+          sub_skills, tools_owned, bio, aadhaar_number, pan_number, ration_card,
+          bank_name, bank_account, bank_ifsc, emergency_contact_name,
+          emergency_contact_phone, emergency_contact_relation, application_no
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          20.2961, 85.8245, 'PENDING', 'OFFLINE', $6,
+          $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16,
+          $17, $18, $19
+        ) RETURNING id`,
+        [
+          newUser.id,
+          workerCode,
+          cooperativeId,
+          city || district || 'Bhubaneswar',
+          Number(experienceYears) || 1,
+          primaryTrade || 'General Artisan',
+          Array.isArray(subSkills) ? subSkills.join(', ') : (subSkills || null),
+          toolsOwned || null,
+          bio || null,
+          aadhaarNumber || null,
+          panNumber || null,
+          rationCard || null,
+          bankName || null,
+          bankAccount || null,
+          bankIfsc || null,
+          emergencyContactName || null,
+          emergencyContactPhone || null,
+          emergencyContactRelation || null,
+          applicationNo,
+        ]
+      );
+
+      const workerId = workerInsertRes.rows[0].id;
+
+      // Insert Certifications if provided
+      if (Array.isArray(certifications) && certifications.length > 0) {
+        for (const cert of certifications) {
+          if (cert.certificationName || cert.certificateNumber) {
+            await query(
+              `INSERT INTO certifications (
+                worker_id, certification_name, issuing_organization, certificate_number,
+                issue_date, expiry_date, document_url, verification_status
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING')`,
+              [
+                workerId,
+                cert.certificationName || 'Trade Certificate',
+                cert.issuingOrganization || 'Govt ITI / State Skill Council',
+                cert.certificateNumber || 'CERT-PENDING',
+                cert.issueDate || new Date().toISOString().split('T')[0],
+                cert.expiryDate || null,
+                cert.documentUrl || 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400',
+              ]
+            );
+          }
+        }
+      } else if (req.body.certificateNumber || req.body.certificationName) {
+        // Single cert form fields
+        await query(
+          `INSERT INTO certifications (
+            worker_id, certification_name, issuing_organization, certificate_number,
+            issue_date, expiry_date, document_url, verification_status
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING')`,
+          [
+            workerId,
+            req.body.certificationName || 'ITI / NSDC National Trade Certificate',
+            req.body.issuingOrganization || 'Government ITI / NCVT Odisha',
+            req.body.certificateNumber || 'ITI-OD-2024-9812',
+            req.body.issueDate || '2022-06-15',
+            null,
+            req.body.documentUrl || 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400',
+          ]
+        );
+      }
+
+      // Link Worker to relevant Skills in database
+      const skillsToLink = [];
+      if (primaryTrade) {
+        const matchingSkills = await query(
+          'SELECT id FROM skills WHERE category ILIKE $1 OR name ILIKE $1 LIMIT 5',
+          [`%${primaryTrade}%`]
+        );
+        for (const s of matchingSkills.rows) {
+          skillsToLink.push(s.id);
+        }
+      }
+
+      for (const skillId of skillsToLink) {
+        await query(
+          `INSERT INTO worker_skills (worker_id, skill_id, proficiency_level)
+           VALUES ($1, $2, 'INTERMEDIATE')
+           ON CONFLICT (worker_id, skill_id) DO NOTHING`,
+          [workerId, skillId]
+        );
+      }
+    }
+
+    // Generate token
+    const token = generateToken(newUser);
+
+    res.status(201).json({
+      message: 'Registration successful',
+      user: newUser,
+      token,
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'Registration failed. Please try again.',
+    });
+  }
+}
+
+/**
+ * POST /api/auth/login
+ * Authenticate user and return JWT token.
+ */
+async function login(req, res) {
+  try {
+    const { email, password, portalRole } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Email and password are required.',
+      });
+    }
+
+    // Find user
+    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid email or password.',
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Account is deactivated. Contact your cooperative administrator.',
+      });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid email or password.',
+      });
+    }
+
+    // Role-specific Portal Validation Guard
+    if (portalRole) {
+      if (portalRole === 'WORKER' && user.role !== 'WORKER') {
+        return res.status(403).json({
+          error: 'Forbidden',
+          roleMismatch: true,
+          actualRole: user.role,
+          message: 'This account is registered as a Citizen / Customer, not a Worker. Please switch to the Citizen portal tab to sign in.',
+        });
+      }
+      if (portalRole === 'ADMIN' && user.role !== 'COOPERATIVE_ADMIN') {
+        return res.status(403).json({
+          error: 'Forbidden',
+          roleMismatch: true,
+          actualRole: user.role,
+          message: 'This account does not have Cooperative Admin privileges. Please switch to the Citizen or Worker portal tab.',
+        });
+      }
+      if (portalRole === 'CUSTOMER' && user.role !== 'CUSTOMER') {
+        return res.status(403).json({
+          error: 'Forbidden',
+          roleMismatch: true,
+          actualRole: user.role,
+          message: `This account is registered as a ${user.role === 'WORKER' ? 'Worker Member' : 'Cooperative Admin'}. Please switch to the ${user.role === 'WORKER' ? 'Worker' : 'Admin'} portal tab to sign in.`,
+        });
+      }
+    }
+
+    // Generate token
+    const token = generateToken(user);
+
+    // Return user without password
+    const { password: _, ...safeUser } = user;
+
+    res.json({
+      message: 'Login successful',
+      user: safeUser,
+      token,
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'Login failed. Please try again.',
+    });
+  }
+}
+
+/**
+ * GET /api/auth/me
+ * Get current authenticated user's profile.
+ */
+async function getMe(req, res) {
+  try {
+    const userRes = await query(
+      `SELECT id, name, email, phone, role, district, city, address, pincode, 
+              latitude, longitude, avatar_url, is_active, created_at
+       FROM users WHERE id = $1`,
+      [req.user.id]
+    );
+
+    const user = userRes.rows[0];
+    if (!user) {
+      return res.status(404).json({ error: 'Not Found', message: 'User not found.' });
+    }
+
+    // If worker, include worker profile
+    let workerProfile = null;
+    if (user.role === 'WORKER') {
+      const workerRes = await query(
+        `SELECT w.*, c.name as cooperative_name
+         FROM workers w
+         LEFT JOIN cooperatives c ON w.cooperative_id = c.id
+         WHERE w.user_id = $1`,
+        [user.id]
+      );
+      workerProfile = workerRes.rows[0] || null;
+
+      if (workerProfile) {
+        // Get skills
+        const skillsRes = await query(
+          `SELECT s.id, s.name, s.category, ws.proficiency_level
+           FROM worker_skills ws
+           JOIN skills s ON ws.skill_id = s.id
+           WHERE ws.worker_id = $1`,
+          [workerProfile.id]
+        );
+        workerProfile.skills = skillsRes.rows;
+
+        // Get certifications
+        const certRes = await query(
+          `SELECT * FROM certifications WHERE worker_id = $1 ORDER BY issue_date DESC`,
+          [workerProfile.id]
+        );
+        workerProfile.certifications = certRes.rows;
+      }
+    }
+
+    res.json({
+      user,
+      workerProfile,
+    });
+  } catch (err) {
+    console.error('Get profile error:', err);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'Failed to fetch profile.',
+    });
+  }
+}
+
+module.exports = { register, login, getMe };

@@ -1,0 +1,672 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Shram Setu — Indian Public Cooperative Portal Design System
+   Government of India & Ministry of Cooperation Initiative
+   ========================================================================== */
+
+:root {
+  --font-scale: 1;
+
+  /* Authentic Indian Civic & National Palette */
+  --gov-saffron: #FF9933;
+  --gov-saffron-dark: #E67300;
+  --gov-saffron-light: #FFF3E6;
+  
+  --gov-green: #138808;
+  --gov-green-dark: #0B5E05;
+  --gov-green-light: #E8F5E9;
+  
+  --gov-navy: #0A1931;
+  --gov-navy-medium: #152A55;
+  --gov-navy-light: #1E3A8A;
+  --gov-ashoka-blue: #002D62;
+
+  --gov-gold: #D97706;
+  --gov-gold-light: #FEF3C7;
+
+  /* Clean Neutrals */
+  --gov-white: #FFFFFF;
+  --gov-bg: #F8FAFC;
+  --gov-surface: #FFFFFF;
+  --gov-khadi: #FCFBF7;
+  
+  --gov-gray-50: #F8FAFC;
+  --gov-gray-100: #F1F5F9;
+  --gov-gray-200: #E2E8F0;
+  --gov-gray-300: #CBD5E1;
+  --gov-gray-400: #94A3B8;
+  --gov-gray-500: #64748B;
+  --gov-gray-600: #475569;
+  --gov-gray-700: #334155;
+  --gov-gray-800: #1E293B;
+  --gov-gray-900: #0F172A;
+
+  /* Semantic Alerts */
+  --gov-success: #138808;
+  --gov-warning: #D97706;
+  --gov-error: #DC2626;
+  --gov-info: #0284C7;
+
+  /* Spacing and Dimensions */
+  --header-height: 38px;
+  --nav-height: 68px;
+  --portal-topbar-height: 64px;
+  --portal-sidebar-width: 260px;
+}
+
+/* ==========================================================================
+   Base Typography & Scaling for Rural & Low-Vision Accessibility
+   ========================================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: calc(16px * var(--font-scale, 1));
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  color: var(--gov-gray-900);
+  background-color: var(--gov-bg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   High-Contrast Mode (Outdoor Sunlight & Low-Vision)
+   ========================================================================== */
+html.high-contrast {
+  --gov-bg: #000000;
+  --gov-surface: #121212;
+  --gov-gray-50: #181818;
+  --gov-gray-100: #222222;
+  --gov-gray-200: #444444;
+  --gov-gray-800: #E0E0E0;
+  --gov-gray-900: #FFFFFF;
+  --gov-navy: #000000;
+  --gov-navy-medium: #111111;
+  --gov-border: #FFFF00;
+  color: #FFFFFF !important;
+}
+
+html.high-contrast body {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+html.high-contrast .card,
+html.high-contrast .bg-white,
+html.high-contrast .bg-gray-50 {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+html.high-contrast .text-gray-900,
+html.high-contrast .text-gray-800,
+html.high-contrast .text-gray-700,
+html.high-contrast .text-gray-600 {
+  color: #FFFFFF !important;
+}
+
+html.high-contrast a {
+  color: #00FFFF !important;
+  text-decoration: underline !important;
+}
+
+html.high-contrast .btn-primary {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+html.high-contrast .btn-secondary {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+/* ==========================================================================
+   National Tricolor Accent Ribbons
+   ========================================================================== */
+.tricolor-ribbon {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    #FF9933 0%,
+    #FF9933 33.33%,
+    #FFFFFF 33.33%,
+    #FFFFFF 66.66%,
+    #138808 66.66%,
+    #138808 100%
+  );
+}
+
+/* ==========================================================================
+   Creative Animations & Visual Effects
+   ========================================================================== */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes radarWave {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes shimmerText {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 5s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 3s ease-in-out infinite;
+}
+
+.radar-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: rgba(19, 136, 8, 0.4);
+  animation: radarWave 2.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.hero-creative-bg {
+  background: radial-gradient(circle at 80% 20%, rgba(255, 153, 51, 0.15) 0%, transparent 40%),
+              radial-gradient(circle at 10% 80%, rgba(19, 136, 8, 0.12) 0%, transparent 45%),
+              linear-gradient(145deg, #071224 0%, #0A1931 45%, #152A55 100%);
+}
+
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.glass-card-gold {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 153, 51, 0.35);
+}
+
+.glass-card-green {
+  background: linear-gradient(135deg, rgba(19, 136, 8, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(19, 136, 8, 0.35);
+}
+
+
+/* ==========================================================================
+   Public Government Top Bar & Accessibility Toolbar
+   ========================================================================== */
+.gov-top-bar {
+  background-color: var(--gov-navy);
+  color: var(--gov-white);
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gov-accessibility-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--gov-white);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.gov-accessibility-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--gov-saffron);
+}
+
+.gov-accessibility-btn.active {
+  background: var(--gov-saffron);
+  color: var(--gov-navy);
+  font-weight: 700;
+  border-color: var(--gov-saffron);
+}
+
+/* ==========================================================================
+   Public Navigation Header
+   ========================================================================== */
+.gov-header {
+  background-color: var(--gov-white);
+  border-bottom: 1px solid var(--gov-gray-200);
+  box-shadow: 0 2px 8px rgba(10, 25, 49, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.gov-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+}
+
+.gov-emblem-badge {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--gov-navy) 0%, var(--gov-navy-medium) 100%);
+  color: var(--gov-white);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(10, 25, 49, 0.2);
+  border: 2px solid #FF9933;
+}
+
+.gov-brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--gov-navy);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.gov-brand-subtitle {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gov-green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gov-nav-item {
+  color: var(--gov-gray-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gov-nav-item:hover {
+  color: var(--gov-navy);
+  background-color: var(--gov-gray-100);
+}
+
+.gov-nav-item.active {
+  color: var(--gov-navy);
+  background-color: var(--gov-saffron-light);
+  font-weight: 700;
+  border-bottom: 2px solid var(--gov-saffron-dark);
+}
+
+/* ==========================================================================
+   Buttons (High Clickability & Accessibility)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: inherit;
+  min-height: 42px;
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--gov-saffron);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gov-navy) 0%, var(--gov-navy-medium) 100%);
+  color: var(--gov-white);
+  border-color: var(--gov-navy);
+  box-shadow: 0 2px 4px rgba(10, 25, 49, 0.15);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #050d1a 0%, var(--gov-navy) 100%);
+  box-shadow: 0 4px 8px rgba(10, 25, 49, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-saffron {
+  background: linear-gradient(135deg, #FF9933 0%, #E67300 100%);
+  color: var(--gov-white);
+  border-color: #D96800;
+  box-shadow: 0 2px 6px rgba(230, 115, 0, 0.25);
+  font-weight: 700;
+}
+
+.btn-saffron:hover {
+  background: linear-gradient(135deg, #FF881A 0%, #D46200 100%);
+  box-shadow: 0 4px 10px rgba(230, 115, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-green {
+  background: linear-gradient(135deg, #138808 0%, #0D6905 100%);
+  color: var(--gov-white);
+  border-color: #0A5303;
+  box-shadow: 0 2px 6px rgba(19, 136, 8, 0.25);
+  font-weight: 700;
+}
+
+.btn-green:hover {
+  background: linear-gradient(135deg, #117807 0%, #094B04 100%);
+  box-shadow: 0 4px 10px rgba(19, 136, 8, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--gov-white);
+  color: var(--gov-navy);
+  border-color: var(--gov-gray-300);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-secondary:hover {
+  background-color: var(--gov-gray-100);
+  border-color: var(--gov-gray-400);
+}
+
+.btn-sm {
+  min-height: 34px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  min-height: 50px;
+  padding: 0.85rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Cards & Layouts
+   ========================================================================== */
+.card {
+  background: var(--gov-white);
+  border: 1px solid var(--gov-gray-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(10, 25, 49, 0.04);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--gov-gray-300);
+  box-shadow: 0 4px 12px rgba(10, 25, 49, 0.08);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--gov-saffron);
+}
+
+/* ==========================================================================
+   Rural / Citizen Assisted Booking Banner
+   ========================================================================== */
+.rural-assist-card {
+  background: linear-gradient(135deg, #FFF8E7 0%, #FEF3C7 100%);
+  border: 2px dashed #D97706;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+}
+
+/* ==========================================================================
+   Authenticated Portal Layout (Clean Role Workspace)
+   ========================================================================== */
+.portal-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #F8FAFC;
+}
+
+.portal-topbar {
+  height: var(--portal-topbar-height);
+  background-color: var(--gov-navy);
+  color: var(--gov-white);
+  border-bottom: 2px solid var(--gov-saffron);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.portal-main-wrapper {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.portal-sidebar {
+  width: var(--portal-sidebar-width);
+  background-color: var(--gov-white);
+  border-right: 1px solid var(--gov-gray-200);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem 0.85rem;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: calc(100vh - 70px);
+}
+
+.portal-sidebar.collapsed {
+  width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-right: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.portal-content {
+  flex: 1;
+  padding: 1.75rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.portal-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  color: var(--gov-gray-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  margin-bottom: 0.25rem;
+}
+
+.portal-nav-link:hover {
+  background-color: var(--gov-gray-100);
+  color: var(--gov-navy);
+}
+
+.portal-nav-link.active {
+  background: linear-gradient(135deg, var(--gov-navy-light) 0%, var(--gov-navy) 100%);
+  color: var(--gov-white);
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(10, 25, 49, 0.15);
+}
+
+.portal-nav-link.active .portal-nav-icon {
+  color: var(--gov-saffron);
+}
+
+/* ==========================================================================
+   Public Footer
+   ========================================================================== */
+.gov-footer {
+  background-color: var(--gov-navy);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3rem 0 0;
+  margin-top: 3.5rem;
+  border-top: 4px solid var(--gov-saffron);
+}
+
+.gov-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.gov-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.gov-footer h4 {
+  color: var(--gov-saffron);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gov-footer ul {
+  list-style: none;
+  space-y: 0.6rem;
+}
+
+.gov-footer ul li {
+  margin-bottom: 0.6rem;
+}
+
+.gov-footer a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  transition: color 0.15s ease;
+}
+
+.gov-footer a:hover {
+  color: var(--gov-white);
+  text-decoration: underline;
+}
+
+.gov-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1.25rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   Responsive Utilities
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .portal-sidebar {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-main-wrapper {
+    position: relative;
+    flex-direction: column;
+  }
+
+  .portal-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 90;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+    border-right: 1px solid var(--gov-gray-200);
+    border-bottom: none;
+    background-color: #ffffff;
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .portal-sidebar.collapsed {
+    transform: translateX(-100%) !important;
+    width: 280px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .portal-content {
+    padding: 1rem;
+    width: 100%;
+  }
+}
