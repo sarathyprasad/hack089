@@ -4,6 +4,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import GovLayout from './layouts/GovLayout';
 import PortalLayout from './layouts/PortalLayout';
+import AIChatBot from './components/AIChatBot';
 
 // Public Pages (Phase 1-4)
 import Home from './pages/Home';
@@ -139,6 +140,8 @@ export default function App() {
         <AccessibilityProvider>
           <AuthProvider>
             <AppRoutes />
+            {/* Global Floating AI Assistant (Persists until window closed) */}
+            <AIChatBot />
           </AuthProvider>
         </AccessibilityProvider>
       </LanguageProvider>

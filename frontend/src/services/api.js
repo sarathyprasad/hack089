@@ -142,6 +142,13 @@ export const api = {
   getPartsCatalog: (tradeCategory) =>
     request(`/governance/parts-catalog${tradeCategory ? `?tradeCategory=${encodeURIComponent(tradeCategory)}` : ''}`),
 
+  // AI Assistant Chatbot
+  sendAIChat: (message, history = [], language = 'EN') =>
+    request('/smart-features/ai-chat', {
+      method: 'POST',
+      body: { message, history, language },
+    }),
+
   // Stats
   getDbStats: () => request('/db/stats'),
 };

@@ -5,9 +5,13 @@ const {
   getWorkforceAllocation,
   approveMutualAid,
 } = require('../controllers/smartFeaturesController');
+const { handleAIChat } = require('../controllers/aiChatController');
 const { authenticate, authorize } = require('../middleware/auth');
 
-// Smart analytics can be viewed by ADMIN or authenticated users
+// Public AI Chatbot Assistant for citizens, workers, and visitors
+router.post('/ai-chat', handleAIChat);
+
+// Protected routes (require authenticated login)
 router.use(authenticate);
 
 router.get('/forecast', getDemandForecast);
