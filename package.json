@@ -9,6 +9,7 @@
     "seed": "npm --prefix backend run seed",
     "start": "node backend/src/index.js",
     "dev:backend": "npm --prefix backend run dev",
-    "dev:frontend": "npm --prefix frontend run dev"
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test": "node test_features.js"
   }
 }
