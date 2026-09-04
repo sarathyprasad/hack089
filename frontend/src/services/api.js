@@ -128,6 +128,7 @@ export const api = {
   // Reviews
   submitReview: (data) => request('/reviews', { method: 'POST', body: data }),
   getWorkerReviews: (workerId) => request(`/reviews/worker/${workerId}`),
+  getFeaturedReviews: () => request('/reviews/featured'),
 
   // Phase 4 & 7: Governance, SOS, Disputes & Locked Parts Catalog
   triggerSos: (data) => request('/governance/sos', { method: 'POST', body: data }),

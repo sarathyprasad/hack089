@@ -10,6 +10,8 @@ import {
   ShieldCheck, Sparkles, IndianRupee, PhoneCall,
   Search, Mic, MicOff, MapPin, Check, Clock, ThumbsUp, Snowflake
 } from 'lucide-react';
+import HomeReviews from '../components/HomeReviews';
+
 
 export default function Home() {
   const { lang, t } = useLanguage();
@@ -645,7 +647,12 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          5. PHONE BOOKING & ASSISTED KIOSK BANNER
+          5. COMMUNITY REVIEWS: CITIZEN & WORKER VOICES
+         ───────────────────────────────────────────────────────────── */}
+      <HomeReviews />
+
+      {/* ─────────────────────────────────────────────────────────────
+          6. PHONE BOOKING & ASSISTED KIOSK BANNER
          ───────────────────────────────────────────────────────────── */}
       <section className="py-10 bg-[#FFFDF7] border-b border-amber-200/70 px-4">
         <div className="max-w-5xl mx-auto p-6 sm:p-7 rounded-2xl bg-white border border-amber-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-left">

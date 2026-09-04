@@ -19,8 +19,10 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // ---------------------
 app.use(helmet({
+  contentSecurityPolicy: false, // Allows external maps (Google Maps / Leaflet tiles) to load without CSP blocking
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginOpenerPolicy: false,
+  crossOriginEmbedderPolicy: false,
 }));
 
 // CORS configured for Localhost, LAN IP, and ngrok tunnels
