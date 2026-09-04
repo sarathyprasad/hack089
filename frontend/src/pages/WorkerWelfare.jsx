@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -10,6 +10,7 @@ import {
 
 export default function WorkerWelfare() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [welfareData, setWelfareData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrollingScheme, setEnrollingScheme] = useState(null);
@@ -24,8 +25,16 @@ export default function WorkerWelfare() {
   };
 
   useEffect(() => {
+    if (user && user.role === 'CUSTOMER') {
+      navigate('/customer/bookings', { replace: true });
+      return;
+    }
+    if (user && user.role === 'COOPERATIVE_ADMIN') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
     fetchWelfare();
-  }, []);
+  }, [user]);
 
   const handleEnroll = async (scheme) => {
     setEnrollingScheme(scheme.benefit_name);
@@ -74,7 +83,7 @@ export default function WorkerWelfare() {
           Worker Welfare & Social Protection Centre
         </h1>
         <p className="text-xs md:text-sm text-blue-200 mt-2 max-w-2xl leading-relaxed">
-          As a member-owner in the <strong>{worker?.cooperative_name}</strong>, a mandatory 10% cooperative levy on all completed gigs is pooled directly into your accident insurance, health cards, pension corpus, and trade upskilling.
+          As a member-owner in the <strong>{worker?.cooperative_name}</strong>, a mandatory 5% PF & insurance contribution on all completed gigs is pooled directly into your accident insurance, health cards, pension corpus, and trade upskilling.
         </p>
 
         <div className="mt-6 pt-4 border-t border-white/15 flex items-center gap-6 text-xs flex-wrap">
@@ -88,7 +97,7 @@ export default function WorkerWelfare() {
           </div>
           <div>
             <span className="text-blue-300 block text-[11px]">Welfare Pool Contribution</span>
-            <span className="font-bold text-green-400 text-sm">10% Capped Levy</span>
+            <span className="font-bold text-green-400 text-sm">5% PF & Insurance</span>
           </div>
         </div>
       </div>
@@ -149,7 +158,7 @@ export default function WorkerWelfare() {
       {/* ── Available Schemes (1-Click Simulation) ── */}
       <div>
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-          <Award size={20} className="text-blue-900" /> Additional Government & Cooperative Schemes Available
+          <Award size={20} className="text-blue-900" /> Additional Federation & Cooperative Welfare Schemes Available
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,7 +193,7 @@ export default function WorkerWelfare() {
 
                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                   <span className="text-[10px] text-gray-400 truncate">
-                    Govt Provider: {sch.provider}
+                    Welfare Provider: {sch.provider}
                   </span>
 
                   {!isEnrolled ? (

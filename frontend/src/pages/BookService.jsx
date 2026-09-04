@@ -8,7 +8,8 @@ import {
   Calendar, Clock, User, ArrowRight, ArrowLeft, Zap, Check,
   Info, Sparkles, Building2, HelpCircle, Layers, ShieldAlert, Award,
   Search, X, Wrench, Droplets, Hammer, Paintbrush, SprayCan,
-  LogIn, CheckSquare, Square, Navigation, Radio, Compass, Car
+  LogIn, CheckSquare, Square, Navigation, Radio, Compass, Car,
+  Snowflake, Wind, Flower2, HeartPulse, Settings
 } from 'lucide-react';
 import LiveRouteMap from '../components/LiveRouteMap';
 
@@ -30,6 +31,7 @@ export default function BookService() {
 
   // Phase 1 Search & Problem Matching state
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState('ALL');
   const [matchedDiagnosis, setMatchedDiagnosis] = useState(null);
 
   // Form states (Phase 2)
@@ -45,6 +47,32 @@ export default function BookService() {
     notes: '',
   });
 
+  // Dynamic 60-minute emergency time window from current time
+  const getEmergencyTimeWindow = () => {
+    const now = new Date();
+    const start = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const end = new Date(now.getTime() + 60 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${start} - ${end} (Express 60-Min Window)`;
+  };
+
+  const handleEmergencyToggle = (isEmergencyChecked) => {
+    if (isEmergencyChecked) {
+      const emergencyWindow = getEmergencyTimeWindow();
+      setFormData((prev) => ({
+        ...prev,
+        isEmergency: true,
+        scheduledDate: new Date().toISOString().split('T')[0],
+        scheduledTime: emergencyWindow,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        isEmergency: false,
+        scheduledTime: '09:00 AM',
+      }));
+    }
+  };
+
   const [loading, setLoading] = useState(false);
   const [matchingLoading, setMatchingLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,17 +81,171 @@ export default function BookService() {
   const [showRouteMap, setShowRouteMap] = useState(false);
   const [customerCoords, setCustomerCoords] = useState({ lat: 20.3540, lng: 85.8170 });
 
+  // Advanced Semantic & Synonym Dictionary for Indian Civic & Home Repair Trades
+  const REPAIR_SYNONYMS = {
+    tap: ['tap', 'faucet', 'spout', 'valve', 'leak', 'plumb', 'pani', 'nal', 'nalaka', 'bibcock', 'spindle', 'cartridge'],
+    leaking: ['leak', 'leaking', 'leakage', 'dripping', 'pipe', 'burst', 'water', 'seepage', 'drip', 'seep', 'overflow', 'plumbing'],
+    leak: ['leak', 'leaking', 'leakage', 'dripping', 'pipe', 'burst', 'water', 'seepage', 'drip', 'seep', 'overflow', 'plumbing'],
+    pipe: ['pipe', 'piping', 'drain', 'drainage', 'plumb', 'plumbing', 'sewer', 'cpvc', 'pvc', 'line', 'joint', 'elbow'],
+    drain: ['drain', 'drainage', 'clog', 'clogged', 'sewer', 'block', 'blocked', 'choke', 'choked', 'sink', 'basin', 'gutter'],
+    toilet: ['toilet', 'commode', 'flush', 'cistern', 'sanitary', 'ewc', 'seat', 'bathroom', 'pot'],
+    flush: ['flush', 'cistern', 'toilet', 'valve', 'leak', 'handle', 'siphon'],
+    sink: ['sink', 'basin', 'washbasin', 'pipe', 'drain', 'trap', 'plumbing'],
+    ac: ['ac', 'air conditioner', 'cooling', 'cool', 'jet', 'gas', 'freon', 'compressor', 'split', 'inverter', 'filter', 'coil', 'servicing'],
+    cool: ['cool', 'cooling', 'chilling', 'ac', 'fridge', 'refrigerator'],
+    cooling: ['cool', 'cooling', 'chilling', 'ac', 'fridge', 'refrigerator'],
+    gas: ['gas', 'refill', 'refilling', 'leak', 'r32', 'r410a', 'charging', 'cylinder', 'nitrogen'],
+    fridge: ['fridge', 'refrigerator', 'compressor', 'cooling', 'defrost', 'freezer', 'relay'],
+    refrigerator: ['fridge', 'refrigerator', 'compressor', 'cooling', 'defrost', 'freezer', 'relay'],
+    washing: ['washing', 'machine', 'washer', 'dryer', 'drum', 'drain pump', 'motor'],
+    fan: ['fan', 'ceiling fan', 'exhaust', 'motor', 'regulator', 'blade', 'bearing', 'noise'],
+    light: ['light', 'tube', 'bulb', 'lighting', 'holder', 'chandelier', 'fixture', 'led'],
+    switch: ['switch', 'socket', 'plug', 'board', 'modular', 'switchboard', 'burnt'],
+    mcb: ['mcb', 'fuse', 'tripping', 'trip', 'short circuit', 'power cut', 'spark', 'sparking', 'wiring', 'distribution'],
+    wiring: ['wire', 'wiring', 'short', 'spark', 'current', 'shock', 'earthing', 'conduit', 'cable'],
+    spark: ['spark', 'sparking', 'short', 'circuit', 'mcb', 'switch', 'fire', 'smoke'],
+    door: ['door', 'darwaza', 'lock', 'handle', 'latch', 'hinge', 'stopper', 'kapat'],
+    lock: ['lock', 'godrej', 'mortise', 'key', 'chabi', 'cylinder'],
+    furniture: ['furniture', 'bed', 'sofa', 'table', 'chair', 'cupboard', 'almirah', 'wardrobe', 'assembly', 'wood'],
+    paint: ['paint', 'painting', 'painter', 'color', 'rang', 'wall', 'putty', 'primer', 'distemper', 'emulsion'],
+    waterproof: ['waterproof', 'waterproofing', 'seepage', 'damp', 'terrace', 'roof', 'leakage', 'crack', 'damp proof'],
+    clean: ['clean', 'cleaning', 'deep clean', 'safai', 'wash', 'scrub', 'sanitize', 'pest', 'termite'],
+    geyser: ['geyser', 'water heater', 'element', 'thermostat', 'heating', 'hot water'],
+    pest: ['pest', 'termite', 'cockroach', 'ant', 'bedbug', 'insect', 'rodent', 'rat'],
+    chimney: ['chimney', 'hob', 'kitchen', 'exhaust', 'degrease', 'filter']
+  };
+
+  const getLikelyPartsForTrade = (trade, serviceName = '') => {
+    const name = (serviceName || '').toLowerCase();
+    if (name.includes('tap') || name.includes('faucet') || name.includes('spout')) {
+      return '1/2" Ceramic Disc Spindle / Teflon Washer Kit';
+    }
+    if (name.includes('gas') && name.includes('ac')) {
+      return 'R32 / R410A Eco Refrigerant Canister (500g)';
+    }
+    if (name.includes('mcb') || name.includes('distribution')) {
+      return '16A Havells Modular MCB';
+    }
+    if (name.includes('switch') || name.includes('socket')) {
+      return 'Anchor 6A/16A Modular Switch & Socket Kit';
+    }
+    if (name.includes('pipe') || name.includes('burst')) {
+      return 'Supreme CPVC 1" Elbow Joint / SS Flexible Waste Pipe';
+    }
+    if (name.includes('lock') || name.includes('door')) {
+      return 'Godrej Stainless Steel Mortise Lock Set';
+    }
+    if (trade === 'Plumbing') return 'Astral 1/2" Brass Ball Valve / Spindle';
+    if (trade === 'Electrical') return 'Modular MCB / Copper Wiring Set';
+    if (trade === 'Appliance Repair') return '45uF Capacitor / Gas Valve Matrix';
+    if (trade === 'Carpentry') return 'Hydraulic Soft-Close Hinges / Fasteners';
+    if (trade === 'Painting') return 'Damp-Proof Acrylic Primer / Putty';
+    return 'Standard ISI Certified Toolkit';
+  };
+
   // Common Problem Presets
   const symptomPresets = [
-    { label: '💧 Kitchen tap/pipe leakage', trade: 'Plumbing', service: 'Plumbing Repair', likelyParts: 'Astral 1/2" Brass Ball Valve', keywords: ['tap', 'pipe', 'leak', 'drain', 'water'] },
-    { label: '⚡ Main MCB tripping repeatedly', trade: 'Electrical', service: 'Electrical Repair', likelyParts: '16A Havells Modular MCB', keywords: ['mcb', 'wire', 'fuse', 'spark', 'light'] },
-    { label: '❄️ AC not cooling / low airflow', trade: 'Appliance Repair', service: 'AC/Appliance Repair', likelyParts: 'Universal AC Run Capacitor (45uF)', keywords: ['ac', 'cool', 'gas', 'fridge', 'filter'] },
-    { label: '🎨 Society lobby repainting (Bulk)', trade: 'Painting', service: 'Painting Service', isBulk: true, likelyParts: 'Asian Paints Damp-Proof Acrylic Primer', keywords: ['paint', 'wall', 'coating', 'color'] },
-    { label: '🚨 Emergency pipe burst (High pressure)', trade: 'Emergency Services', service: 'Emergency Plumbing', isEmergency: true, likelyParts: 'SS Flexible Waste Pipe', keywords: ['emergency', 'burst', 'urgent'] },
+    { label: '🚰 Tap leaking', query: 'tap leaking', trade: 'Plumbing', service: 'Tap, Spout & Flush Valve Leak Repair' },
+    { label: '❄️ AC gas & cooling', query: 'ac cooling gas', trade: 'Appliance Repair', service: 'AC Gas Leak Repair & Refilling' },
+    { label: '⚡ MCB tripping / switch', query: 'mcb tripping', trade: 'Electrical', service: 'Main MCB & Distribution Board Replacement' },
+    { label: '🪑 Furniture assembly', query: 'furniture assembly', trade: 'Carpentry', service: 'Flatpack Furniture Assembly' },
+    { label: '💧 Blocked drain / pipe', query: 'blocked drain', trade: 'Plumbing', service: 'Blocked Drain & Sewer Pipe De-clogging' },
+    { label: '🚨 Emergency pipe burst', query: 'emergency pipe burst', trade: 'Emergency Services', service: 'Emergency 60-Min Main Pipe Burst Containment', isEmergency: true },
   ];
 
-  // Initial load
+  // Core Search Ranking Engine
+  const rankServices = (allServices, queryText, categoryTab) => {
+    const rawQuery = (queryText || '').trim().toLowerCase();
+
+    // If no search query, filter purely by category tab
+    if (!rawQuery) {
+      if (categoryTab && categoryTab !== 'ALL') {
+        return allServices.filter((s) => (s.category || '').toLowerCase() === categoryTab.toLowerCase());
+      }
+      return allServices;
+    }
+
+    // Clean query words
+    const cleanWords = rawQuery
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 1);
+
+    if (cleanWords.length === 0) return allServices;
+
+    // Expand search terms with repair synonyms
+    const expandedTerms = new Set();
+    cleanWords.forEach((word) => {
+      expandedTerms.add(word);
+      for (const [key, list] of Object.entries(REPAIR_SYNONYMS)) {
+        if (word.includes(key) || key.includes(word)) {
+          list.forEach((item) => expandedTerms.add(item.toLowerCase()));
+        }
+      }
+    });
+
+    const scored = allServices.map((svc) => {
+      const name = (svc.name || '').toLowerCase();
+      const cat = (svc.category || '').toLowerCase();
+      const desc = (svc.description || '').toLowerCase();
+      let score = 0;
+
+      // Exact phrase match in name or desc
+      if (name.includes(rawQuery)) score += 250;
+      if (desc.includes(rawQuery)) score += 80;
+      if (cat.includes(rawQuery)) score += 70;
+
+      // Token matches
+      let matchedTokens = 0;
+      cleanWords.forEach((word) => {
+        if (name.includes(word)) {
+          score += 100;
+          matchedTokens++;
+        } else if (desc.includes(word)) {
+          score += 40;
+          matchedTokens++;
+        } else if (cat.includes(word)) {
+          score += 35;
+          matchedTokens++;
+        }
+      });
+
+      // Bonus if multiple query tokens all matched
+      if (cleanWords.length > 1 && matchedTokens === cleanWords.length) {
+        score += 150;
+      }
+
+      // Synonym expansion matches
+      expandedTerms.forEach((term) => {
+        if (name.includes(term)) score += 45;
+        else if (cat.includes(term)) score += 30;
+        else if (desc.includes(term)) score += 15;
+      });
+
+      // Boost if categoryTab is set and matches
+      if (categoryTab && categoryTab !== 'ALL' && cat === categoryTab.toLowerCase()) {
+        score += 20;
+      }
+
+      return { svc, score };
+    });
+
+    const matches = scored.filter((item) => item.score > 0);
+    matches.sort((a, b) => b.score - a.score);
+    return matches.map((m) => m.svc);
+  };
+
+  // Initial load & Role Redirect Guard
   useEffect(() => {
+    if (user && user.role === 'WORKER') {
+      navigate('/worker/dashboard', { replace: true });
+      return;
+    }
+    if (user && user.role === 'COOPERATIVE_ADMIN') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
+
     api.getServices()
       .then(async (data) => {
         const sList = data.services || [];
@@ -81,16 +263,23 @@ export default function BookService() {
 
         if (querySearch) {
           setSearchQuery(querySearch);
+          const ranked = rankServices(sList, querySearch, 'ALL');
+          if (ranked.length > 0) {
+            setSelectedService(ranked[0]);
+            setMatchedDiagnosis({
+              serviceName: ranked[0].name,
+              trade: ranked[0].category,
+              likelyParts: getLikelyPartsForTrade(ranked[0].category, ranked[0].name),
+              standardTariff: `Cooperative Regulated • ₹${ranked[0].base_price}`,
+            });
+          }
         }
 
-        // Direct Worker Booking from Find Worker profile
         if (queryWorkerId) {
           try {
             const workerData = await api.getWorkerById(queryWorkerId);
             if (workerData?.worker) {
               const w = workerData.worker;
-              setSelectedWorker(w);
-              setAutoAssign(false);
               const workerTrade = w.primary_trade || (w.skills && w.skills[0] ? w.skills[0].category : null);
               const match = sList.find(s => workerTrade && (s.category.toLowerCase().includes(workerTrade.toLowerCase()) || workerTrade.toLowerCase().includes(s.category.toLowerCase()))) || sList[0];
               if (match) {
@@ -98,8 +287,8 @@ export default function BookService() {
                 setMatchedDiagnosis({
                   serviceName: match.name,
                   trade: match.category,
-                  likelyParts: 'Standard Certified Toolkit',
-                  standardTariff: 'Govt. Regulated',
+                  likelyParts: getLikelyPartsForTrade(match.category, match.name),
+                  standardTariff: `Cooperative Regulated • ₹${match.base_price}`,
                 });
               }
               setCurrentStep(2);
@@ -117,8 +306,8 @@ export default function BookService() {
             setMatchedDiagnosis({
               serviceName: match.name,
               trade: match.category,
-              likelyParts: 'Standard Certified Toolkit',
-              standardTariff: 'Govt. Regulated',
+              likelyParts: getLikelyPartsForTrade(match.category, match.name),
+              standardTariff: `Cooperative Regulated • ₹${match.base_price}`,
             });
             if (match.category === 'Emergency Services') {
               setFormData((prev) => ({ ...prev, isEmergency: true }));
@@ -126,136 +315,63 @@ export default function BookService() {
             setCurrentStep(2);
           }
         } else if (queryCategory) {
-          // Normalize category query (e.g. catElectrical, Caregiving, Electrical, etc.)
           const normCat = queryCategory.toLowerCase().replace(/^cat/, '');
           const match = sList.find((s) => {
             const sc = (s.category || '').toLowerCase();
             const sn = (s.name || '').toLowerCase();
             return sc.includes(normCat) || normCat.includes(sc) || sn.includes(normCat) || normCat.includes(sn);
-          }) || sList[0];
+          });
 
           if (match) {
+            setSelectedCategoryTab(match.category);
             setSelectedService(match);
             setMatchedDiagnosis({
               serviceName: match.name,
               trade: match.category,
-              likelyParts: 'Standard Certified Toolkit',
-              standardTariff: 'Govt. Regulated',
+              likelyParts: getLikelyPartsForTrade(match.category, match.name),
+              standardTariff: `Cooperative Regulated • ₹${match.base_price}`,
             });
             if (match.category === 'Emergency Services') {
-              setFormData((prev) => ({ ...prev, isEmergency: true }));
+              handleEmergencyToggle(true);
             }
-            // Auto-advance to Step 2 so citizen can immediately configure slot & location
-            setCurrentStep(2);
           }
-        } else if (querySearch) {
-          handleProblemMatch(querySearch);
-        } else if (sList.length > 0) {
-          // Default initial selection for smooth 1-click booking experience
-          setSelectedService(sList[0]);
-          setMatchedDiagnosis({
-            serviceName: sList[0].name,
-            trade: sList[0].category,
-            likelyParts: 'Standard ISI Hardware Toolkit',
-            standardTariff: 'Govt. Regulated',
-          });
         }
       })
       .catch((err) => console.error('Failed to load services:', err));
   }, [searchParams]);
 
-  // High-performance Multilingual & Keyword Search Filtering
+  // High-performance Ranked Search Filtering
   const filteredServices = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return services;
-
-    return services.filter((s) => {
-      const name = (s.name || '').toLowerCase();
-      const cat = (s.category || '').toLowerCase();
-      const desc = (s.description || '').toLowerCase();
-
-      // Check direct text match
-      if (name.includes(query) || cat.includes(query) || desc.includes(query)) return true;
-
-      // Check common repair synonyms
-      const electricalTerms = ['bijli', 'fan', 'light', 'switch', 'socket', 'plug', 'mcb', 'wire', 'wiring', 'power', 'shock', 'current', 'motor', 'spark'];
-      const plumbingTerms = ['tap', 'pipe', 'leak', 'drain', 'water', 'tank', 'tanki', 'pani', 'valve', 'block', 'toilet', 'flush', 'sink', 'basin', 'plumber'];
-      const applianceTerms = ['ac', 'cool', 'fridge', 'refrigerator', 'washing', 'machine', 'geyser', 'cooler', 'filter', 'purifier', 'gas'];
-      const carpentryTerms = ['wood', 'door', 'lock', 'darwaza', 'handle', 'table', 'chair', 'furniture', 'bed', 'sofa', 'almirah', 'kapat'];
-      const paintingTerms = ['paint', 'wall', 'color', 'putty', 'primer', 'polish', 'damp'];
-      const cleaningTerms = ['clean', 'safai', 'wash', 'deep', 'dust', 'sanitize'];
-
-      if (cat.includes('Electrical') && electricalTerms.some(t => query.includes(t))) return true;
-      if (cat.includes('Plumbing') && plumbingTerms.some(t => query.includes(t))) return true;
-      if (cat.includes('Appliance') && applianceTerms.some(t => query.includes(t))) return true;
-      if (cat.includes('Carpentry') && carpentryTerms.some(t => query.includes(t))) return true;
-      if (cat.includes('Painting') && paintingTerms.some(t => query.includes(t))) return true;
-      if (cat.includes('Cleaning') && cleaningTerms.some(t => query.includes(t))) return true;
-
-      return false;
-    });
-  }, [services, searchQuery]);
+    return rankServices(services, searchQuery, selectedCategoryTab);
+  }, [services, searchQuery, selectedCategoryTab]);
 
   // Handle Search & Problem Match
   const handleProblemMatch = (symptomText, presetObj = null) => {
-    const text = (symptomText || searchQuery).toLowerCase();
-    let matched = null;
-
+    const query = (symptomText || searchQuery || '').trim();
     if (presetObj) {
-      setSearchQuery(presetObj.label);
-      matched = services.find((s) => s.name === presetObj.service || s.category === presetObj.trade);
-      if (presetObj.isEmergency) setFormData(prev => ({ ...prev, isEmergency: true }));
-      if (presetObj.isBulk) setFormData(prev => ({ ...prev, isBulkOrder: true }));
-      setMatchedDiagnosis({
-        serviceName: presetObj.service,
-        trade: presetObj.trade,
-        likelyParts: presetObj.likelyParts,
-        standardTariff: 'Govt. Regulated',
-      });
-    } else if (text.includes('ac') || text.includes('cool') || text.includes('fridge') || text.includes('refrigerator')) {
-      matched = services.find((s) => s.category.includes('Appliance') || s.name.includes('Appliance'));
-      setMatchedDiagnosis({
-        serviceName: matched?.name || 'AC/Appliance Repair',
-        trade: 'Appliance Repair',
-        likelyParts: '45uF Capacitor / Gas Refill Matrix',
-        standardTariff: 'Govt. Regulated',
-      });
-    } else if (text.includes('leak') || text.includes('pipe') || text.includes('water') || text.includes('tap') || text.includes('drain') || text.includes('pani') || text.includes('tanki')) {
-      matched = services.find((s) => s.category.includes('Plumbing') || s.name.includes('Plumbing'));
-      setMatchedDiagnosis({
-        serviceName: matched?.name || 'Plumbing Repair',
-        trade: 'Plumbing',
-        likelyParts: '1/2" Brass Ball Valve / CPVC Elbow Joint',
-        standardTariff: 'Govt. Regulated',
-      });
-    } else if (text.includes('mcb') || text.includes('wire') || text.includes('power') || text.includes('light') || text.includes('shock') || text.includes('switch') || text.includes('fan') || text.includes('bijli')) {
-      matched = services.find((s) => s.category.includes('Electrical') || s.name.includes('Electrical'));
-      setMatchedDiagnosis({
-        serviceName: matched?.name || 'Electrical Repair',
-        trade: 'Electrical',
-        likelyParts: '16A Modular MCB / Copper Wiring',
-        standardTariff: 'Govt. Regulated',
-      });
-    } else if (text.includes('paint') || text.includes('wall') || text.includes('damp') || text.includes('color')) {
-      matched = services.find((s) => s.category.includes('Painting') || s.name.includes('Painting'));
-      setMatchedDiagnosis({
-        serviceName: matched?.name || 'Painting Service',
-        trade: 'Painting',
-        likelyParts: 'Damp-Proof Acrylic Primer',
-        standardTariff: 'Govt. Regulated',
-      });
-    } else {
-      matched = filteredServices[0] || services[0];
-      setMatchedDiagnosis({
-        serviceName: matched?.name || 'Standard Cooperative Service',
-        trade: matched?.category || 'General Maintenance',
-        likelyParts: 'Standard ISI Hardware Toolkit',
-        standardTariff: 'Govt. Regulated',
-      });
+      setSearchQuery(presetObj.query || presetObj.label);
     }
 
-    if (matched) {
-      setSelectedService(matched);
+    if (!query) {
+      setMatchedDiagnosis(null);
+      return;
+    }
+
+    const ranked = rankServices(services, query, 'ALL');
+    if (ranked.length > 0) {
+      const topMatch = ranked[0];
+      setSelectedService(topMatch);
+      setMatchedDiagnosis({
+        serviceName: topMatch.name,
+        trade: topMatch.category,
+        likelyParts: getLikelyPartsForTrade(topMatch.category, topMatch.name),
+        standardTariff: `Cooperative Regulated • ₹${topMatch.base_price}`,
+      });
+      if (topMatch.category === 'Emergency Services') {
+        handleEmergencyToggle(true);
+      }
+    } else {
+      setMatchedDiagnosis(null);
     }
   };
 
@@ -332,11 +448,6 @@ export default function BookService() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!autoAssign && selectedWorker && (selectedWorker.isSlotOccupied || selectedWorker.availability === 'BUSY' || selectedWorker.availability === 'OFFLINE' || selectedWorker.availability === 'ON_LEAVE')) {
-      setError(`Artisan ${selectedWorker.name} is currently busy at this time slot (${formData.scheduledTime} on ${formData.scheduledDate}) and cannot be assigned.`);
-      return;
-    }
-
     setLoading(true);
     setError('');
     try {
@@ -349,20 +460,23 @@ export default function BookService() {
         }
       }
 
+      // Customer has no authority to choose worker; order broadcasts to nearby pool
       const payload = {
         service_id: selectedService.id,
-        worker_id: autoAssign ? (selectedWorker?.id || null) : (selectedWorker?.id || null),
         scheduled_date: formData.scheduledDate,
         scheduled_time: formData.scheduledTime,
         address: `${formData.address}, ${formData.city}, ${formData.district} - ${formData.pincode}`,
         district: formData.district,
+        city: formData.city,
+        pincode: formData.pincode,
         is_emergency: formData.isEmergency,
+        is_bulk_order: formData.isBulkOrder,
         notes: formData.notes || 'Standard booking',
       };
 
       const res = await api.createBooking(payload);
       setCreatedBooking(res.booking);
-      setCurrentStep(5);
+      setCurrentStep(4);
     } catch (err) {
       console.error('Booking submission failed:', err);
       setError(err.message || 'Failed to submit booking order.');
@@ -371,52 +485,64 @@ export default function BookService() {
     }
   };
 
-  // Phase 5 90-5-5 Split Calculation
+  // 93-2-5 Split Calculation: 93% Worker, 2% Platform Fee, 5% PF & Insurance
   let rawBasePrice = selectedService
     ? (formData.isEmergency ? Math.max(selectedService.base_price, 499) : selectedService.base_price)
     : 0;
 
   const bulkDiscount = formData.isBulkOrder ? Math.round(rawBasePrice * 0.15 * 100) / 100 : 0;
   const basePrice = rawBasePrice - bulkDiscount;
-  const coopFee = Math.round(basePrice * 0.05 * 100) / 100; // 5% Welfare Fund
-  const platformFee = Math.round(basePrice * 0.05 * 100) / 100; // 5% Platform Infra
+  const coopFee = Math.round(basePrice * 0.05 * 100) / 100; // 5% PF & Insurance
+  const platformFee = Math.round(basePrice * 0.02 * 100) / 100; // 2% Platform Fee
   const totalEstimated = Math.round((basePrice + coopFee + platformFee) * 100) / 100;
 
   return (
     <div className="container py-8 max-w-5xl mx-auto px-4">
-      {/* Wizard Progress Bar */}
+      {/* Wizard Step Progress Tracker */}
       <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-bold text-gray-500 mb-2">
-          <span>{t('step1Title')}</span>
-          <span>{t('step2Title')}</span>
-          <span>{t('step3Title')}</span>
-          <span>Confirmation</span>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[1, 2, 3, 4].map((stepNum) => {
-            const isDone = currentStep > stepNum;
-            const isCurrent = currentStep === stepNum;
-            const labels = ['1. Service', '2. Location & Schedule', '3. Artisan Pairing', '4. Confirmation'];
-            const label = labels[stepNum - 1];
+        <div className="relative flex items-center justify-between max-w-2xl mx-auto px-4">
+          {/* Background Connecting Track */}
+          <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-slate-200 -z-0" />
+          <div
+            className="absolute left-8 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-emerald-500 to-blue-900 transition-all duration-500 -z-0"
+            style={{
+              width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%'
+            }}
+          />
+
+          {[
+            { step: 1, title: 'Service & Problem', subtitle: 'Select Tariff' },
+            { step: 2, title: 'Location & Slot', subtitle: 'Address & Time' },
+            { step: 3, title: 'Review & Broadcast', subtitle: 'Nearby Worker Dispatch' },
+          ].map(({ step, title, subtitle }) => {
+            const isDone = currentStep > step;
+            const isCurrent = currentStep === step;
 
             return (
-              <div key={stepNum} className="flex flex-col items-center">
+              <div key={step} className="flex flex-col items-center relative z-10">
                 <div
-                  className={`h-2 w-full rounded-full transition-all duration-300 ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-sm ${
                     isDone
-                      ? 'bg-emerald-600'
+                      ? 'bg-emerald-600 text-white shadow-emerald-200'
                       : isCurrent
-                      ? 'bg-blue-950 ring-2 ring-blue-950/20'
-                      : 'bg-gray-200'
-                  }`}
-                />
-                <span
-                  className={`text-[11px] font-semibold mt-1.5 ${
-                    isCurrent ? 'text-blue-950' : isDone ? 'text-emerald-800' : 'text-gray-400'
+                      ? 'bg-[#0F294A] text-white ring-4 ring-blue-100 shadow-blue-950/20 scale-110'
+                      : 'bg-white text-slate-400 border-2 border-slate-200'
                   }`}
                 >
-                  {label}
-                </span>
+                  {isDone ? <Check size={16} className="stroke-[3]" /> : step}
+                </div>
+                <div className="text-center mt-2">
+                  <div
+                    className={`text-xs font-bold leading-tight ${
+                      isCurrent ? 'text-slate-900' : isDone ? 'text-emerald-800' : 'text-slate-400'
+                    }`}
+                  >
+                    {title}
+                  </div>
+                  <div className="text-[10px] text-slate-400 hidden sm:block">
+                    {subtitle}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -433,167 +559,218 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 1: PROBLEM SEARCH & TARIFF MATCHER (Clean & Optimized)
+          PHASE 1: PROBLEM SEARCH & SERVICE SELECTION (Minimal & Fast)
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 1 && (
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-6">
-          
-          {/* Smart Problem Search Console */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0A1931] via-[#102A45] to-[#163B60] text-white shadow-lg border border-blue-900/50">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
-                <Search className="w-4 h-4 text-amber-400" />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                {t('problemSearchTitle')}
-              </span>
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm space-y-5">
+          {/* Clean Step Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <span>Select Service & Repair Issue</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Type your problem (e.g. tap leaking, fan sparking) or choose a trade category below
+              </p>
             </div>
-            <h2 className="text-lg font-bold">{t('problemSearchSub')}</h2>
-            <p className="text-xs text-blue-200 mt-0.5 mb-4">
-              {t('problemSearchDesc')}
-            </p>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleProblemMatch(searchQuery);
-              }}
-              className="flex gap-2 mb-4"
-            >
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    if (e.target.value.length > 2) {
-                      handleProblemMatch(e.target.value);
-                    }
-                  }}
-                  placeholder={t('searchIssuePlaceholder')}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white text-gray-950 placeholder-gray-400 font-semibold text-xs border border-gray-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-400"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setMatchedDiagnosis(null);
-                    }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-              <button
-                type="submit"
-                className="btn btn-saffron text-xs font-bold px-5 py-3 rounded-xl shrink-0 shadow-md flex items-center gap-1.5"
-              >
-                <Search size={14} />
-                <span>{t('btnFindServiceRate')}</span>
-              </button>
-            </form>
-
-            {/* Quick symptom presets */}
-            <div className="flex flex-wrap gap-2">
-              {symptomPresets.map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleProblemMatch(p.label, p)}
-                  className="text-[11px] font-medium bg-white/15 hover:bg-white/25 border border-white/20 px-3 py-1.5 rounded-lg text-white transition text-left"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-
-            {matchedDiagnosis && (
-              <div className="mt-4 p-3.5 bg-white/15 rounded-xl border border-white/20 text-xs flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <span className="text-amber-400 font-bold">✓ {t('matchedService')}: </span>
-                  <strong className="text-white">{matchedDiagnosis.serviceName}</strong> ({matchedDiagnosis.trade})
-                  <div className="text-[11px] text-blue-200 mt-0.5">
-                    {t('likelyPartsLabel')} <strong>{matchedDiagnosis.likelyParts}</strong>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-full">
-                  ✓ {t('govStandardRate')}
-                </span>
+            {selectedService && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold shrink-0 shadow-2xs">
+                <CheckCircle2 size={15} className="text-emerald-600" />
+                <span>Selected: <strong>{selectedService.name}</strong> (₹{selectedService.base_price})</span>
               </div>
             )}
           </div>
 
-          {/* Filtered Services Grid */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-gray-900">
-                {searchQuery ? `${t('matchingServicesFound')} (${filteredServices.length})` : t('orSelectManual')}
-              </h3>
+          {/* Minimal Smart Search Input */}
+          <div className="space-y-2.5">
+            <div className="relative flex items-center">
+              <div className="absolute left-4 flex items-center pointer-events-none text-slate-400">
+                <Search size={18} />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchQuery(val);
+                  if (val.trim().length > 1) {
+                    handleProblemMatch(val);
+                  } else if (!val.trim()) {
+                    setMatchedDiagnosis(null);
+                  }
+                }}
+                placeholder="Type your repair issue (e.g. tap leaking, fan not working, AC gas, switch sparking, drain blocked)..."
+                className="w-full pl-11 pr-24 py-3.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white text-slate-900 placeholder:text-slate-400 rounded-2xl text-xs sm:text-sm font-medium border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0F294A] transition shadow-xs"
+              />
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="text-xs text-blue-900 font-bold hover:underline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setMatchedDiagnosis(null);
+                  }}
+                  className="absolute right-3 px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800 bg-slate-200/60 hover:bg-slate-200 rounded-lg font-medium transition"
                 >
-                  {t('clearSearch')}
+                  Clear
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1">
-              {filteredServices.map((svc) => {
-                const isSelected = selectedService?.id === svc.id;
-                const isEmergency = svc.category === 'Emergency Services';
+            {/* Quick 1-Click Problem Suggestions */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+                Common:
+              </span>
+              {symptomPresets.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery(item.query);
+                    handleProblemMatch(item.query, item);
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-[#0F294A] hover:border-blue-300 border border-slate-200/80 text-xs font-semibold whitespace-nowrap transition-all shadow-2xs"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                return (
-                  <div
-                    key={svc.id}
-                    onClick={() => {
-                      setSelectedService(svc);
-                      setMatchedDiagnosis({
-                        serviceName: svc.name,
-                        trade: svc.category,
-                        likelyParts: 'Standard ISI Hardware Toolkit',
-                        standardTariff: 'Govt. Regulated',
-                      });
-                      if (isEmergency) {
-                        setFormData((prev) => ({ ...prev, isEmergency: true }));
-                      }
-                    }}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between ${
+          {/* Compact Matched Diagnosis Banner (Only shown when issue matched) */}
+          {matchedDiagnosis && (
+            <div className="p-3.5 bg-gradient-to-r from-emerald-50 via-emerald-50/80 to-teal-50/60 border border-emerald-300/80 rounded-2xl flex items-center justify-between flex-wrap gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Check size={16} className="stroke-[3]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Matched Issue:</span>
+                    <strong className="text-slate-900 text-sm">{matchedDiagnosis.serviceName}</strong>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">
+                      {matchedDiagnosis.trade}
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-900 font-mono">
+                      • Base Tariff: ₹{selectedService?.base_price}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    Recommended Standard Parts: <strong className="text-slate-800">{matchedDiagnosis.likelyParts}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="bg-[#0F294A] hover:bg-[#153A68] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition"
+              >
+                <span>Continue with this Service</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          )}
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              { id: 'ALL', label: 'All Services' },
+              { id: 'Appliance Repair', label: '❄️ AC & Appliances' },
+              { id: 'Electrical', label: '⚡ Electrical' },
+              { id: 'Plumbing', label: '🚰 Plumbing' },
+              { id: 'Carpentry', label: '🔨 Carpentry' },
+              { id: 'Painting', label: '🎨 Painting' },
+              { id: 'Cleaning', label: '🧹 Cleaning & Pest' },
+              { id: 'Emergency Services', label: '🚨 60-Min Emergency' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedCategoryTab(tab.id)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedCategoryTab === tab.id
+                    ? 'bg-[#0F294A] text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Services Grid Header */}
+          <div className="flex items-center justify-between pt-1">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              {searchQuery ? `Matching Services for "${searchQuery}" (${filteredServices.length})` : `Available Standard Services (${filteredServices.length})`}
+            </h3>
+            {(searchQuery || selectedCategoryTab !== 'ALL') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategoryTab('ALL');
+                  setMatchedDiagnosis(null);
+                }}
+                className="text-xs text-blue-900 font-bold hover:underline"
+              >
+                Reset Filter
+              </button>
+            )}
+          </div>
+
+          {/* Filtered Services Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[480px] overflow-y-auto pr-1">
+            {filteredServices.map((svc) => {
+              const isSelected = selectedService?.id === svc.id;
+              const isEmergency = svc.category === 'Emergency Services';
+
+              return (
+                <div
+                  key={svc.id}
+                  onClick={() => {
+                    setSelectedService(svc);
+                    setMatchedDiagnosis({
+                      serviceName: svc.name,
+                      trade: svc.category,
+                      likelyParts: getLikelyPartsForTrade(svc.category, svc.name),
+                      standardTariff: `Cooperative Regulated • ₹${svc.base_price}`,
+                    });
+                    if (isEmergency) {
+                      setFormData((prev) => ({ ...prev, isEmergency: true }));
+                    }
+                  }}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                       isSelected
-                        ? 'border-blue-950 bg-blue-50/60 ring-2 ring-blue-950 shadow-sm'
+                        ? 'border-[#0F294A] bg-blue-50/70 ring-2 ring-[#0F294A] shadow-md scale-[1.01]'
                         : isEmergency
-                        ? 'border-red-200 bg-red-50/30 hover:border-red-400'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-red-200 bg-red-50/30 hover:border-red-400 hover:shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/70 hover:shadow-xs'
                     }`}
                   >
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-gray-100 text-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-slate-100 text-slate-700">
                           {svc.category}
                         </span>
                         {svc.is_complex ? (
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80">
                             Master Paired
                           </span>
                         ) : null}
                       </div>
-                      <h4 className="font-bold text-xs text-gray-900 mb-0.5">{svc.name}</h4>
-                      <p className="text-[11px] text-gray-500 line-clamp-2">{svc.description}</p>
+                      <h4 className="font-extrabold text-xs text-slate-900 mb-1">{svc.name}</h4>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{svc.description}</p>
                     </div>
 
-                    <div className="pt-2 mt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                      <span className="text-gray-500 text-[10px]">{svc.available_workers || 3} {t('verifiedArtisans')}</span>
-                      <span className="font-extrabold text-blue-950 font-mono">₹{svc.base_price}</span>
+                    <div className="pt-2.5 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="text-slate-500 text-[11px] font-medium">{svc.available_workers || 3} {t('verifiedArtisans')}</span>
+                      <span className="font-black text-[#0F294A] text-sm font-mono">₹{svc.base_price}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
 
           <div className="pt-3 flex items-center justify-between border-t border-gray-100">
             <span className="text-xs text-gray-500">
@@ -658,7 +835,7 @@ export default function BookService() {
             <div
               className={`p-4 rounded-xl border transition flex items-start gap-3 ${
                 formData.isEmergency
-                  ? 'bg-red-50 border-red-300'
+                  ? 'bg-red-50 border-red-300 ring-1 ring-red-400'
                   : 'bg-amber-50/40 border-amber-200'
               }`}
             >
@@ -666,16 +843,16 @@ export default function BookService() {
                 type="checkbox"
                 id="emergency-toggle"
                 checked={formData.isEmergency}
-                onChange={(e) => setFormData({ ...formData, isEmergency: e.target.checked })}
+                onChange={(e) => handleEmergencyToggle(e.target.checked)}
                 className="h-4 w-4 mt-0.5 text-red-600 rounded focus:ring-red-500 border-gray-300"
               />
               <label htmlFor="emergency-toggle" className="cursor-pointer">
                 <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                  <Zap size={14} className="text-red-600 fill-red-600" />
-                  24/7 Priority Emergency (Express 30-Minute Dispatch)
+                  <Zap size={14} className="text-red-600 fill-red-600 animate-pulse" />
+                  24/7 Priority Emergency (Express 60-Minute Dispatch)
                 </div>
                 <p className="text-[11px] text-gray-600 mt-0.5">
-                  Instant priority dispatch to on-duty rapid response squad for high-risk water bursts, short-circuits, or safety hazards.
+                  Instant priority dispatch to on-duty rapid response squad for high-risk water bursts, short-circuits, or safety hazards within the immediate 60-minute window.
                 </p>
               </label>
             </div>
@@ -744,30 +921,56 @@ export default function BookService() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Preferred Date
+                  Preferred Date {formData.isEmergency && <span className="text-red-600 font-bold">(Immediate Express Dispatch)</span>}
                 </label>
                 <input
                   type="date"
+                  disabled={formData.isEmergency}
                   value={formData.scheduledDate}
                   onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
+                  className={`w-full p-2 border rounded-md focus:outline-hidden text-xs ${
+                    formData.isEmergency
+                      ? 'bg-red-50/50 border-red-300 text-red-950 font-bold cursor-not-allowed'
+                      : 'border-gray-300 focus:ring-2 focus:ring-blue-900'
+                  }`}
                 />
+                {formData.isEmergency && (
+                  <span className="text-[10px] text-red-600 font-semibold block mt-0.5">
+                    ⚡ Date locked to Today for 24/7 Priority Emergency Dispatch
+                  </span>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Preferred Time Slot
+                  Preferred Time Slot {formData.isEmergency && <span className="text-red-600 font-bold">(60-Min Rapid Window)</span>}
                 </label>
-                <select
-                  value={formData.scheduledTime}
-                  onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                >
-                  <option value="09:00 AM">Morning (09:00 AM - 12:00 PM)</option>
-                  <option value="02:00 PM">Afternoon (02:00 PM - 05:00 PM)</option>
-                  <option value="06:00 PM">Evening (06:00 PM - 08:00 PM)</option>
-                  <option value="Immediate">Immediate / Express 30-min</option>
-                </select>
+                {formData.isEmergency ? (
+                  <select
+                    value={formData.scheduledTime}
+                    onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                    className="w-full p-2.5 border border-red-400 bg-red-50 rounded-md focus:outline-hidden focus:ring-2 focus:ring-red-600 text-xs font-bold text-red-950 shadow-xs"
+                  >
+                    <option value={formData.scheduledTime}>
+                      ⚡ {formData.scheduledTime.includes('Express') ? formData.scheduledTime : getEmergencyTimeWindow()}
+                    </option>
+                  </select>
+                ) : (
+                  <select
+                    value={formData.scheduledTime}
+                    onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                    className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white"
+                  >
+                    <option value="09:00 AM">Morning (09:00 AM - 12:00 PM)</option>
+                    <option value="02:00 PM">Afternoon (02:00 PM - 05:00 PM)</option>
+                    <option value="06:00 PM">Evening (06:00 PM - 08:00 PM)</option>
+                  </select>
+                )}
+                {formData.isEmergency && (
+                  <span className="text-[10px] text-red-600 font-semibold block mt-0.5">
+                    ⚡ Artisan mobilized within this exact 60-minute emergency window
+                  </span>
+                )}
               </div>
             </div>
 
@@ -797,7 +1000,7 @@ export default function BookService() {
                 type="submit"
                 className="btn btn-primary flex items-center gap-2 text-xs font-bold"
               >
-                Continue to Choose Artisan <ArrowRight size={14} />
+                Continue to Review & Broadcast <ArrowRight size={14} />
               </button>
             </div>
           </form>
@@ -805,18 +1008,18 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 3: CHOOSE WORKER OR AUTO-ASSIGN
+          PHASE 3: REVIEW ORDER & BROADCAST DISPATCH
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 3 && (
         <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-900">
-                Phase 3: Geo-Location Smart Dispatch & Artisan Matching
+                Phase 3: Smart Broadcast Dispatch & Transparent Escrow Tariff
               </span>
-              <h2 className="text-lg font-bold text-gray-900">Select Specific Artisan or Auto-Dispatch Nearby</h2>
+              <h2 className="text-lg font-bold text-gray-900">Review Order & Confirm Broadcast Dispatch</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Preference is prioritized for verified available artisans closest to your service location in {formData.district}.
+                Service request will be broadcasted to all nearby verified artisans in {formData.district}. The first artisan who accepts claims the work order.
               </p>
             </div>
 
@@ -830,298 +1033,47 @@ export default function BookService() {
               }`}
             >
               <Navigation size={13} className={showRouteMap ? 'rotate-45 text-slate-950' : 'text-amber-300'} />
-              <span>{showRouteMap ? 'Hide Live Map & Radar' : '🗺️ View Live Route & Radar'}</span>
+              <span>{showRouteMap ? 'Hide Locality Radar' : '🗺️ View Nearby Artisan Radar'}</span>
             </button>
           </div>
 
-          {/* Interactive Live Route & Proximity Radar Map */}
+          {/* Policy Banner: Zero Authority to choose worker */}
+          <div className="p-4 bg-blue-50/80 rounded-2xl border-2 border-blue-200 text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-950 text-amber-300 flex items-center justify-center shrink-0 font-bold">
+                ⚖️
+              </div>
+              <div>
+                <div className="font-bold text-blue-950 text-sm">Fair Cooperative Broadcast Policy Active</div>
+                <p className="text-blue-900/80 text-[11px] mt-0.5 leading-relaxed">
+                  To prevent artisan monopolization and ensure rapid dispatch, customers do not choose specific workers. Your request is broadcasted simultaneously to all certified cooperative artisans in your area. The first available artisan to accept will be immediately assigned.
+                </p>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-extrabold uppercase shrink-0 whitespace-nowrap self-start sm:self-center">
+              First-to-Accept Dispatch
+            </span>
+          </div>
+
+          {/* Interactive Locality Radar Map */}
           {showRouteMap && (
             <LiveRouteMap
-              worker={selectedWorker || recommendedWorkers.find(w => !w.isSlotOccupied) || recommendedWorkers[0]}
+              worker={recommendedWorkers[0] || {
+                name: 'Nearby Cooperative Artisans',
+                tier: 'MASTER',
+                distanceKm: 2.5,
+                etaMinutes: 10,
+                service_area: formData.district,
+              }}
               customerAddress={`${formData.address}, ${formData.city}`}
               customerCoords={customerCoords}
               allNearbyWorkers={recommendedWorkers}
-              onSelectWorker={(w) => {
-                setSelectedWorker(w);
-                setAutoAssign(false);
-                setError('');
-              }}
+              title={`Nearby Verified Artisans Radar (${recommendedWorkers.length || 'Active'} Artisans in Local Area)`}
             />
           )}
 
-          {/* Selection Mode Switch */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              onClick={() => {
-                setAutoAssign(true);
-                setError('');
-                const available = recommendedWorkers.filter((w) => !w.isSlotOccupied && w.availability === 'AVAILABLE');
-                setSelectedWorker(available[0] || null);
-              }}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center gap-3 ${
-                autoAssign
-                  ? 'border-blue-950 bg-blue-50/70 shadow-xs'
-                  : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                autoAssign ? 'border-blue-950 bg-blue-950 text-white' : 'border-gray-400 bg-white'
-              }`}>
-                {autoAssign && <Check size={12} />}
-              </div>
-              <div>
-                <div className="font-bold text-xs text-blue-950 flex items-center gap-1.5">
-                  <Zap size={14} className="text-amber-600 fill-amber-500" />
-                  Auto-Assign Nearest Available Artisan
-                </div>
-                <p className="text-[11px] text-gray-600">
-                  Fastest dispatch: Automatically picks the closest non-busy verified artisan ({recommendedWorkers.find(w => !w.isSlotOccupied)?.distanceKm || '2.4'} km away).
-                </p>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setAutoAssign(false);
-                setError('');
-              }}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center gap-3 ${
-                !autoAssign
-                  ? 'border-blue-950 bg-blue-50/70 shadow-xs'
-                  : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                !autoAssign ? 'border-blue-950 bg-blue-950 text-white' : 'border-gray-400 bg-white'
-              }`}>
-                {!autoAssign && <Check size={12} />}
-              </div>
-              <div>
-                <div className="font-bold text-xs text-blue-950 flex items-center gap-1.5">
-                  <User size={14} className="text-blue-900" />
-                  Choose Specific Artisan from List Below
-                </div>
-                <p className="text-[11px] text-gray-600">
-                  Pick your preferred artisan by proximity, rating, or artisan tier.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {matchingLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-              <p className="text-xs text-gray-600">Calculating GPS proximity & loading verified artisans...</p>
-            </div>
-          ) : recommendedWorkers.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-200">
-              <p className="text-xs text-gray-600">
-                No specific verified artisans found for <strong>{selectedService?.category || 'this service'}</strong> in {formData.district} yet. Click Auto-Assign to continue with automatic district dispatch.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3.5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                  Verified Artisans Sorted by GPS Proximity & Availability:
-                </h3>
-                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <Navigation size={12} className="text-emerald-700" /> Closest Available First
-                </span>
-              </div>
-
-              {recommendedWorkers.map((worker, index) => {
-                const isBusy = worker.isSlotOccupied || worker.availability === 'BUSY' || worker.availability === 'OFFLINE' || worker.availability === 'ON_LEAVE';
-                const isSelected = !isBusy && selectedWorker?.id === worker.id;
-                const tradeLabel = worker.primary_trade || selectedService?.category || 'General Artisan';
-                const isClosestAvailable = !isBusy && index === recommendedWorkers.findIndex(w => !w.isSlotOccupied);
-
-                return (
-                  <div
-                    key={worker.id}
-                    onClick={() => {
-                      if (isBusy) {
-                        setError(`Artisan ${worker.name} is currently busy or booked during this time slot (${formData.scheduledTime} on ${formData.scheduledDate}) and cannot be assigned to another customer.`);
-                        return;
-                      }
-                      setError('');
-                      setSelectedWorker(worker);
-                      setAutoAssign(false);
-                    }}
-                    className={`p-4 rounded-xl border-2 transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                      isBusy
-                        ? 'border-gray-200 bg-gray-50/75 opacity-80 cursor-not-allowed'
-                        : isSelected
-                        ? 'border-blue-950 bg-blue-50/50 ring-2 ring-blue-950/20 cursor-pointer'
-                        : 'border-gray-200 hover:border-gray-300 bg-white cursor-pointer'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3.5">
-                      {/* Worker Avatar & Initials */}
-                      <div className="w-12 h-12 rounded-xl bg-blue-950 text-white flex flex-col items-center justify-center shrink-0 shadow-xs">
-                        <span className="font-bold text-sm">{worker.name?.charAt(0)}</span>
-                        <span className="text-[8px] font-mono text-amber-400 uppercase">{worker.tier || 'MASTER'}</span>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-bold text-sm text-gray-900">{worker.name}</h4>
-                          <span className="font-mono text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
-                            {worker.worker_code}
-                          </span>
-
-                          {/* Proximity Distance & ETA Pill */}
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-950 border border-sky-300 flex items-center gap-1">
-                            <Navigation size={10} className="text-sky-700" />
-                            <span>{worker.distanceKm ? `${worker.distanceKm} km away` : 'Nearby'} (~{worker.etaMinutes || 12}m ETA)</span>
-                          </span>
-
-                          {isClosestAvailable && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
-                              ⚡ Nearest Available
-                            </span>
-                          )}
-
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
-                            🛠️ {tradeLabel}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            worker.tier === 'MASTER'
-                              ? 'bg-amber-100 text-amber-900 border-amber-300'
-                              : worker.tier === 'GOLD'
-                              ? 'bg-yellow-100 text-yellow-900 border-yellow-300'
-                              : 'bg-indigo-100 text-indigo-900 border-indigo-300'
-                          }`}>
-                            {worker.tier || 'MASTER'} ARTISAN
-                          </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                            ✓ Verified
-                          </span>
-                        </div>
-
-                        <div className="text-[11px] text-gray-500 mt-1 flex items-center gap-3 flex-wrap">
-                          <span>🏢 {worker.cooperative_name}</span>
-                          <span>⭐ {worker.rating > 0 ? worker.rating.toFixed(1) : '4.8'} ({worker.total_reviews || 25} reviews)</span>
-                          <span>⏳ {worker.experience_years} yrs exp</span>
-                          <span className="text-emerald-700 font-semibold">🛡️ 7-Day Guarantee</span>
-                        </div>
-
-                        {/* Master Pairing Notification */}
-                        {worker.masterPairing && (
-                          <div className="mt-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-center gap-1.5">
-                            <Award className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                            <span>Paired with Master Artisan <strong>{worker.masterPairing.masterName}</strong> (₹0 extra cost).</span>
-                          </div>
-                        )}
-
-                        {/* Busy Slot Conflict Alert Banner */}
-                        {isBusy && (
-                          <div className="mt-2.5 p-2 rounded-lg bg-amber-50 border border-amber-300 text-[11px] text-amber-900 flex items-center gap-1.5 font-medium">
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                            <span>
-                              {worker.slotConflictReason
-                                ? `🔒 Unavailable: ${worker.slotConflictReason}. Cannot assign to another customer in this time slot.`
-                                : '🔒 Unavailable: Artisan is currently engaged on an active job. Cannot assign to another customer.'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0 flex md:flex-col items-center md:items-end justify-between gap-1.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        isBusy
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        {isBusy ? 'BUSY' : worker.availability}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedWorker(worker);
-                            setShowRouteMap(true);
-                          }}
-                          className="text-[11px] font-semibold text-blue-900 hover:text-blue-700 flex items-center gap-1 underline"
-                        >
-                          <Navigation size={12} /> Route Preview
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isBusy}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (isBusy) {
-                              setError(`Artisan ${worker.name} is busy during this time slot (${formData.scheduledTime} on ${formData.scheduledDate}) and cannot be assigned.`);
-                              return;
-                            }
-                            setError('');
-                            setSelectedWorker(worker);
-                            setAutoAssign(false);
-                          }}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
-                            isBusy
-                              ? 'border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : isSelected
-                              ? 'bg-blue-950 text-white'
-                              : 'border border-blue-950 text-blue-950 hover:bg-blue-50'
-                          }`}
-                        >
-                          {isBusy ? '🔒 Slot Unavailable' : isSelected ? '✓ Selected Artisan' : 'Select Artisan'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="pt-3 flex items-center justify-between border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(2)}
-              className="btn btn-secondary btn-sm flex items-center gap-1 text-xs"
-            >
-              <ArrowLeft size={14} /> Back
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (!autoAssign && (!selectedWorker || selectedWorker.isSlotOccupied || selectedWorker.availability === 'BUSY' || selectedWorker.availability === 'OFFLINE' || selectedWorker.availability === 'ON_LEAVE')) {
-                  setError('The selected artisan is currently busy or unavailable in this time slot. Please choose an available artisan or use Auto-Dispatch.');
-                  return;
-                }
-                setError('');
-                setCurrentStep(4);
-              }}
-              className="btn btn-primary flex items-center gap-2 text-xs font-bold"
-            >
-              Review Booking Summary <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ─────────────────────────────────────────────────────────────
-          PHASE 4: REVIEW & CONFIRM
-         ───────────────────────────────────────────────────────────── */}
-      {currentStep === 4 && (
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-6">
-          <div className="pb-3 border-b border-gray-100">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-900">
-              Phase 4 & 5: Review & 90-5-5 Escrow Tariff Breakdown
-            </span>
-            <h2 className="text-lg font-bold text-gray-900">Confirm Order & Generate Security Handshake OTPs</h2>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left: Order & Artisan Summary */}
+            {/* Left: Order Summary */}
             <div className="space-y-3.5 text-xs">
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-1.5">
                 <div className="font-bold text-sm text-gray-900 flex items-center justify-between">
@@ -1138,48 +1090,28 @@ export default function BookService() {
                 )}
                 {formData.isEmergency && (
                   <div className="text-red-700 font-bold flex items-center gap-1 text-[11px]">
-                    <Zap size={13} /> 24/7 Priority Emergency Active
+                    <Zap size={13} /> 24/7 Priority Emergency Active (60-Min Response)
                   </div>
                 )}
               </div>
 
-              {/* Chosen Worker Banner */}
-              <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-200 space-y-1">
-                <div className="font-bold text-blue-950 flex items-center gap-1.5">
-                  <User size={14} className="text-blue-900" />
-                  {autoAssign ? 'Auto-Dispatched Artisan' : 'Selected Artisan'}
-                </div>
-                {selectedWorker ? (
-                  <div className="text-gray-800 pt-1">
-                    <div className="font-bold text-sm text-gray-900">{selectedWorker.name}</div>
-                    <div className="text-gray-500 text-[11px]">
-                      {selectedWorker.worker_code} • {selectedWorker.tier || 'MASTER'} ARTISAN • {selectedWorker.cooperative_name}
-                    </div>
+              {/* Broadcast Target Pool */}
+              <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-1.5">
+                <div className="font-bold text-emerald-950 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Radio size={14} className="text-emerald-700 animate-pulse" />
+                    <span>Broadcast Target: {formData.district} Artisan Network</span>
                   </div>
-                ) : (
-                  <div className="text-gray-600">Nearest available certified cooperative worker</div>
-                )}
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900">
+                    Live Pool
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  Broadcast notification will pop up on the screens of all active, verified {selectedService?.category || 'trade'} artisans within {formData.city} and {formData.district}.
+                </p>
               </div>
 
-              {/* Warning if worker is busy */}
-              {!autoAssign && selectedWorker && (selectedWorker.isSlotOccupied || selectedWorker.availability === 'BUSY' || selectedWorker.availability === 'OFFLINE' || selectedWorker.availability === 'ON_LEAVE') && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs font-medium flex items-center gap-2">
-                  <AlertTriangle size={16} className="text-red-600 shrink-0" />
-                  <span>Artisan {selectedWorker.name} is busy during this time slot. Please return to Phase 3 to select an available artisan.</span>
-                </div>
-              )}
-
-              {/* Compact Route Preview */}
-              {selectedWorker && (
-                <LiveRouteMap
-                  worker={selectedWorker}
-                  customerAddress={`${formData.address}, ${formData.city}`}
-                  customerCoords={customerCoords}
-                  compact={true}
-                  title={`Live Dispatch Route (${selectedWorker.distanceKm || '3.2'} km • ~${selectedWorker.etaMinutes || 12}m ETA)`}
-                />
-              )}
-
+              {/* Destination & Schedule */}
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
                 <div className="font-bold text-gray-900 flex items-center gap-1.5">
                   <MapPin size={14} className="text-blue-900" /> Destination & Schedule
@@ -1187,19 +1119,22 @@ export default function BookService() {
                 <div className="text-gray-800 font-semibold">{formData.address}</div>
                 <div className="text-gray-500">{formData.city}, {formData.district} - {formData.pincode}</div>
                 <div className="text-gray-600 pt-1 font-medium">📅 {formData.scheduledDate} at {formData.scheduledTime}</div>
+                {formData.notes && (
+                  <div className="text-gray-500 pt-1 text-[11px] italic">Notes: "{formData.notes}"</div>
+                )}
               </div>
             </div>
 
-            {/* Right: Transparent 90-5-5 Split */}
+            {/* Right: Transparent 93-2-5 Split */}
             <div className="p-6 bg-blue-950 text-white rounded-2xl flex flex-col justify-between shadow-md">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-1.5">
-                  <ShieldCheck size={16} /> Transparent 90-5-5 Tariff
+                  <ShieldCheck size={16} /> Transparent 93-2-5 Tariff Split
                 </div>
 
                 <div className="space-y-2.5 text-xs border-b border-white/15 pb-4 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-blue-200">Labour Base Charge:</span>
+                    <span className="text-blue-200">Labour Base Charge (Worker 93%):</span>
                     <span className="font-bold">₹{rawBasePrice.toFixed(2)}</span>
                   </div>
                   {formData.isBulkOrder && (
@@ -1209,11 +1144,11 @@ export default function BookService() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-blue-200">Worker Welfare Fund (5%):</span>
+                    <span className="text-blue-200">PF & Insurance Pool (5%):</span>
                     <span className="font-bold">₹{coopFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-200">Platform Infra & Operations (5%):</span>
+                    <span className="text-blue-200">Platform Operating Fee (2%):</span>
                     <span className="font-bold">₹{platformFee.toFixed(2)}</span>
                   </div>
                 </div>
@@ -1224,9 +1159,10 @@ export default function BookService() {
                 </div>
 
                 <div className="text-[10px] text-blue-200 bg-white/10 p-2.5 rounded-lg leading-relaxed space-y-0.5">
-                  <div>• 90% goes directly to artisan wallet.</div>
-                  <div>• 5% pools directly into ESIC accident & health insurance.</div>
-                  <div>• 7-Day Free Repair Guarantee armed automatically upon completion.</div>
+                  <div>• 93% goes directly to the artisan's cooperative wallet.</div>
+                  <div>• 2% platform fee for server and dispatch network upkeep.</div>
+                  <div>• 5% pools directly into PF & accident/health coverage.</div>
+                  <div>• 30-Day Free Repair Guarantee automatically armed upon completion.</div>
                 </div>
               </div>
 
@@ -1235,20 +1171,28 @@ export default function BookService() {
                   <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 text-center space-y-2">
                     <p className="text-xs text-amber-200">You must be signed in to confirm your booking.</p>
                     <Link
-                      to="/login?role=customer"
-                      className="w-full btn btn-saffron py-2.5 font-bold text-xs shadow-md flex items-center justify-center gap-1.5"
+                      to="/login"
+                      className="btn btn-saffron btn-sm font-bold text-xs inline-block"
                     >
-                      Sign In to Confirm Booking →
+                      Login to Book
                     </Link>
                   </div>
                 ) : (
                   <button
-                    type="button"
-                    disabled={loading || (!autoAssign && selectedWorker && (selectedWorker.isSlotOccupied || selectedWorker.availability === 'BUSY' || selectedWorker.availability === 'OFFLINE'))}
+                    disabled={loading}
                     onClick={handleConfirmBooking}
-                    className="w-full btn btn-saffron py-3 font-bold text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full btn btn-saffron py-3.5 font-extrabold text-sm shadow-lg flex items-center justify-center gap-2 hover:bg-amber-400 text-blue-950 transition"
                   >
-                    {loading ? 'Submitting Order...' : 'Confirm Booking & Generate OTPs'}
+                    {loading ? (
+                      <>
+                        <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-blue-950 border-t-transparent" />
+                        Broadcasting Request...
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={16} /> 📢 Confirm & Broadcast Service Order
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -1258,30 +1202,41 @@ export default function BookService() {
           <div className="pt-2 flex items-center justify-between border-t border-gray-100">
             <button
               type="button"
-              onClick={() => setCurrentStep(3)}
+              onClick={() => setCurrentStep(2)}
               className="btn btn-secondary btn-sm flex items-center gap-1 text-xs"
             >
-              <ArrowLeft size={14} /> Back
+              <ArrowLeft size={14} /> Back to Schedule
             </button>
           </div>
         </div>
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 5: SUCCESS WITH OTPS & LIVE TRACKING
+          PHASE 4: SUCCESS WITH BROADCAST STATUS & OTPS
          ───────────────────────────────────────────────────────────── */}
-      {currentStep === 5 && createdBooking && (
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-emerald-200 shadow-sm max-w-3xl mx-auto space-y-6">
+      {currentStep === 4 && createdBooking && (
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-emerald-200 shadow-sm max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
           <div className="text-center space-y-2">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
               <CheckCircle2 size={32} />
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Service Dispatched!</h2>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+                Broadcast Active
+              </span>
+              <h2 className="text-xl font-bold text-gray-900 mt-1">Service Request Broadcasted!</h2>
               <p className="text-xs text-gray-600 mt-0.5">
-                Ref: <strong className="font-mono text-blue-950">{createdBooking.booking_code}</strong>
+                Reference Code: <strong className="font-mono text-blue-950">{createdBooking.booking_code}</strong>
               </p>
+            </div>
+          </div>
+
+          {/* Broadcast Status Alert */}
+          <div className="p-4 bg-amber-50/80 rounded-xl border border-amber-300 text-xs text-amber-950 flex items-center gap-3">
+            <Radio size={20} className="text-amber-700 animate-pulse shrink-0" />
+            <div>
+              <strong>Dispatching to Nearest Available Artisan:</strong> Your order is currently ringing on nearby verified artisans' dashboards in <strong>{createdBooking.location_city || formData.city}</strong>. The first artisan who accepts will be assigned immediately.
             </div>
           </div>
 
@@ -1292,29 +1247,29 @@ export default function BookService() {
               <div className="text-xl font-bold font-mono text-blue-950 mt-1">
                 {createdBooking.arrival_otp || '4821'}
               </div>
-              <span className="text-[9px] text-gray-500">Give upon arrival</span>
+              <span className="text-[9px] text-gray-500">Give upon artisan arrival</span>
             </div>
             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
               <span className="text-[10px] font-bold text-emerald-900 uppercase">Completion OTP</span>
               <div className="text-xl font-bold font-mono text-emerald-950 mt-1">
                 {createdBooking.completion_otp || '9156'}
               </div>
-              <span className="text-[9px] text-gray-500">Give after work is done</span>
+              <span className="text-[9px] text-gray-500">Give after work is finished</span>
             </div>
           </div>
 
           {/* Live Dispatch & Route Map */}
           <LiveRouteMap
-            worker={selectedWorker || {
-              name: 'Assigned Cooperative Artisan',
+            worker={{
+              name: 'Cooperative Artisan Broadcast',
               tier: 'MASTER',
-              distanceKm: 2.8,
-              etaMinutes: 11,
-              service_area: 'Bhubaneswar Metro',
+              distanceKm: 2.5,
+              etaMinutes: 10,
+              service_area: formData.district,
             }}
             customerAddress={`${formData.address}, ${formData.city}`}
             customerCoords={customerCoords}
-            title="Real-Time Artisan Transit Tracking to Your Destination"
+            title="Locality Proximity & Cooperative Broadcast Telemetry"
           />
 
           <div className="flex justify-center gap-3 pt-2">

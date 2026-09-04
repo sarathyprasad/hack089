@@ -5,7 +5,7 @@
 
 Unlike profit-extracting private aggregator platforms that treat workers as expendable gig laborers with high commissions and zero safety nets, **Shram Setu** implements an institutional cooperative model where:
 1. Workers are **member-owners** in their registered district federations.
-2. A transparent **10% Cooperative Welfare Levy** on every service is pooled directly into **ESIC Accident Insurance, EPFO Pensions, Health Funds, and NSDC/ITI Trade Upskilling**.
+2. A transparent **93-2-5 model (93% direct worker take-home, 2% platform fee, 5% PF & insurance)** where contributions pool directly into **ESIC Accident Insurance, EPFO Pensions, Health Funds, and NSDC/ITI Trade Upskilling**.
 3. Tariffs are standardized with **government-regulated base rates** and zero hidden surge pricing.
 4. Citizen satisfaction is guaranteed through background checks and trade credential audits.
 

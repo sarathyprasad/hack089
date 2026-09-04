@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 export default function Login() {
-  const { login, error } = useAuth();
+  const { user, login, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -24,6 +24,27 @@ export default function Login() {
 
   const from = location.state?.from?.pathname || '/';
 
+  const redirectUser = (userObj) => {
+    if (!userObj) return;
+    if (userObj.role === 'COOPERATIVE_ADMIN') {
+      const isAllowed = from.startsWith('/admin') || from.startsWith('/federation');
+      navigate(isAllowed ? from : '/admin/dashboard', { replace: true });
+    } else if (userObj.role === 'WORKER') {
+      const isAllowed = from.startsWith('/worker');
+      navigate(isAllowed ? from : '/worker/dashboard', { replace: true });
+    } else {
+      const isAllowed = from.startsWith('/customer');
+      navigate(isAllowed ? from : '/customer/bookings', { replace: true });
+    }
+  };
+
+  // If already logged in, immediately redirect to respective role portal
+  useEffect(() => {
+    if (user) {
+      redirectUser(user);
+    }
+  }, [user]);
+
   // Sync email default when tab changes
   useEffect(() => {
     setEmail('');
@@ -38,8 +59,8 @@ export default function Login() {
     setSuggestedPortal(null);
     setLoading(true);
     try {
-      const user = await login(email, password, activePortal);
-      redirectUser(user);
+      const loggedUser = await login(email, password, activePortal);
+      redirectUser(loggedUser);
     } catch (err) {
       const msg = err.message || 'Invalid credentials';
       setLocalError(msg);
@@ -55,41 +76,6 @@ export default function Login() {
     }
   };
 
-  const handleQuickDemoLogin = async (roleKey) => {
-    setLocalError('');
-    setSuggestedPortal(null);
-    setLoading(true);
-    try {
-      let demoEmail = 'customer@demo.local';
-      let demoPortal = 'CUSTOMER';
-      if (roleKey === 'WORKER') {
-        demoEmail = 'ramesh.w@demo.local';
-        demoPortal = 'WORKER';
-      } else if (roleKey === 'ADMIN') {
-        demoEmail = 'admin@demo.local';
-        demoPortal = 'ADMIN';
-      }
-      setEmail(demoEmail);
-      setPassword('demo123');
-      const user = await login(demoEmail, 'demo123', demoPortal);
-      redirectUser(user);
-    } catch (err) {
-      setLocalError(err.message || 'Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const redirectUser = (user) => {
-    if (user.role === 'COOPERATIVE_ADMIN') {
-      navigate('/admin/dashboard');
-    } else if (user.role === 'WORKER') {
-      navigate('/worker/dashboard');
-    } else {
-      navigate(from === '/' ? '/customer/bookings' : from);
-    }
-  };
-
   // Portal theme configs
   const portalConfigs = {
     CUSTOMER: {
@@ -100,8 +86,6 @@ export default function Login() {
       btnColor: 'bg-blue-900 hover:bg-blue-950 text-white',
       registerLink: '/register?role=customer',
       registerText: 'New citizen? Create an account here',
-      demoLabel: 'Demo Citizen (Ananya Patel)',
-      demoEmail: 'customer@demo.local',
     },
     WORKER: {
       title: 'Worker Member Portal',
@@ -111,19 +95,15 @@ export default function Login() {
       btnColor: 'bg-green-700 hover:bg-green-800 text-white',
       registerLink: '/register?role=worker',
       registerText: 'Skilled artisan? Register with your local cooperative federation',
-      demoLabel: 'Demo Worker (Ramesh Kumar - Electrician)',
-      demoEmail: 'ramesh.w@demo.local',
     },
     ADMIN: {
-      title: 'Cooperative Federation Admin',
-      subtitle: 'Official federation administrator portal for worker credential verification, dispute arbitration, and dispatch oversight.',
-      badgeText: 'Federation Authority',
+      title: 'Cooperative Society & Federation Portal',
+      subtitle: 'Official portal for Society & Federation Administrators and Treasurers to manage worker rosters, NLCF tenders, 30-day guarantee disputes, and the 10 financial treasury KPIs.',
+      badgeText: 'Society / Federation Authority',
       badgeClass: 'bg-amber-100 text-amber-900 border-amber-200',
       btnColor: 'bg-amber-600 hover:bg-amber-700 text-white',
-      registerLink: '/help',
-      registerText: 'Federation officer? Contact State Registrar for administrative access',
-      demoLabel: 'Demo Admin (Arun Pattnaik - Federation Admin)',
-      demoEmail: 'admin@demo.local',
+      registerLink: '/society/register',
+      registerText: 'Forming a new society/federation? Complete the 9-Step Legal Formation Charter here',
     },
   };
 
@@ -133,14 +113,16 @@ export default function Login() {
     <div className="container py-10 max-w-2xl mx-auto px-4">
       {/* Top Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-950 text-white mb-2 shadow-md">
-          <ShieldCheck size={26} />
-        </div>
+        <img
+          src="/logo.png"
+          alt="Shram Setu Brand Logo"
+          className="w-20 h-20 mx-auto mb-3 object-contain rounded-2xl shadow-md border border-slate-200 bg-white p-1.5"
+        />
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
           Shram Setu Single Sign-On
         </h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1 max-w-lg mx-auto">
-          Official Government Cooperative Labour Services Portal
+          Official National Cooperative Labour Services & Federation Portal
         </p>
       </div>
 
@@ -182,7 +164,7 @@ export default function Login() {
           </div>
         </button>
 
-        {/* Admin Tab */}
+        {/* Federation / Society Admin Tab */}
         <button
           type="button"
           onClick={() => setActivePortal('ADMIN')}
@@ -196,7 +178,7 @@ export default function Login() {
             <Building size={18} />
           </div>
           <div className={`font-bold text-xs ${activePortal === 'ADMIN' ? 'text-amber-950' : 'text-gray-800'}`}>
-            Coop Admin
+            Society / Federation
           </div>
         </button>
       </div>
@@ -214,23 +196,6 @@ export default function Login() {
           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
             {currentConfig.subtitle}
           </p>
-        </div>
-
-        {/* 1-Click Quick Demo Login Button for Active Portal */}
-        <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-          <div>
-            <span className="text-[10px] uppercase font-bold text-gray-500 block">Pre-Configured Demo Account</span>
-            <span className="font-semibold text-gray-800">{currentConfig.demoLabel}</span>
-            <span className="text-gray-500 text-[11px] block">{currentConfig.demoEmail} / demo123</span>
-          </div>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => handleQuickDemoLogin(activePortal)}
-            className="btn btn-secondary btn-sm text-xs font-bold shrink-0 self-start sm:self-auto border-blue-300 text-blue-900 hover:bg-blue-50"
-          >
-            ⚡ 1-Click Sign In
-          </button>
         </div>
 
         {(localError || error) && (

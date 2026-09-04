@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -11,6 +11,7 @@ import {
 
 export default function WorkerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,17 +40,70 @@ export default function WorkerDashboard() {
   const [sosActive, setSosActive] = useState(false);
   const [sosLoading, setSosLoading] = useState(false);
 
-  const fetchDashboard = () => {
-    setLoading(true);
+  // Real-Time First-to-Accept Broadcast Dispatch Pool States
+  const [dismissedJobIds, setDismissedJobIds] = useState([]);
+  const [lastAlertedJobId, setLastAlertedJobId] = useState(null);
+  const [claimFeedback, setClaimFeedback] = useState(null); // { type: 'success' | 'error', message: '' }
+  const [error, setError] = useState(null);
+
+  const fetchDashboard = (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     api.getWorkerDashboard()
-      .then((data) => setDashboardData(data))
-      .catch((err) => console.error('Failed to load worker dashboard:', err))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        setDashboardData(data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('Failed to load worker dashboard:', err);
+        if (!isSilent) setError(err.message || 'Unable to load worker dashboard.');
+      })
+      .finally(() => {
+        if (!isSilent) setLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchDashboard();
-  }, []);
+    if (user && user.role === 'CUSTOMER') {
+      navigate('/customer/bookings', { replace: true });
+      return;
+    }
+    if (user && user.role === 'COOPERATIVE_ADMIN') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
+    fetchDashboard(false);
+    // Silent auto-poll every 3 seconds for real-time dispatch pool updates
+    const pollInterval = setInterval(() => {
+      fetchDashboard(true);
+    }, 3000);
+    return () => clearInterval(pollInterval);
+  }, [user]);
+
+  const { worker, skills, certifications, stats, incomingJobs, activeJobs, completedJobs, reviews } = dashboardData || {};
+
+  // All active incoming jobs that have not been declined or dismissed by this worker
+  const availableIncomingJobs = (incomingJobs || []).filter((j) => !dismissedJobIds.includes(j.id));
+
+  // Active Broadcast Job for popup: First unhandled incoming request in the pool
+  const broadcastJob = availableIncomingJobs[0] || null;
+
+  // Audio / Speech alert for new incoming job (Hook declared at top level)
+  useEffect(() => {
+    if (broadcastJob && broadcastJob.id !== lastAlertedJobId) {
+      setLastAlertedJobId(broadcastJob.id);
+      try {
+        if ('speechSynthesis' in window && !window.speechSynthesis.speaking) {
+          const utterance = new SpeechSynthesisUtterance(
+            `New ${broadcastJob.is_emergency ? 'emergency' : ''} broadcast order in ${broadcastJob.location_city}. ${broadcastJob.service_name}.`
+          );
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {
+        console.debug('Speech synthesis note:', e);
+      }
+    }
+  }, [broadcastJob?.id]);
 
   const handleAvailabilityChange = async (newStatus) => {
     setAvailabilityUpdating(true);
@@ -110,7 +164,7 @@ export default function WorkerDashboard() {
         alert(res.message || 'Arrival verified! Status is now IN_PROGRESS.');
       } else {
         const res = await api.verifyCompletionOtp(otpTargetBooking.id, enteredOtp);
-        alert(res.message || 'Job completed! Merit points awarded and 7-Day Guarantee armed.');
+        alert(res.message || 'Job completed! Merit points awarded and 30-Day Guarantee armed.');
       }
       setOtpTargetBooking(null);
       setEnteredOtp('');
@@ -172,17 +226,55 @@ export default function WorkerDashboard() {
   const handleAction = async (bookingId, action) => {
     setActionBusyId(bookingId);
     try {
-      await api.handleWorkerJobAction(bookingId, action);
-      fetchDashboard();
+      if (action === 'DECLINE') {
+        // Optimistically dismiss the job from the local view immediately
+        setDismissedJobIds((prev) => [...prev, bookingId]);
+        setDashboardData((prev) => prev ? {
+          ...prev,
+          incomingJobs: (prev.incomingJobs || []).filter((j) => j.id !== bookingId),
+          stats: {
+            ...prev.stats,
+            incomingJobsCount: Math.max(0, (prev.stats?.incomingJobsCount || 1) - 1)
+          }
+        } : prev);
+        setClaimFeedback({
+          type: 'info',
+          message: '✓ Work order declined without penalty. Passed to other cooperative artisans.',
+        });
+      }
+
+      const res = await api.handleWorkerJobAction(bookingId, action);
+      if (action === 'ACCEPT') {
+        setClaimFeedback({
+          type: 'success',
+          message: '🎉 Work Order Claimed! You won this order. It has been added to your Active Tasks.',
+        });
+        setActiveTab('ACTIVE');
+        // Dismiss from broadcast popup
+        setDismissedJobIds((prev) => [...prev, bookingId]);
+      }
+      fetchDashboard(true);
     } catch (err) {
       console.error(`Action ${action} failed:`, err);
-      alert(err.message || 'Action failed.');
+      if (action === 'ACCEPT') {
+        setClaimFeedback({
+          type: 'error',
+          message: err.message || '⚡ Order Claimed: Another nearby artisan just accepted this order first.',
+        });
+        // Remove from broadcast popup immediately
+        setDismissedJobIds((prev) => [...prev, bookingId]);
+        fetchDashboard(true);
+      } else {
+        alert(err.message || 'Action failed.');
+        fetchDashboard(true);
+      }
     } finally {
       setActionBusyId(null);
+      setTimeout(() => setClaimFeedback(null), 6000);
     }
   };
 
-  if (loading) {
+  if (loading && !dashboardData) {
     return (
       <div className="container py-20 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
@@ -191,10 +283,61 @@ export default function WorkerDashboard() {
     );
   }
 
-  const { worker, skills, certifications, stats, incomingJobs, activeJobs, completedJobs, reviews } = dashboardData || {};
+  if (error || (!loading && !worker)) {
+    return (
+      <div className="container py-16 max-w-lg mx-auto text-center space-y-4">
+        <div className="bg-amber-50 border border-amber-200 p-8 rounded-2xl shadow-sm space-y-4">
+          <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+            ⚠️
+          </div>
+          <h2 className="text-lg font-bold text-gray-900">Worker Profile Not Accessible</h2>
+          <p className="text-xs text-gray-600">
+            {error || 'No registered worker member profile was found for your account. Please sign in with an accredited worker member account.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+            <button
+              onClick={() => fetchDashboard(false)}
+              className="px-4 py-2 bg-blue-900 text-white rounded-xl text-xs font-bold hover:bg-blue-950 transition"
+            >
+              Retry Connection
+            </button>
+            <Link
+              to="/login?role=worker"
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-800 rounded-xl text-xs font-bold hover:bg-gray-50 transition"
+            >
+              Sign In as Demo Artisan
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-8 max-w-6xl mx-auto space-y-6">
+      {/* ── REAL-TIME CLAIM FEEDBACK NOTIFICATION BANNER ── */}
+      {claimFeedback && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-bold shadow-lg border flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 ${
+            claimFeedback.type === 'success'
+              ? 'bg-emerald-50 text-emerald-950 border-emerald-300'
+              : claimFeedback.type === 'info'
+              ? 'bg-blue-50 text-blue-950 border-blue-300'
+              : 'bg-amber-50 text-amber-950 border-amber-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">{claimFeedback.type === 'success' ? '✅' : claimFeedback.type === 'info' ? 'ℹ️' : '⚡'}</span>
+            <span>{claimFeedback.message}</span>
+          </div>
+          <button
+            onClick={() => setClaimFeedback(null)}
+            className="p-1 text-gray-500 hover:text-gray-900 rounded"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
       {/* ── PENDING / REJECTED VERIFICATION STATUS BANNER ── */}
       {worker?.verification_status === 'PENDING' && (
         <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-sm space-y-4">
@@ -379,7 +522,7 @@ export default function WorkerDashboard() {
             <div className="text-lg font-bold font-mono text-blue-950 mt-0.5">
               ₹{worker?.total_earnings?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-gray-500">90% Direct Wallet Payout</span>
+            <span className="text-[10px] text-gray-500">93% Direct Wallet Payout</span>
           </div>
 
           <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200">
@@ -413,7 +556,7 @@ export default function WorkerDashboard() {
       <div className="flex border-b border-gray-200 gap-6 text-xs font-bold">
         {[
           { key: 'ACTIVE', label: `Active Tasks (${activeJobs?.length || 0})` },
-          { key: 'INCOMING', label: `Dispatch Inbox (${incomingJobs?.length || 0})` },
+          { key: 'INCOMING', label: `Dispatch Inbox (${availableIncomingJobs.length})` },
           { key: 'COMPLETED', label: `Completed Orders (${completedJobs?.length || 0})` },
           { key: 'REVIEWS', label: `Feedback & Reviews (${reviews?.length || 0})` },
         ].map((tab) => (
@@ -563,12 +706,12 @@ export default function WorkerDashboard() {
          ───────────────────────────────────────────────────────────── */}
       {activeTab === 'INCOMING' && (
         <div className="space-y-4">
-          {incomingJobs?.length === 0 ? (
+          {availableIncomingJobs.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl border border-gray-200 text-gray-500 text-xs">
               No new incoming requests in dispatch inbox.
             </div>
           ) : (
-            incomingJobs.map((job) => (
+            availableIncomingJobs.map((job) => (
               <div key={job.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -594,16 +737,26 @@ export default function WorkerDashboard() {
                   <button
                     onClick={() => handleAction(job.id, 'ACCEPT')}
                     disabled={actionBusyId === job.id}
-                    className="btn btn-primary btn-sm text-xs font-bold flex items-center gap-1"
+                    className="btn btn-primary btn-sm text-xs font-bold flex items-center gap-1.5"
                   >
-                    <Check size={13} /> Accept
+                    {actionBusyId === job.id ? (
+                      <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Check size={13} />
+                    )}
+                    <span>Accept</span>
                   </button>
                   <button
                     onClick={() => handleAction(job.id, 'DECLINE')}
                     disabled={actionBusyId === job.id}
-                    className="btn btn-secondary btn-sm text-xs text-gray-600"
+                    className="btn btn-secondary btn-sm text-xs text-gray-600 hover:text-red-700 hover:border-red-300 transition flex items-center gap-1.5"
                   >
-                    Decline (Zero Penalty)
+                    {actionBusyId === job.id ? (
+                      <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-gray-500 border-t-transparent" />
+                    ) : (
+                      <X size={13} />
+                    )}
+                    <span>Decline (Zero Penalty)</span>
                   </button>
                 </div>
               </div>
@@ -774,7 +927,7 @@ export default function WorkerDashboard() {
             </div>
 
             <p className="text-xs text-gray-500">
-              Select standardized government-approved replacement parts. Prices are locked and billed directly to the customer invoice without markup.
+              Select standardized cooperative-approved replacement parts. Prices are locked and billed directly to the customer invoice without markup.
             </p>
 
             <div className="overflow-y-auto flex-1 space-y-2 pr-1">
@@ -817,6 +970,139 @@ export default function WorkerDashboard() {
                   Add to Invoice
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          REAL-TIME BROADCAST INCOMING JOB POPUP (FIRST-TO-ACCEPT)
+         ───────────────────────────────────────────────────────────── */}
+      {broadcastJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-400 space-y-5 relative overflow-hidden">
+            {/* Ambient Pulse Glow */}
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shrink-0 shadow-sm animate-bounce">
+                  ⚡
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300">
+                      🚨 Live Dispatch Broadcast
+                    </span>
+                    {broadcastJob.is_emergency ? (
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-red-600 text-white animate-pulse">
+                        60-Min Emergency
+                      </span>
+                    ) : null}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-950 mt-1">
+                    {broadcastJob.service_name}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-mono">
+                    Ref: {broadcastJob.booking_code}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDismissedJobIds((prev) => [...prev, broadcastJob.id])}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
+                title="Dismiss"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Broadcast Policy Banner */}
+            <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 flex items-center gap-2">
+              <Zap size={16} className="text-amber-600 shrink-0" />
+              <span>
+                <strong>First-to-Accept Rule:</strong> This order is broadcasted to nearby verified artisans. The first artisan to click Accept receives the order immediately!
+              </span>
+            </div>
+
+            {/* Order Details Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">📍 Customer Location</span>
+                <div className="font-bold text-slate-900 mt-0.5">{broadcastJob.location_city}</div>
+                <div className="text-[11px] text-slate-600 line-clamp-1">{broadcastJob.location_address}</div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">📅 Scheduled Slot</span>
+                <div className="font-bold text-slate-900 mt-0.5">{broadcastJob.scheduled_date}</div>
+                <div className="text-[11px] text-blue-900 font-semibold">{broadcastJob.scheduled_time}</div>
+              </div>
+            </div>
+
+            {/* Net Labour Payout Card */}
+            <div className="p-4 bg-gradient-to-r from-emerald-950 to-teal-950 rounded-2xl text-white flex items-center justify-between shadow-md">
+              <div>
+                <span className="text-[10px] font-bold uppercase text-emerald-300 tracking-wider">
+                  Net Labour Payout (93% Direct Share)
+                </span>
+                <div className="text-2xl font-black font-mono text-amber-400 mt-0.5">
+                  ₹{broadcastJob.amount}
+                </div>
+                <span className="text-[10px] text-emerald-200">
+                  Instant escrow release upon completion
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-300 block">Category:</span>
+                <span className="text-xs font-bold text-white">{broadcastJob.service_category}</span>
+              </div>
+            </div>
+
+            {broadcastJob.notes && (
+              <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <strong>Customer Note:</strong> {broadcastJob.notes}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleVoiceAlert(broadcastJob)}
+                className="btn btn-secondary btn-sm text-xs flex items-center justify-center gap-1 w-full sm:w-auto"
+                title="Listen in regional voice"
+              >
+                <Volume2 size={15} /> Listen
+              </button>
+
+              <button
+                type="button"
+                disabled={actionBusyId === broadcastJob.id}
+                onClick={() => handleAction(broadcastJob.id, 'DECLINE')}
+                className="btn btn-secondary btn-sm text-xs flex-1 w-full sm:w-auto hover:text-red-700 hover:border-red-300 transition flex items-center justify-center gap-1"
+              >
+                <X size={14} /> Decline (Zero Penalty)
+              </button>
+
+              <button
+                type="button"
+                disabled={actionBusyId === broadcastJob.id}
+                onClick={() => handleAction(broadcastJob.id, 'ACCEPT')}
+                className="btn btn-primary btn-sm text-xs font-extrabold flex-2 w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 py-2.5"
+              >
+                {actionBusyId === broadcastJob.id ? (
+                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <Check size={16} /> ⚡ ACCEPT & CLAIM ORDER NOW
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

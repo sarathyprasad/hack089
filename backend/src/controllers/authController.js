@@ -137,7 +137,7 @@ async function register(req, res) {
               [
                 workerId,
                 cert.certificationName || 'Trade Certificate',
-                cert.issuingOrganization || 'Govt ITI / State Skill Council',
+                cert.issuingOrganization || 'National ITI / State Skill Council',
                 cert.certificateNumber || 'CERT-PENDING',
                 cert.issueDate || new Date().toISOString().split('T')[0],
                 cert.expiryDate || null,
@@ -156,7 +156,7 @@ async function register(req, res) {
           [
             workerId,
             req.body.certificationName || 'ITI / NSDC National Trade Certificate',
-            req.body.issuingOrganization || 'Government ITI / NCVT Odisha',
+            req.body.issuingOrganization || 'National ITI / NCVT',
             req.body.certificateNumber || 'ITI-OD-2024-9812',
             req.body.issueDate || '2022-06-15',
             null,
@@ -185,6 +185,35 @@ async function register(req, res) {
           [workerId, skillId]
         );
       }
+    } else if (userRole === 'COOPERATIVE_ADMIN') {
+      // Create Society / Federation entity for newly registered Federation Admin
+      const societyName = req.body.societyName || req.body.name || `${newUser.name} Cooperative Society`;
+      const isNlcf = req.body.isNlcfAffiliated ? 1 : 0;
+      const initialCapital = parseFloat(req.body.initialCapitalBalance) || 25000;
+      const trackingId = `SS-SOC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const societyCode = `SOC-${(district || 'KHO').substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
+      await query(
+        `INSERT INTO societies (
+          society_code, name, status, registered_email, registered_phone, district, city, address, pincode,
+          is_nlcf_affiliated, nlcf_certificate_no, initial_capital_balance, timeline_stage, tracking_id
+        ) VALUES ($1, $2, 'ACTIVE', $3, $4, $5, $6, $7, $8, $9, $10, $11, 9, $12)
+        ON CONFLICT (registered_email) DO NOTHING`,
+        [
+          societyCode,
+          societyName,
+          email,
+          phone || '0674-2548800',
+          district || 'Khordha',
+          city || 'Bhubaneswar',
+          address || 'District Cooperative Road',
+          pincode || '751001',
+          isNlcf,
+          isNlcf ? `NLCF-CERT-2026-${Math.floor(1000 + Math.random() * 9000)}` : null,
+          initialCapital,
+          trackingId,
+        ]
+      );
     }
 
     // Generate token

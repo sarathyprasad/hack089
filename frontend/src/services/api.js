@@ -85,7 +85,7 @@ export const api = {
   addPartsToBooking: (bookingId, parts) =>
     request(`/bookings/${bookingId}/add-parts`, { method: 'POST', body: { parts } }),
 
-  // Phase 6: 7-Day Guarantee
+  // Phase 6: 30-Day Guarantee
   claimGuarantee: (bookingId) =>
     request(`/bookings/${bookingId}/claim-guarantee`, { method: 'POST' }),
 
@@ -147,6 +147,42 @@ export const api = {
     request('/smart-features/ai-chat', {
       method: 'POST',
       body: { message, history, language },
+    }),
+
+  // Society Registration & Lifecycle Tracking (Pages 1 & 2)
+  registerSociety: (data) =>
+    request('/societies/register', {
+      method: 'POST',
+      body: data,
+    }),
+  getSocietyTracking: (trackingId) =>
+    request(`/societies/track/${encodeURIComponent(trackingId)}`),
+  getSocietiesList: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/societies${query ? `?${query}` : ''}`);
+  },
+  updateSocietyTimeline: (id, data) =>
+    request(`/societies/${id}/timeline`, {
+      method: 'PATCH',
+      body: data,
+    }),
+
+  // Federation Dual-Console Management (Pages 3 & 4)
+  getFederationAdminDashboard: (societyId = 1) =>
+    request(`/federation/admin-dashboard?societyId=${societyId}`),
+  getFederationTreasurerDashboard: (societyId = 1) =>
+    request(`/federation/treasurer-dashboard?societyId=${societyId}`),
+  applyNcctTraining: (data) =>
+    request('/federation/ncct/apply', {
+      method: 'POST',
+      body: data,
+    }),
+  getInstitutionalTenders: () =>
+    request('/federation/tenders'),
+  registerWorkerByFederation: (data) =>
+    request('/federation/workers/register', {
+      method: 'POST',
+      body: data,
     }),
 
   // Stats

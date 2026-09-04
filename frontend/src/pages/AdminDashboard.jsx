@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -11,6 +12,7 @@ import {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);
   const [workers, setWorkers] = useState([]);
@@ -69,8 +71,16 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    if (user && user.role === 'WORKER') {
+      navigate('/worker/dashboard', { replace: true });
+      return;
+    }
+    if (user && user.role === 'CUSTOMER') {
+      navigate('/customer/bookings', { replace: true });
+      return;
+    }
     loadAllData();
-  }, []);
+  }, [user]);
 
   const handleVerifyWorker = async (workerId, newStatus, reason = '') => {
     setActionBusyId(workerId);
@@ -456,7 +466,7 @@ export default function AdminDashboard() {
                                 {w.certifications[0].certificate_number || 'CERT-RECORD'}
                               </span>
                               <span className="text-[10px] text-slate-500 block truncate max-w-[160px]">
-                                {w.certifications[0].issuing_organization || 'Govt ITI / NCVT'}
+                                {w.certifications[0].issuing_organization || 'National ITI / NCVT'}
                               </span>
                             </div>
                           ) : (
@@ -620,9 +630,9 @@ export default function AdminDashboard() {
       {activeTab === 'WELFARE' && (
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
           <div className="pb-3 border-b border-gray-100">
-            <h3 className="font-bold text-base text-gray-900">5% Cooperative Welfare Fund Corpus Live Ledger</h3>
+            <h3 className="font-bold text-base text-gray-900">5% PF & Insurance (Worker Welfare Fund) Corpus Live Ledger</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Transparent pooling and disbursement ledger for ESIC accident insurance, pensions, and medical emergency grants.
+              Transparent pooling and disbursement ledger for PF, ESIC accident insurance, pensions, and medical emergency grants.
             </p>
           </div>
 
@@ -630,7 +640,7 @@ export default function AdminDashboard() {
             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
               <span className="text-xs font-bold text-emerald-900 block">Total Pooled Levy Corpus</span>
               <div className="text-2xl font-bold font-mono text-emerald-950 mt-1">₹{welfareCorpus.toLocaleString('en-IN')}</div>
-              <span className="text-[10px] text-emerald-700">5% automatically deducted from every order</span>
+              <span className="text-[10px] text-emerald-700">5% automatically pooled from every order into PF & insurance</span>
             </div>
 
             <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
@@ -785,7 +795,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between border-b border-gray-200 pb-3">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
-                  Government Worker Accreditation Dossier
+                  Cooperative Worker Accreditation Dossier
                 </span>
                 <h3 className="font-bold text-lg text-slate-900 mt-1">
                   {selectedWorker.name}
@@ -873,7 +883,7 @@ export default function AdminDashboard() {
               {/* 4. Statutory KYC & Banking */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                 <strong className="text-indigo-950 font-bold uppercase text-[10px] tracking-wider block">
-                  4. Statutory KYC & Bank Account (Direct 90% Pay)
+                  4. Statutory KYC & Bank Account (Direct 93% Pay)
                 </strong>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-700">
                   <div><span className="text-slate-400 block text-[10px]">Aadhaar (Masked):</span> <span className="font-mono">{selectedWorker.aadhaar_number ? `XXXX-XXXX-${selectedWorker.aadhaar_number.slice(-4)}` : 'Verified on File'}</span></div>

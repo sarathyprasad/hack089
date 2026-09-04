@@ -48,11 +48,11 @@ export default function GovLayout() {
       return;
     }
     const currentLangText = {
-      EN: "Welcome to Shram Setu, the official Government Cooperative Labour Services Portal. Verified skills, fair wages, zero surge pricing, and direct social security for all artisans. You can book an electrical, plumbing, carpentry or appliance service directly online or dial toll free 1800-345-7788.",
-      HI: "श्रम सेतु में आपका स्वागत है। यह सरकारी श्रम सहकारी सेवा पोर्टल है। प्रमाणित कारीगर, उचित सरकारी दरें, शून्य अतिरिक्त शुल्क और 100% सामाजिक सुरक्षा। आप ऑनलाइन सेवा बुक कर सकते हैं या टोल-फ्री 1800-345-7788 पर कॉल करें।",
-      OR: "ଶ୍ରମ ସେତୁ ପୋର୍ଟାଲକୁ ସ୍ୱାଗତ। ଏହା ସରକାରୀ ଶ୍ରମ ସମବାୟ ମହାସଂଘର ଏକ ପ୍ରୟାସ। ପ୍ରମାଣିତ ଶ୍ରମିକ, ସରକାରୀ ଦର ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା। ସେବା ବୁକ୍ କରିବା ପାଇଁ ଟୋଲ୍ ଫ୍ରି ୧୮୦୦-୩୪୫-୭୭୮୮ ଡାଏଲ କରନ୍ତୁ।",
-      BN: "শ্রম সেতুতে স্বাগতম। এটি সরকারি সমবায় শ্রম সেবা পোর্টাল। যাচাইকৃত কর্মী, ন্যায্য সরকারি মূল্য এবং সামাজিক সুরক্ষা। সেবা বুক করতে ১৮০০-৩৪৫-৭৭৮৮ নম্বরে কল করুন।",
-      TE: "శ్రమ్ సేతుకు స్వాగతం. ఇది ప్రభుత్వ సహకార కార్మిక సేవల పోర్టల్. ధృవీకరించబడిన నైపుణ్యాలు మరియు సామాజిక భద్రత. సేవను బుక్ చేయడానికి టోల్ ఫ్రీ 1800-345-7788 కు కాల్ చేయండి."
+      EN: "Welcome to Shram Setu, the official National Cooperative Labour Services Federation Portal. Verified skills, fair wages, zero surge pricing, and direct social security for all artisans. You can book an electrical, plumbing, carpentry or appliance service directly online or dial toll free 1800-345-7788.",
+      HI: "श्रम सेतु में आपका स्वागत है। यह राष्ट्रीय श्रम सहकारी सेवा पोर्टल है। प्रमाणित कारीगर, उचित सहकारी दरें, शून्य अतिरिक्त शुल्क और 100% सामाजिक सुरक्षा। आप ऑनलाइन सेवा बुक कर सकते हैं या टोल-फ्री 1800-345-7788 पर कॉल करें।",
+      OR: "ଶ୍ରମ ସେତୁ ପୋର୍ଟାଲକୁ ସ୍ୱାଗତ। ଏହା ଶ୍ରମ ସମବାୟ ମହାସଂଘର ଏକ ପ୍ରୟାସ। ପ୍ରମାଣିତ ଶ୍ରମିକ, ସମବାୟ ଦର ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା। ସେବା ବୁକ୍ କରିବା ପାଇଁ ଟୋଲ୍ ଫ୍ରି ୧୮୦୦-୩୪୫-୭୭୮୮ ଡାଏଲ କରନ୍ତୁ।",
+      BN: "শ্রম সেতুতে স্বাগতম। এটি সমবায় শ্রম সেবা পোর্টাল। যাচাইকৃত কর্মী, ন্যায্য সমবায় মূল্য এবং সামাজিক সুরক্ষা। সেবা বুক করতে ১৮০০-৩৪৫-৭৭৮৮ নম্বরে কল করুন।",
+      TE: "శ్రమ్ సేతుకు స్వాగతం. ఇది సహకార కార్మిక సేవల పోర్టల్. ధృవీకరించబడిన నైపుణ్యాలు మరియు సామాజిక భద్రత. సేవను బుక్ చేయడానికి టోల్ ఫ్రీ 1800-345-7788 కు కాల్ చేయండి."
     };
     speakText(currentLangText[lang] || currentLangText.EN);
   };
@@ -60,8 +60,8 @@ export default function GovLayout() {
   const navLinks = [
     { to: '/', label: t('navHome') },
     { to: '/services', label: t('navServices') },
-    { to: '/find-worker', label: t('navFindWorker') },
     { to: '/book-service', label: t('navBookService') },
+    { to: '/rate-card', label: 'Rate Card' },
     { to: '/about', label: t('navAbout') },
     { to: '/help', label: t('navHelp') },
   ];
@@ -74,108 +74,71 @@ export default function GovLayout() {
       {/* ── 2. Top Accessibility & Multi-Lingual Public Bar ── */}
       <div className="gov-top-bar py-1.5 px-3 md:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 text-xs">
-          {/* Left: Official Government Statement */}
+          {/* Left: Official Cooperative Federation Statement */}
           <div className="flex items-center gap-2 font-medium">
-            <span className="inline-flex items-center gap-1.5 text-amber-300 font-bold">
-              <Landmark size={14} className="text-amber-400 shrink-0" />
-              <span>🇮🇳 {t('govSupportTag')}</span>
+            <span className="inline-flex items-center gap-1.5 text-amber-300 font-bold text-[11px] tracking-wide">
+              <Building2 size={13} className="text-amber-400 shrink-0" />
+              <span>{t('govSupportTag')}</span>
             </span>
           </div>
 
           {/* Right: Accessibility Controls & Language Switcher */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {/* Toll-Free Quick Hotline */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Helpline Link */}
             <a
               href="tel:18003457788"
-              className="hidden lg:inline-flex items-center gap-1 text-[11px] text-green-300 hover:text-green-200 font-bold bg-green-950/40 px-2 py-0.5 rounded border border-green-700/40"
+              className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-emerald-300 hover:text-emerald-200 font-bold bg-emerald-950/50 hover:bg-emerald-900/60 px-2.5 py-0.5 rounded-full border border-emerald-700/50 transition"
               title="Toll-Free Citizen Assistance"
             >
-              <PhoneCall size={12} />
-              <span>{t('tollFreeLabel')}: 1800-345-7788</span>
+              <PhoneCall size={11} />
+              <span>1800-345-7788</span>
             </a>
 
-            {/* Font Size Adjusters: A- / A / A+ */}
-            <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded border border-white/15">
+            {/* Font Size Adjusters: A- / A+ */}
+            <div className="flex items-center gap-0.5 bg-white/10 p-0.5 rounded-lg border border-white/15">
               <button
                 onClick={() => setFontSize('normal')}
-                className={`gov-accessibility-btn ${fontSize === 'normal' ? 'active' : ''}`}
-                title="Standard Font Size"
-                aria-label="Standard Font"
+                className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${fontSize === 'normal' ? 'bg-amber-400 text-slate-950' : 'text-slate-200 hover:text-white'}`}
+                title="Normal Font Size"
               >
                 A
               </button>
               <button
-                onClick={() => setFontSize('large')}
-                className={`gov-accessibility-btn ${fontSize === 'large' ? 'active' : ''}`}
-                title="Large Font Size"
-                aria-label="Large Font"
+                onClick={() => setFontSize(fontSize === 'large' ? 'xlarge' : 'large')}
+                className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${fontSize !== 'normal' ? 'bg-amber-400 text-slate-950' : 'text-slate-200 hover:text-white'}`}
+                title="Larger Font Size"
               >
                 A+
-              </button>
-              <button
-                onClick={() => setFontSize('xlarge')}
-                className={`gov-accessibility-btn ${fontSize === 'xlarge' ? 'active' : ''}`}
-                title="Extra Large Font Size"
-                aria-label="Extra Large Font"
-              >
-                A++
               </button>
             </div>
 
             {/* High Contrast Toggle */}
             <button
               onClick={toggleHighContrast}
-              className={`gov-accessibility-btn ${highContrast ? 'active' : ''}`}
+              className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border ${highContrast ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-white/10 text-slate-200 border-white/15 hover:text-white'}`}
               title="Toggle High Contrast"
-              aria-label="High Contrast Mode"
             >
-              {highContrast ? <Sun size={12} /> : <Moon size={12} />}
+              {highContrast ? <Sun size={11} /> : <Moon size={11} />}
               <span className="hidden sm:inline">{t('contrastBtn')}</span>
             </button>
 
-            {/* Audio Voice Assistant Button */}
-            <button
-              onClick={handleVoiceListen}
-              className={`gov-accessibility-btn ${isSpeaking ? 'bg-amber-400 text-blue-950 font-bold animate-pulse' : ''}`}
-              title={t('listenVoice')}
-              aria-label="Read page aloud"
-            >
-              {isSpeaking ? <VolumeX size={13} className="text-red-700" /> : <Volume2 size={13} />}
-              <span>{isSpeaking ? t('stopVoice') : t('listenVoice')}</span>
-            </button>
-
             {/* Indic Language Switcher */}
-            <div className="flex items-center gap-1 pl-1 border-l border-white/20 text-[11px] font-bold">
-              <button
-                onClick={() => setLang('EN')}
-                className={`px-1.5 py-0.5 rounded transition ${lang === 'EN' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-200 hover:text-white'}`}
-              >
-                English
-              </button>
-              <button
-                onClick={() => setLang('HI')}
-                className={`px-1.5 py-0.5 rounded transition ${lang === 'HI' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-200 hover:text-white'}`}
-              >
-                हिंदी
-              </button>
-              <button
-                onClick={() => setLang('OR')}
-                className={`px-1.5 py-0.5 rounded transition ${lang === 'OR' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-200 hover:text-white'}`}
-              >
-                ଓଡ଼ିଆ
-              </button>
-              <button
-                onClick={() => setLang('BN')}
-                className={`px-1.5 py-0.5 rounded transition ${lang === 'BN' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-200 hover:text-white'}`}
-              >
-                বাংলা
-              </button>
-              <button
-                onClick={() => setLang('TE')}
-                className={`px-1.5 py-0.5 rounded transition ${lang === 'TE' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-200 hover:text-white'}`}
-              >
-                తెలుగు
-              </button>
+            <div className="flex items-center gap-0.5 pl-1.5 border-l border-white/20 text-[11px] font-semibold">
+              {[
+                { code: 'EN', label: 'English' },
+                { code: 'HI', label: 'हिंदी' },
+                { code: 'OR', label: 'ଓଡ଼ିଆ' },
+                { code: 'BN', label: 'বাংলা' },
+                { code: 'TE', label: 'తెలుగు' },
+              ].map((item) => (
+                <button
+                  key={item.code}
+                  onClick={() => setLang(item.code)}
+                  className={`px-1.5 py-0.5 rounded transition text-[11px] ${lang === item.code ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-300 hover:text-white'}`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -184,16 +147,22 @@ export default function GovLayout() {
       {/* ── 3. Official Public Navigation Header ── */}
       <header className="gov-header" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-[72px]">
-          {/* Brand & Seal */}
-          <Link to="/" className="gov-brand" aria-label="Homepage">
-            <div className="gov-emblem-badge">
-              <Building2 size={24} className="text-amber-300" />
+          <Link to="/" className="gov-brand flex items-center gap-3.5 group" aria-label="Homepage">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center justify-center p-1 group-hover:shadow-md group-hover:scale-105 transition-all">
+              <img
+                src="/logo-emblem.png"
+                alt="Shram Setu Brand Emblem"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="gov-brand-title">{t('brandName')}</span>
+              <div className="flex items-center gap-2 leading-none">
+                <span className="text-xl font-black tracking-tight text-[#0F294A]">
+                  SHRAM<span className="text-[#2E7D32]">setu</span>
+                </span>
+                <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300/80 rounded-md tracking-wider">COOP</span>
               </div>
-              <div className="gov-brand-subtitle">
+              <div className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider mt-1">
                 {t('brandSubtitle')}
               </div>
             </div>
@@ -245,13 +214,13 @@ export default function GovLayout() {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="btn btn-secondary btn-sm font-semibold text-xs border-blue-900 text-blue-950 hover:bg-blue-50"
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:text-blue-950 hover:bg-slate-50 font-bold text-xs transition"
                 >
                   {t('loginBtn')}
                 </Link>
                 <Link
                   to="/register"
-                  className="btn btn-saffron btn-sm font-bold text-xs shadow-sm"
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm hover:shadow transition"
                 >
                   {t('registerBtn')}
                 </Link>
@@ -341,10 +310,12 @@ export default function GovLayout() {
           <div className="gov-footer-grid">
             {/* Column 1: Public Cooperative Federation */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded bg-amber-400 text-blue-950 flex items-center justify-center font-bold">
-                  <Building2 size={18} />
-                </div>
+              <div className="flex items-center gap-3 mb-3">
+                <img
+                  src="/logo-emblem.png"
+                  alt="Shram Setu Logo"
+                  className="w-12 h-12 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-700/50"
+                />
                 <div>
                   <div className="font-extrabold text-sm text-white">{t('brandName')}</div>
                   <div className="text-[10px] text-amber-300 uppercase font-semibold">{t('portalSubHeader')}</div>
@@ -364,8 +335,8 @@ export default function GovLayout() {
               <h4>{t('navServices')}</h4>
               <ul>
                 <li><Link to="/services">{t('secServices')}</Link></li>
+                <li><Link to="/rate-card">Regulated Rate Card</Link></li>
                 <li><Link to="/book-service">{t('btnBookNow')}</Link></li>
-                <li><Link to="/find-worker">{t('navFindWorker')}</Link></li>
                 <li><Link to="/help">{t('callBookingTitle')}</Link></li>
               </ul>
             </div>

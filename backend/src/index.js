@@ -77,6 +77,8 @@ const paymentRoutes = require('./routes/payments');
 const reviewRoutes = require('./routes/reviews');
 const localizationRoutes = require('./routes/localization');
 const governanceRoutes = require('./routes/governance');
+const societiesRoutes = require('./routes/societies');
+const federationRoutes = require('./routes/federation');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
@@ -90,6 +92,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/localization', localizationRoutes);
 app.use('/api/governance', governanceRoutes);
+app.use('/api/societies', societiesRoutes);
+app.use('/api/federation', federationRoutes);
 
 // ---------------------
 // Health Check

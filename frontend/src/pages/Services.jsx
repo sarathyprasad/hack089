@@ -5,13 +5,14 @@ import {
   Zap, Droplets, Hammer, Paintbrush, SprayCan, Flower2,
   HeartPulse, Car, Wrench, Home as HomeIcon, Settings, AlertTriangle,
   Search, Users, ArrowRight, ShieldCheck, CheckCircle2, Clock,
-  Mic, MicOff, PhoneCall, IndianRupee, X
+  Mic, MicOff, PhoneCall, IndianRupee, X, Snowflake, Wind
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const ICON_MAP = {
   Zap, Droplets, Hammer, Paintbrush, SprayCan, Flower2,
-  HeartPulse, Car, Wrench, Home: HomeIcon, Settings, AlertTriangle
+  HeartPulse, Car, Wrench, Home: HomeIcon, Settings, AlertTriangle,
+  Snowflake, Wind
 };
 
 export default function Services() {
@@ -96,22 +97,28 @@ export default function Services() {
         </div>
       </div>
 
-      {/* Regulated Tariff Guarantee Banner */}
-      <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-amber-900">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">
-            <IndianRupee size={16} />
+      {/* Regulated Tariff Guarantee & Rate Card Banner */}
+      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-blue-950 text-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0">
+            <ShieldCheck size={20} />
           </div>
           <div>
-            <div className="font-bold">{t('zeroSurgeBannerTitle')}</div>
-            <p className="text-[11px] text-amber-800">
-              {t('zeroSurgeBannerDesc')}
+            <div className="font-extrabold text-white flex items-center gap-2">
+              <span>93-2-5 Cooperative Tariff & Shram Suraksha Cover</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.2 rounded-full border border-emerald-500/30 font-bold">Zero Surge</span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Fixed regulated tariffs with capped labour fees (₹199–₹349 vs commercial ₹499). Backed by 30-Day Free Workmanship Warranty.
             </p>
           </div>
         </div>
-        <div className="text-[11px] font-bold text-amber-950 shrink-0">
-          {t('tollFreeBookingLabel')}: <strong className="font-mono">1800-345-7788</strong>
-        </div>
+        <Link
+          to="/rate-card"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition shrink-0 flex items-center gap-1.5 shadow-xs"
+        >
+          <span>View Rate Card →</span>
+        </Link>
       </div>
 
       {/* Search & Filter Bar */}
@@ -242,22 +249,32 @@ export default function Services() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
+                <div className="p-3.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
                   <Link
-                    to={`/find-worker?skill=${encodeURIComponent(service.category)}`}
-                    className="text-xs text-blue-900 hover:underline font-bold"
+                    to={`/services/${service.id}`}
+                    className="text-xs text-slate-700 hover:text-blue-900 font-bold flex items-center gap-1 hover:underline"
                   >
-                    {t('viewWorkers')} →
+                    <span>View Process</span>
+                    <ArrowRight size={12} />
                   </Link>
 
-                  <button
-                    onClick={() => navigate(`/book-service?serviceId=${service.id}`)}
-                    className={`btn btn-sm text-xs font-bold ${
-                      isEmergency ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'
-                    }`}
-                  >
-                    {t('bookBtn')}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/find-worker?skill=${encodeURIComponent(service.category)}`}
+                      className="text-xs text-gray-500 hover:text-gray-800 font-medium hidden sm:inline"
+                    >
+                      Artisans
+                    </Link>
+
+                    <button
+                      onClick={() => navigate(`/book-service?serviceId=${service.id}`)}
+                      className={`btn btn-sm text-xs font-bold ${
+                        isEmergency ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'
+                      }`}
+                    >
+                      {t('bookBtn')}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -20,7 +20,7 @@ const TIMELINE_STEPS = [
   { status: 'MATCHED', label: 'Matched', desc: 'Assigned to verified artisan' },
   { status: 'ACCEPTED', label: 'Accepted', desc: 'Artisan confirmed' },
   { status: 'IN_PROGRESS', label: 'In Progress', desc: 'Arrival OTP verified on-site' },
-  { status: 'COMPLETED', label: 'Completed', desc: 'Completion OTP verified & 7-Day Guarantee armed' },
+  { status: 'COMPLETED', label: 'Completed', desc: 'Completion OTP verified & 30-Day Guarantee armed' },
 ];
 
 export default function BookingDetail() {
@@ -40,8 +40,8 @@ export default function BookingDetail() {
   const [showLineageModal, setShowLineageModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
 
-  const fetchDetail = () => {
-    setLoading(true);
+  const fetchDetail = (silent = false) => {
+    if (!silent) setLoading(true);
     api.getBookingById(id)
       .then((res) => {
         setData(res);
@@ -49,23 +49,40 @@ export default function BookingDetail() {
       })
       .catch((err) => {
         console.error('Fetch booking detail error:', err);
-        setError(err.message || 'Failed to load booking details.');
+        if (!silent) setError(err.message || 'Failed to load booking details.');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!silent) setLoading(false);
+      });
   };
 
   useEffect(() => {
+    if (user && user.role === 'WORKER') {
+      navigate('/worker/dashboard', { replace: true });
+      return;
+    }
+    if (user && user.role === 'COOPERATIVE_ADMIN') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
     fetchDetail();
-  }, [id]);
+    // Auto-poll every 3 seconds while order is waiting for an artisan to accept
+    const interval = setInterval(() => {
+      if (data?.booking?.status === 'REQUESTED') {
+        fetchDetail(true);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [id, data?.booking?.status, user]);
 
   const handleClaimGuarantee = async () => {
-    if (!window.confirm('Would you like to claim the 7-Day Free Repair Guarantee? A Senior Master Artisan will be dispatched with ₹0 labour cost.')) {
+    if (!window.confirm('Would you like to claim the 30-Day Free Repair Guarantee? A Senior Master Artisan will be dispatched with ₹0 labour cost.')) {
       return;
     }
     setActionLoading(true);
     try {
       const res = await api.claimGuarantee(id);
-      alert(res.message || '7-Day Guarantee Claim Approved! Master Artisan dispatched.');
+      alert(res.message || '30-Day Guarantee Claim Approved! Master Artisan dispatched.');
       fetchDetail();
     } catch (err) {
       alert(err.message || 'Failed to claim guarantee.');
@@ -249,7 +266,7 @@ export default function BookingDetail() {
                 {booking.completion_otp || '9156'}
               </span>
               <p className="text-[11px] text-gray-600">
-                Only give this code to the artisan when work is complete to confirm satisfaction and arm your 7-Day Guarantee.
+                Only give this code to the artisan when work is complete to confirm satisfaction and arm your 30-Day Guarantee.
               </p>
             </div>
           </div>
@@ -257,23 +274,23 @@ export default function BookingDetail() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 6: 7-DAY FREE REPAIR GUARANTEE BANNER
+          PHASE 6: 30-DAY FREE REPAIR GUARANTEE BANNER
          ───────────────────────────────────────────────────────────── */}
       {isCompleted && (
-        <div className="p-4 rounded-2xl bg-linear-to-r from-emerald-900 to-teal-950 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 to-teal-950 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-amber-400 shrink-0">
               <ShieldCheck className="w-6 h-6 text-emerald-300" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white">7-Day Free Cooperative Repair Guarantee Active</h3>
+                <h3 className="font-bold text-sm text-white">30-Day Free Cooperative Repair Guarantee Active</h3>
                 <span className="text-[10px] font-bold bg-emerald-500/30 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30">
                   Armed
                 </span>
               </div>
               <p className="text-xs text-emerald-100 mt-0.5">
-                If the same fault recurs within 7 days, a Senior Master Artisan will be re-dispatched with ₹0 labour cost.
+                If the same fault recurs within 30 days, a Senior Master Artisan will be re-dispatched with ₹0 labour cost.
               </p>
             </div>
           </div>
@@ -414,8 +431,14 @@ export default function BookingDetail() {
                 )}
               </div>
             ) : (
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600">
-                Cooperative dispatch engine is rotating nearby verified artisans for this order.
+              <div className="p-4 bg-amber-50/80 rounded-xl border border-amber-300 text-xs text-amber-950 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-amber-900">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                  <span>📡 Broadcasting to Nearby Verified Artisans</span>
+                </div>
+                <p className="text-amber-800 leading-relaxed">
+                  Your work order is currently broadcasted to all nearby certified cooperative artisans in <strong>{booking.location_city || 'your area'}</strong>. The first artisan who accepts will receive this assignment immediately.
+                </p>
               </div>
             )}
           </div>
@@ -468,16 +491,16 @@ export default function BookingDetail() {
           </div>
         </div>
 
-        {/* Right: Transparent 90-5-5 Tariff Breakdown */}
+        {/* Right: Transparent 93-2-5 Tariff Breakdown */}
         <div className="space-y-6">
           <div className="bg-blue-950 text-white p-5 rounded-2xl shadow-md space-y-4 text-xs">
             <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-              <ShieldCheck size={14} /> Transparent 90-5-5 Split
+              <ShieldCheck size={14} /> Transparent 93-2-5 Split
             </div>
 
             <div className="space-y-2.5 border-b border-white/15 pb-3">
               <div className="flex justify-between">
-                <span className="text-blue-200">Labour Base Charge:</span>
+                <span className="text-blue-200">Labour Base Charge (Worker 93%):</span>
                 <span className="font-bold">₹{Number(booking.amount || 299).toFixed(2)}</span>
               </div>
               {Number(booking.parts_cost) > 0 && (
@@ -493,11 +516,11 @@ export default function BookingDetail() {
                 </div>
               ) : null}
               <div className="flex justify-between">
-                <span className="text-blue-200">Welfare Levy (5%):</span>
+                <span className="text-blue-200">PF & Insurance (5%):</span>
                 <span className="font-bold">₹{Number(booking.cooperative_fee || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-200">Platform Infra (5%):</span>
+                <span className="text-blue-200">Platform Fee (2%):</span>
                 <span className="font-bold">₹{Number(booking.platform_fee || 0).toFixed(2)}</span>
               </div>
             </div>

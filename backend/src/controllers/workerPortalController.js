@@ -38,7 +38,7 @@ async function getWorkerDashboard(req, res) {
     `, [worker.id]);
     const certifications = certsRes.rows;
 
-    // Incoming requests (REQUESTED for worker's trade category and district, OR MATCHED to this worker)
+    // Incoming requests (REQUESTED for worker's trade category and district/city, OR MATCHED to this worker)
     const incomingRes = await query(`
       SELECT b.*, s.name as service_name, s.category as service_category, s.icon as service_icon,
              u.name as customer_name, u.phone as customer_phone
@@ -46,10 +46,32 @@ async function getWorkerDashboard(req, res) {
       JOIN services s ON b.service_id = s.id
       JOIN users u ON b.customer_id = u.id
       WHERE (b.worker_id = $1 AND b.status = 'MATCHED')
-         OR (b.worker_id IS NULL AND b.status = 'REQUESTED' AND b.location_district = $2)
+         OR (
+              b.worker_id IS NULL 
+              AND b.status = 'REQUESTED' 
+              AND (b.declined_worker_ids IS NULL OR b.declined_worker_ids NOT LIKE '%,' || $1 || ',%')
+              AND (
+                b.location_district = $2 
+                OR $2 IS NULL 
+                OR b.location_district IS NULL 
+                OR b.location_city = $4
+              )
+              AND (
+                $3 = '' OR $3 IS NULL
+                OR $3 ILIKE '%' || s.category || '%'
+                OR s.category ILIKE '%' || $3 || '%'
+                OR s.category = 'Emergency Services'
+                OR EXISTS (
+                  SELECT 1 FROM worker_skills ws
+                  JOIN skills sk ON ws.skill_id = sk.id
+                  WHERE ws.worker_id = $1
+                    AND (sk.category ILIKE s.category OR s.category ILIKE '%' || sk.category || '%' OR sk.name ILIKE '%' || s.name || '%')
+                )
+              )
+            )
       ORDER BY b.is_emergency DESC, b.id DESC
-      LIMIT 10
-    `, [worker.id, worker.district || 'Khordha']);
+      LIMIT 15
+    `, [worker.id, worker.district || 'Khordha', worker.primary_trade || '', worker.city || 'Bhubaneswar']);
     const incomingJobs = incomingRes.rows;
 
     // Active Jobs (ACCEPTED or IN_PROGRESS)
@@ -174,11 +196,24 @@ async function handleJobAction(req, res) {
     }
 
     if (action === 'ACCEPT') {
-      await query(`
+      // First-to-Accept atomic claim: only claim if booking is still REQUESTED & unassigned (or MATCHED to this worker)
+      const claimRes = await query(`
         UPDATE bookings
         SET status = 'ACCEPTED', worker_id = $1, updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
+          AND (
+            (status = 'REQUESTED' AND worker_id IS NULL)
+            OR (status = 'MATCHED' AND worker_id = $1)
+          )
+        RETURNING *
       `, [worker.id, bookingId]);
+
+      if (claimRes.rows.length === 0) {
+        return res.status(409).json({
+          error: 'Order Already Claimed',
+          message: 'This job request has already been accepted by another nearby artisan and is no longer available in the dispatch pool.'
+        });
+      }
 
       // Automatically change the worker status to BUSY in schedule slot
       await query(`
@@ -186,12 +221,36 @@ async function handleJobAction(req, res) {
         SET availability = 'BUSY', updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
       `, [worker.id]);
+
+      // Also update invoice with worker name and cooperative affiliation
+      const workerInfoRes = await query(`
+        SELECT u.name, c.name as cooperative_name, w.tier
+        FROM workers w
+        JOIN users u ON w.user_id = u.id
+        JOIN cooperatives c ON w.cooperative_id = c.id
+        WHERE w.id = $1
+      `, [worker.id]);
+      if (workerInfoRes.rows[0]) {
+        const wInfo = workerInfoRes.rows[0];
+        await query(`
+          UPDATE invoices
+          SET worker_name = $1, cooperative_name = $2
+          WHERE booking_id = $3
+        `, [`${wInfo.name} (${wInfo.tier} Artisan)`, wInfo.cooperative_name, bookingId]);
+      }
     } else if (action === 'DECLINE') {
       await query(`
         UPDATE bookings
-        SET status = 'REQUESTED', worker_id = NULL, updated_at = CURRENT_TIMESTAMP
+        SET status = 'REQUESTED',
+            worker_id = NULL,
+            declined_worker_ids = CASE 
+              WHEN declined_worker_ids IS NULL OR declined_worker_ids = '' THEN ',' || $2 || ','
+              WHEN declined_worker_ids NOT LIKE '%,' || $2 || ',%' THEN declined_worker_ids || $2 || ','
+              ELSE declined_worker_ids
+            END,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
-      `, [bookingId]);
+      `, [bookingId, worker.id]);
 
       // If worker has no remaining active jobs, restore to AVAILABLE
       const remainingActive = await query(`
@@ -224,11 +283,12 @@ async function handleJobAction(req, res) {
         return res.json({ message: 'Booking is already completed', booking });
       }
       const completedAt = new Date().toISOString();
+      const guaranteeUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       await query(`
         UPDATE bookings
-        SET status = 'COMPLETED', completed_at = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-      `, [completedAt, bookingId]);
+        SET status = 'COMPLETED', completed_at = $1, guarantee_armed_until = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3
+      `, [completedAt, guaranteeUntil, bookingId]);
 
       // Update worker stats
       await query(`
@@ -298,19 +358,19 @@ async function getWorkerWelfare(req, res) {
       {
         benefit_type: 'Insurance',
         benefit_name: 'ESIC Group Accident Insurance',
-        provider: 'Employees State Insurance Corp (Govt of India)',
+        provider: 'Employees State Insurance Corp',
         details: '₹2,00,000 accidental coverage + disability support',
       },
       {
         benefit_type: 'Health',
         benefit_name: 'Cooperative Health Support & Annual Checkup',
-        provider: 'Odisha Cooperative Welfare Fund',
+        provider: 'Cooperative Labour Welfare Fund',
         details: 'Free annual health checkup + subsidized family diagnostics',
       },
       {
         benefit_type: 'Training',
         benefit_name: 'NSDC Advanced Trade Upskilling Workshop',
-        provider: 'National Skill Development Corp / ITI Odisha',
+        provider: 'National Skill Development Corp / ITI Network',
         details: 'Certified 2-week advanced appliance & green energy skill training',
       },
       {
@@ -331,8 +391,8 @@ async function getWorkerWelfare(req, res) {
       worker,
       welfareRecords: welfareRes.rows,
       availableSchemes,
-      cooperativeLevyShare: '10% of every completed booking fee is directly credited to your Cooperative Welfare Account',
-      pocNotice: 'POC Welfare Integration: Real-world claim processing requires integration with authorized ESIC/EPFO government portals and physical verification.',
+      cooperativeLevyShare: '5% of every completed booking fee is directly credited to your PF & Insurance (Cooperative Welfare) Account',
+      pocNotice: 'POC Welfare Integration: Real-world claim processing requires integration with authorized ESIC/EPFO digital portals and physical verification.',
     });
   } catch (err) {
     console.error('Get welfare error:', err);

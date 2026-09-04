@@ -78,7 +78,7 @@ export default function PaymentModal({ isOpen = true, booking, onClose, onPaymen
 
             <h3 className="text-xl font-bold text-gray-900">Payment Confirmed!</h3>
             <p className="text-xs text-gray-500 max-w-xs mx-auto">
-              Your payment has been securely credited. 90% is routed to the artisan, and 5% has been contributed to the Worker Welfare Fund.
+              Your payment has been securely credited. 93% is routed directly to the artisan, 2% covers the platform fee, and 5% has been contributed to PF & Insurance.
             </p>
 
             <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs text-left space-y-1.5 max-w-xs mx-auto font-mono">

@@ -67,11 +67,11 @@ function diagnoseHouseholdProblem(msg) {
     const opener = pick(OPENERS);
 
     return {
-      reply: `${opener}\n\n### 🚰 Problem Diagnosis: Tap / Faucet Malfunction\n\n**Probable Technical Causes**:\n${selectedVar.causes.map((c) => `• ${c}`).join('\n')}\n\n**💡 Immediate Safe DIY Troubleshooting Steps**:\n${selectedVar.diy}\n\n---\n\n### 🏛️ Official Government Service & Tariff\n• **Standard Labour Base Tariff**: **₹249** *(Zero surge pricing)*\n• **Statutory 90-5-5 Split**: 90% direct to artisan (₹224.10), 5% ESIC worker welfare fund (₹12.45), 5% platform operations (₹12.45)\n• **Standard ISI Replacement Parts**: Ceramic Disc Cartridge (₹120–₹180), Teflon Seal Tape (₹20), Brass Spindle (₹160)\n• **Cooperative Assurance**: 2-Stage Security OTP (Arrival & Completion) + **7-Day Free Repair Guarantee** with ₹0 labour cost if fault recurs.`,
+      reply: `${opener}\n\n### 🚰 Problem Diagnosis: Tap / Faucet Malfunction\n\n**Probable Technical Causes**:\n${selectedVar.causes.map((c) => `• ${c}`).join('\n')}\n\n**💡 Immediate Safe DIY Troubleshooting Steps**:\n${selectedVar.diy}\n\n---\n\n### 🏛️ Official Cooperative Service & Tariff\n• **Standard Labour Base Tariff**: **₹249** *(Zero surge pricing)*\n• **Statutory 93-2-5 Split**: 93% direct to artisan (₹231.57), 2% platform operations fee (₹4.98), 5% PF & insurance fund (₹12.45)\n• **Standard ISI Replacement Parts**: Ceramic Disc Cartridge (₹120–₹180), Teflon Seal Tape (₹20), Brass Spindle (₹160)\n• **Cooperative Assurance**: 2-Stage Security OTP (Arrival & Completion) + **30-Day Free Repair Guarantee** with ₹0 labour cost if fault recurs.`,
       suggestions: [
         'Book a Plumber for Tap Repair (₹249)',
         'Check Nearby Plumbers on Live Radar',
-        'How does 7-Day Free Warranty work?',
+        'How does 30-Day Free Warranty work?',
         'How does 2-Stage OTP Handshake work?',
       ],
       links: [
@@ -94,7 +94,7 @@ function diagnoseHouseholdProblem(msg) {
   ) {
     const opener = pick(OPENERS);
     return {
-      reply: `${opener}\n\n### ⚡ Problem Diagnosis: Electrical Fault / MCB Tripping\n\n**Probable Technical Causes**:\n• **Circuit Overload**: High-draw appliances (geyser, AC, heater) exceeding the 6A/16A rating of the circuit breaker.\n• **Neutral / Phase Short Circuit**: Worn wire insulation or rodent damage touching metallic conduit boxes.\n• **Carbonized Switch Terminals**: Loose terminal screws creating micro-arcs and heat buildup.\n• **Moisture Leakage into Concealed Box**: High humidity or wall seepage near junction boxes.\n\n**🚨 Critical Safety Precautions**:\n1. **DO NOT repeatedly force the MCB toggle up** if it immediately snaps down. This indicates an active ground/short fault.\n2. Unplug all heavy appliances from the affected room before attempting a single reset.\n3. Keep hands dry and wear rubber-soled footwear.\n\n---\n\n### 🏛️ Official Cooperative Service & Tariff\n• **Standard Labour Base Tariff**: **₹199** *(Fixed rate)*\n• **Master-Artisan Quality Assurance**: High-voltage complex tasks are paired with a certified Senior Master Electrician at **₹0 extra cost**.\n• **Standard ISI Parts**: Havells/Anchor 16A/32A MCB (₹180–₹260), ISI 2.5mm Copper Wire (₹35/m), Modular Switches (₹45–₹90)\n• **Warranty**: 7-Day Free Cooperative Repair Guarantee.`,
+      reply: `${opener}\n\n### ⚡ Problem Diagnosis: Electrical Fault / MCB Tripping\n\n**Probable Technical Causes**:\n• **Circuit Overload**: High-draw appliances (geyser, AC, heater) exceeding the 6A/16A rating of the circuit breaker.\n• **Neutral / Phase Short Circuit**: Worn wire insulation or rodent damage touching metallic conduit boxes.\n• **Carbonized Switch Terminals**: Loose terminal screws creating micro-arcs and heat buildup.\n• **Moisture Leakage into Concealed Box**: High humidity or wall seepage near junction boxes.\n\n**🚨 Critical Safety Precautions**:\n1. **DO NOT repeatedly force the MCB toggle up** if it immediately snaps down. This indicates an active ground/short fault.\n2. Unplug all heavy appliances from the affected room before attempting a single reset.\n3. Keep hands dry and wear rubber-soled footwear.\n\n---\n\n### 🏛️ Official Cooperative Service & Tariff\n• **Standard Labour Base Tariff**: **₹199** *(Fixed rate)*\n• **Master-Artisan Quality Assurance**: High-voltage complex tasks are paired with a certified Senior Master Electrician at **₹0 extra cost**.\n• **Standard ISI Parts**: Havells/Anchor 16A/32A MCB (₹180–₹260), ISI 2.5mm Copper Wire (₹35/m), Modular Switches (₹45–₹90)\n• **Warranty**: 30-Day Free Cooperative Repair Guarantee.`,
       suggestions: [
         'Book Certified Electrician (₹199)',
         'Check Emergency Electrical Dispatch',
@@ -122,7 +122,7 @@ function diagnoseHouseholdProblem(msg) {
       suggestions: [
         'Book AC Master Mechanic (₹499)',
         'Check AC Gas Refill Rates',
-        'How 7-Day Guarantee Works',
+        'How 30-Day Guarantee Works',
       ],
       links: [
         { label: '❄️ Book AC Service (₹499)', url: '/book-service?category=Appliance%20Repair&problem=AC%20Not%20Cooling' },
@@ -135,7 +135,7 @@ function diagnoseHouseholdProblem(msg) {
   if (m.includes('fan') || m.includes('ceiling fan') || m.includes('humming') || m.includes('slow speed')) {
     const opener = pick(OPENERS);
     return {
-      reply: `${opener}\n\n### ⚡ Problem Diagnosis: Ceiling Fan Humming / Slow Speed\n\n**Probable Causes**:\n• **Weakened 2.5uF Motor Capacitor**: Reduces starting torque, causing motor to hum without rotating at full speed.\n• **Dry or Jammed Ball Bearings (6201/6202)**: Lack of high-temperature grease causing grinding noise or resistance.\n• **Defective Electronic Regulator**: Voltage potentiometer malfunctioning.\n\n**💡 Quick DIY Check**: Turn off fan switch. Use a clean stick to gently spin fan blades by hand. If blades spin freely, the capacitor is likely degraded; if stiff, bearings require greasing.\n\n---\n\n• **Labour Base Rate**: **₹199**\n• **Parts**: Heavy-Duty 2.5uF Capacitor (₹60), Sealed Ball Bearings (₹110)\n• **Warranty**: 7-Day Free Cooperative Repair Guarantee.`,
+      reply: `${opener}\n\n### ⚡ Problem Diagnosis: Ceiling Fan Humming / Slow Speed\n\n**Probable Causes**:\n• **Weakened 2.5uF Motor Capacitor**: Reduces starting torque, causing motor to hum without rotating at full speed.\n• **Dry or Jammed Ball Bearings (6201/6202)**: Lack of high-temperature grease causing grinding noise or resistance.\n• **Defective Electronic Regulator**: Voltage potentiometer malfunctioning.\n\n**💡 Quick DIY Check**: Turn off fan switch. Use a clean stick to gently spin fan blades by hand. If blades spin freely, the capacitor is likely degraded; if stiff, bearings require greasing.\n\n---\n\n• **Labour Base Rate**: **₹199**\n• **Parts**: Heavy-Duty 2.5uF Capacitor (₹60), Sealed Ball Bearings (₹110)\n• **Warranty**: 30-Day Free Cooperative Repair Guarantee.`,
       suggestions: ['Book Fan Electrician (₹199)', 'Find Nearby Electrician'],
       links: [{ label: '⚡ Book Fan Repair (₹199)', url: '/book-service?category=Electrical&problem=Ceiling%20Fan%20Repair' }],
     };
@@ -145,7 +145,7 @@ function diagnoseHouseholdProblem(msg) {
   if (m.includes('tank') || m.includes('overflow') || m.includes('pump') || m.includes('motor') || m.includes('drain') || m.includes('blockage')) {
     const opener = pick(OPENERS);
     return {
-      reply: `${opener}\n\n### 🚰 Problem Diagnosis: Water Tank / Drainage / Pump Issue\n\n**Probable Causes**:\n• **Damaged Heavy-Duty Float Valve**: Rubber stopper inside overhead tank valve is punctured, causing overflow.\n• **Airlock / Impeller Jam in Water Pump**: Dry running or sand particles lodged in pump housing.\n• **Organic Sludge & Hair Trap in Drains**: Blocking kitchen sink/bathroom drain traps.\n\n• **Standard Labour Tariff**: **₹249 - ₹349**\n• **Parts**: Brass/PVC Float Valve (₹140–₹220), Pressure Seal Kit (₹90)\n• **Protection**: 2-Stage OTP Handshake & 7-Day Guarantee.`,
+      reply: `${opener}\n\n### 🚰 Problem Diagnosis: Water Tank / Drainage / Pump Issue\n\n**Probable Causes**:\n• **Damaged Heavy-Duty Float Valve**: Rubber stopper inside overhead tank valve is punctured, causing overflow.\n• **Airlock / Impeller Jam in Water Pump**: Dry running or sand particles lodged in pump housing.\n• **Organic Sludge & Hair Trap in Drains**: Blocking kitchen sink/bathroom drain traps.\n\n• **Standard Labour Tariff**: **₹249 - ₹349**\n• **Parts**: Brass/PVC Float Valve (₹140–₹220), Pressure Seal Kit (₹90)\n• **Protection**: 2-Stage OTP Handshake & 30-Day Guarantee.`,
       suggestions: ['Book Plumber Now (₹249)', 'Emergency Plumbing Helpline'],
       links: [{ label: '🚰 Book Plumbing Service', url: '/book-service?category=Plumbing&problem=Water%20Tank%20Overflow' }],
     };
@@ -155,7 +155,7 @@ function diagnoseHouseholdProblem(msg) {
   if (m.includes('door') || m.includes('lock') || m.includes('key') || m.includes('handle') || m.includes('hinge') || m.includes('wardrobe') || m.includes('carpenter')) {
     const opener = pick(OPENERS);
     return {
-      reply: `${opener}\n\n### 🔨 Problem Diagnosis: Door Lock Jam / Carpentry Issue\n\n**Probable Causes**:\n• **Misaligned Latch Bolt**: Door frame settling or wood swelling due to humidity causing striker plate friction.\n• **Internal Brass Pin Seizure**: Dust inside key cylinder.\n• **Loose Hydraulic Hinge**: Cabinet hinges slipping out of screw anchor.\n\n• **Standard Base Tariff**: **₹299**\n• **Standard Parts**: Godrej/Europa Brass Lock (₹450–₹950), SS Ball Bearing Hinges (₹120)\n• **Warranty**: 7-Day Free Workmanship Guarantee.`,
+      reply: `${opener}\n\n### 🔨 Problem Diagnosis: Door Lock Jam / Carpentry Issue\n\n**Probable Causes**:\n• **Misaligned Latch Bolt**: Door frame settling or wood swelling due to humidity causing striker plate friction.\n• **Internal Brass Pin Seizure**: Dust inside key cylinder.\n• **Loose Hydraulic Hinge**: Cabinet hinges slipping out of screw anchor.\n\n• **Standard Base Tariff**: **₹299**\n• **Standard Parts**: Godrej/Europa Brass Lock (₹450–₹950), SS Ball Bearing Hinges (₹120)\n• **Warranty**: 30-Day Free Workmanship Guarantee.`,
       suggestions: ['Book Carpenter (₹299)', 'Find Nearby Carpenter'],
       links: [{ label: '🔨 Book Carpentry Service', url: '/book-service?category=Carpentry&problem=Door%20Lock%20Jammed' }],
     };
@@ -181,22 +181,22 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 1. Emergency / SOS
   if (msg.includes('sos') || msg.includes('emergency') || msg.includes('urgent') || msg.includes('shock') || msg.includes('fire') || msg.includes('burst')) {
     return {
-      reply: `🚨 **EMERGENCY ASSISTANCE ACTIVE**\n\nFor immediate safety hazards:\n• **National Emergency Helpline**: Dial [112](tel:112)\n• **Medical Ambulance**: Dial [108](tel:108)\n• **Shram Setu 24/7 Rapid Dispatch**: Dial [1800-345-7788](tel:18003457788)\n\nOur cooperative emergency priority dispatch mobilizes a verified master technician within **30 minutes** for major water line bursts or electrical short-circuits.`,
+      reply: `🚨 **EMERGENCY ASSISTANCE ACTIVE**\n\nFor immediate safety hazards:\n• **National Emergency Helpline**: Dial [112](tel:112)\n• **Medical Ambulance**: Dial [108](tel:108)\n• **Shram Setu 24/7 Rapid Dispatch**: Dial [1800-345-7788](tel:18003457788)\n\nOur cooperative emergency priority dispatch mobilizes a verified master technician within **60 minutes** for major water line bursts or electrical short-circuits.`,
       suggestions: ['Book 24/7 Emergency Service', 'Call Toll-Free Helpline', 'View Active SOS Status'],
       links: [{ label: '⚡ Book Emergency Repair', url: '/book-service?emergency=true' }],
     };
   }
 
-  // 2. 90-5-5 Revenue Split & Cooperative Welfare
-  if (msg.includes('90-5-5') || msg.includes('split') || msg.includes('commission') || msg.includes('welfare') || msg.includes('esic') || msg.includes('social security')) {
+  // 2. 93-2-5 Revenue Split & Cooperative Welfare
+  if (msg.includes('93-2-5') || msg.includes('90-5-5') || msg.includes('split') || msg.includes('commission') || msg.includes('welfare') || msg.includes('pf') || msg.includes('insurance') || msg.includes('esic') || msg.includes('social security')) {
     const variations = [
-      `🏛️ **Transparent 90-5-5 Statutory Tariff Architecture**:\n\nUnlike commercial aggregator apps that extract 25%–35% middleman commission, **Shram Setu** operates on a regulated cooperative model:\n\n• **90%**: Directly paid to the verified artisan's wallet for their skilled labour.\n• **5%**: Deposited into the **Worker Welfare Fund** for ESIC accident insurance, medical coverage, and retirement corpus.\n• **5%**: Capped platform operations and server maintenance.\n\nEvery booking you make directly empowers skilled blue-collar artisans!`,
-      `💰 **How the 90-5-5 Fair Wage Split Protects Artisans & Citizens**:\n\nBy state cooperative bylaws, every rupee is accounted for transparently:\n\n1. **90% Worker Take-Home**: Fair, guaranteed earnings with zero commission deductions.\n2. **5% Social Security Net**: Automated healthcare and accident insurance pooling under ESIC.\n3. **5% Platform Infrastructure**: Covers digital services and helpline operations.\n\nNo surge pricing, no arbitrary contractor markups!`,
+      `🏛️ **Transparent 93-2-5 Statutory Tariff Architecture**:\n\nUnlike commercial aggregator apps that extract 25%–35% middleman commission, **Shram Setu** operates on a regulated cooperative model:\n\n• **93%**: Directly paid to the verified artisan's wallet for their skilled labour.\n• **2%**: Capped platform operations and server maintenance.\n• **5%**: Deposited into the **PF & Insurance (Worker Welfare Fund)** for ESIC accident insurance, medical coverage, and retirement corpus.\n\nEvery booking you make directly empowers skilled blue-collar artisans!`,
+      `💰 **How the 93-2-5 Fair Wage Split Protects Artisans & Citizens**:\n\nBy state cooperative bylaws, every rupee is accounted for transparently:\n\n1. **93% Worker Take-Home**: Fair, guaranteed earnings with zero commission deductions.\n2. **2% Platform Fee**: Transparent, minimal fee to maintain servers, dispatch, and support.\n3. **5% PF & Insurance Net**: Automated social security, healthcare, and accident insurance pooling under ESIC/EPFO.\n\nNo surge pricing, no arbitrary contractor markups!`,
     ];
 
     return {
       reply: `${opener}\n\n${pick(variations)}`,
-      suggestions: ['View All Standardized Tariffs', 'How to Book a Service', 'Artisan Welfare Fund Details'],
+      suggestions: ['View All Standardized Tariffs', 'How to Book a Service', 'Artisan PF & Insurance Details'],
       links: [{ label: '📊 View Transparent Tariffs', url: '/services' }, { label: '🏢 Learn About Cooperative Model', url: '/about' }],
     };
   }
@@ -204,16 +204,16 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 3. 2-Stage OTP Handshake
   if (msg.includes('otp') || msg.includes('handshake') || msg.includes('arrival') || msg.includes('completion otp') || msg.includes('security code')) {
     return {
-      reply: `${opener}\n\n🔐 **Two-Stage Cryptographic Security Handshake**:\n\nTo protect citizens from unauthorized entries and premature billing, Shram Setu enforces a strict 2-step OTP verification:\n\n1. **Arrival OTP (4 Digits)**: Generated when your order is dispatched. Share this with the artisan *only upon their arrival* at your doorstep to initiate the work session.\n2. **Completion OTP (4 Digits)**: Generated after repairs. Share this *only when you are 100% satisfied* with the completed work. Entering this OTP releases the artisan wage and automatically arms your **7-Day Free Repair Guarantee**!`,
-      suggestions: ['Check Active Booking Status', 'How to Claim 7-Day Guarantee', 'Book a Verified Artisan'],
+      reply: `${opener}\n\n🔐 **Two-Stage Cryptographic Security Handshake**:\n\nTo protect citizens from unauthorized entries and premature billing, Shram Setu enforces a strict 2-step OTP verification:\n\n1. **Arrival OTP (4 Digits)**: Generated when your order is dispatched. Share this with the artisan *only upon their arrival* at your doorstep to initiate the work session.\n2. **Completion OTP (4 Digits)**: Generated after repairs. Share this *only when you are 100% satisfied* with the completed work. Entering this OTP releases the artisan wage and automatically arms your **30-Day Free Repair Guarantee**!`,
+      suggestions: ['Check Active Booking Status', 'How to Claim 30-Day Guarantee', 'Book a Verified Artisan'],
       links: [{ label: '📋 View My Bookings', url: '/customer/bookings' }],
     };
   }
 
-  // 4. 7-Day Guarantee / Warranty
+  // 4. 30-Day Guarantee / Warranty
   if (msg.includes('guarantee') || msg.includes('warranty') || msg.includes('repair failed') || msg.includes('issue again') || msg.includes('complaint') || msg.includes('dispute')) {
     return {
-      reply: `${opener}\n\n🛡️ **7-Day Free Cooperative Repair Guarantee**:\n\nEvery job completed through Shram Setu is backed by an automated 7-day workmanship warranty:\n\n• If the same technical issue or defect recurs within **7 days** of service completion, simply go to your booking details or dispute desk.\n• Click **"Claim Free Re-dispatch"**.\n• A certified **Senior Master Artisan** will be dispatched to resolve the issue with **₹0 labour charges**.\n• All replacement parts carry standard manufacturer ISI warranties.`,
+      reply: `${opener}\n\n🛡️ **30-Day Free Cooperative Repair Guarantee**:\n\nEvery job completed through Shram Setu is backed by an automated 30-day workmanship warranty:\n\n• If the same technical issue or defect recurs within **30 days** of service completion, simply go to your booking details or dispute desk.\n• Click **"Claim Free Re-dispatch"**.\n• A certified **Senior Master Artisan** will be dispatched to resolve the issue with **₹0 labour charges**.\n• All replacement parts carry standard manufacturer ISI warranties.`,
       suggestions: ['Open Dispute & Guarantee Desk', 'View Form IV Tax Bill', 'Book a New Service'],
       links: [{ label: '🛡️ Open My Bookings & Guarantee', url: '/customer/bookings' }, { label: '⚖️ Grievance Helpdesk', url: '/help' }],
     };
@@ -226,16 +226,16 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
       : `• **Electrical Repairs & Wiring**: Base rate ₹199\n• **Plumbing & Leakage Fix**: Base rate ₹249\n• **AC Service & Gas Refill**: Base rate ₹499\n• **Carpentry & Lock Replacement**: Base rate ₹299`;
 
     return {
-      reply: `${opener}\n\n💰 **Standardized Government-Regulated Tariffs (Zero Surge Pricing)**:\n\nAll rates are fixed by the Cooperative Federation with **zero hidden surge charges**:\n\n${serviceListText}\n\n*Note: Total bill includes standard 90-5-5 breakdown (90% labour, 5% welfare, 5% ops) plus official Form IV GST tax bill.*`,
-      suggestions: ['Book a Service Now', 'Find Nearest Available Artisan', 'How Does 90-5-5 Split Work?'],
+      reply: `${opener}\n\n💰 **Standardized Cooperative-Regulated Tariffs (Zero Surge Pricing)**:\n\nAll rates are fixed by the Cooperative Federation with **zero hidden surge charges**:\n\n${serviceListText}\n\n*Note: Total bill includes standard 93-2-5 breakdown (93% worker labour, 2% platform fee, 5% PF & insurance) plus official Form IV GST tax bill.*`,
+      suggestions: ['Book a Service Now', 'Find Nearest Available Artisan', 'How Does 93-2-5 Split Work?'],
       links: [{ label: '📜 View Full Service Catalog', url: '/services' }, { label: '📅 Book a Service', url: '/book-service' }],
     };
   }
 
   // 6. General Greetings / Default Fallback with Context
   const generalGreetings = [
-    `${opener}\n\nI can help you with:\n1. 🛠️ **Service Booking & Diagnostics**: Tell me any repair issue (e.g. *my tap is not working*, *MCB tripping*, *AC not cooling*).\n2. 💰 **Transparent Pricing**: Check government 90-5-5 base rates.\n3. 🛡️ **Guarantees**: Learn about 2-stage OTP handshakes and 7-Day Free Repair Guarantee.\n4. 👷 **Artisan Registration**: Join as an accredited cooperative worker member.\n\nWhat repair or question can I help you with right now?`,
-    `${opener}\n\nWhether you need an immediate plumber, electrician, carpenter, AC mechanic, or want to check official cooperative service rates, I'm here to assist!\n\nSimply describe your home problem or ask about our transparent 90-5-5 pricing.`,
+    `${opener}\n\nI can help you with:\n1. 🛠️ **Service Booking & Diagnostics**: Tell me any repair issue (e.g. *my tap is not working*, *MCB tripping*, *AC not cooling*).\n2. 💰 **Transparent Pricing**: Check cooperative 93-2-5 base rates.\n3. 🛡️ **Guarantees**: Learn about 2-stage OTP handshakes and 30-Day Free Repair Guarantee.\n4. 👷 **Artisan Registration**: Join as an accredited cooperative worker member.\n\nWhat repair or question can I help you with right now?`,
+    `${opener}\n\nWhether you need an immediate plumber, electrician, carpenter, AC mechanic, or want to check official cooperative service rates, I'm here to assist!\n\nSimply describe your home problem or ask about our transparent 93-2-5 pricing.`,
   ];
 
   return {
@@ -244,9 +244,9 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
       'My tap is not working',
       'MCB switch is tripping',
       'AC is not cooling',
-      'How does the 90-5-5 split work?',
+      'How does the 93-2-5 split work?',
       'How does the 2-Stage OTP work?',
-      'How to claim 7-Day Free Guarantee?',
+      'How to claim 30-Day Free Guarantee?',
     ],
     links: [
       { label: '📅 Book a Service Now', url: '/book-service' },
@@ -277,15 +277,15 @@ async function handleAIChat(req, res) {
     if (process.env.GEMINI_API_KEY) {
       try {
         const fetch = global.fetch || require('node-fetch');
-        const systemPrompt = `You are "Sahayak AI", the official virtual assistant for Shram Setu, the National Cooperative Gig Services Platform supported by the Government of India and Ministry of Cooperation.
+        const systemPrompt = `You are "Sahayak AI", the official virtual assistant for Shram Setu, the National Cooperative Gig Services Platform supported by the National Labour Cooperatives Federation (NLCF).
 Platform Facts:
-- 90-5-5 statutory revenue split: 90% direct to artisan wage, 5% worker welfare/ESIC medical/accident fund, 5% platform operations.
-- Zero surge pricing and regulated government tariffs.
+- 93-2-5 statutory revenue split: 93% direct to artisan wage, 2% platform operations fee, 5% PF & insurance fund.
+- Zero surge pricing and regulated cooperative tariffs.
 - If the user describes a problem (e.g. "my tap is not working", "mcb tripping", "ac not cooling"), provide:
   1. Technical causes in simple terms.
   2. Safe DIY check.
   3. Standard base tariff (Plumbing ₹249, Electrical ₹199, AC ₹499, Carpentry ₹299).
-  4. Mention 2-stage OTP handshake & 7-Day Free Guarantee.
+  4. Mention 2-stage OTP handshake & 30-Day Free Guarantee.
 - Keep responses dynamic, varied, polite, and markdown formatted.`;
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
@@ -310,7 +310,7 @@ Platform Facts:
         if (generatedText) {
           aiResponse = {
             reply: generatedText,
-            suggestions: ['Book a Service Now', 'Check Tariffs', 'How Does 90-5-5 Work?'],
+            suggestions: ['Book a Service Now', 'Check Tariffs', 'How Does 93-2-5 Work?'],
             links: [{ label: '📅 Book a Service', url: '/book-service' }, { label: '📜 View Tariffs', url: '/services' }],
           };
         }

@@ -5,8 +5,8 @@ const LanguageContext = createContext(null);
 export const TRANSLATIONS = {
   EN: {
     // Top Bar & Branding
-    govSupportTag: 'Govt. of India & Ministry of Cooperation Supported',
-    portalSubHeader: 'Government of India • Labour Cooperative Federation Portal',
+    govSupportTag: 'National Labour Cooperatives Federation (NLCF) Supported',
+    portalSubHeader: 'National Cooperative Labour Services Federation Portal',
     brandName: 'Shram Setu',
     brandSubtitle: 'Cooperative Gig Services Portal',
     tollFreeLabel: 'Toll-Free Helpline',
@@ -20,7 +20,7 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'Live Notice',
-    tickerText: '100% ITI & Police-verified cooperative artisans across all 30 districts • Regulated base tariffs • 7-Day free repair guarantee • Toll-Free Booking: 1800-345-7788',
+    tickerText: '100% ITI & Police-verified cooperative artisans across all 30 districts • Regulated base tariffs • 30-Day free repair guarantee • Toll-Free Booking: 1800-345-7788',
 
     // Hero Section
     heroTitlePart1: 'Verified Trade Skills.',
@@ -49,16 +49,16 @@ export const TRANSLATIONS = {
     sampleWorkerStats: '124+ Jobs Completed • 1.2 km away',
     policeVerifiedBadge: 'Police & Aadhaar Verified',
     bookNowShort: 'Book Now →',
-    guaranteeCardTitle: '7-Day Free Workmanship Guarantee',
-    guaranteeCardDesc: 'If any issue arises within 7 days, a Senior Master Artisan resolves it at ₹0 cost.',
+    guaranteeCardTitle: '30-Day Free Workmanship Guarantee',
+    guaranteeCardDesc: 'If any issue arises within 30 days, a Senior Master Artisan resolves it at ₹0 cost.',
     welfareCardTitle: '100% Artisan Social Security',
-    welfareCardDesc: 'Every booking directly contributes 10% to the artisan’s ESIC healthcare & pension fund.',
+    welfareCardDesc: 'Every booking directly contributes 5% to the artisan’s PF, ESIC healthcare & insurance fund.',
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% Verified Artisans',
     pillar1Desc: 'ITI / NSDC & Police background verified',
     pillar2Title: 'Zero Surge Pricing',
-    pillar2Desc: 'Regulated government base tariffs',
+    pillar2Desc: 'Regulated cooperative base tariffs',
     pillar3Title: '100% Social Security',
     pillar3Desc: 'Healthcare & pension welfare coverage',
 
@@ -71,7 +71,7 @@ export const TRANSLATIONS = {
     tabCarpentry: '🔨 Carpentry / Locks',
     likelyPartsLabel: 'Standard ISI Locked Parts:',
     baseRateTag: 'Standard Labour Base Rate:',
-    zeroSurgeNotice: '✓ Zero surge pricing • Official Form IV GST bill • 7-day warranty',
+    zeroSurgeNotice: '✓ Zero surge pricing • Official Form IV GST bill • 30-day warranty',
     bookThisServiceBtn: 'Book This Service Now',
 
     // Problem Items
@@ -126,18 +126,18 @@ export const TRANSLATIONS = {
     cscBookingTitle: 'Jan Seva Kendra (CSC)',
     cscBookingDesc: 'Book with an official receipt at your nearest Panchayat Mo Seva Kendra.',
     cscBookingSub: 'Find Nearest Kiosk →',
-    guaranteeTag: 'Government Assurance',
-    guaranteeTitle: '7-Day Guarantee',
-    guaranteeDesc: 'Free rework by Master Artisan if any defect occurs within 7 days.',
-    guaranteeSub: '100% Government Backed',
+    guaranteeTag: 'Cooperative Assurance',
+    guaranteeTitle: '30-Day Guarantee',
+    guaranteeDesc: 'Free rework by Master Artisan if any defect occurs within 30 days.',
+    guaranteeSub: '100% Cooperative Backed',
     emergencyTag: 'Immediate Priority',
     emergencyTitle: '24/7 Emergency Service',
-    emergencyDesc: 'Priority dispatch within 30 minutes for short circuits or burst pipes.',
+    emergencyDesc: 'Priority dispatch within 60 minutes for short circuits or burst pipes.',
     emergencySub: 'Book Emergency Service →',
 
     // Categories / Services Section
     secServices: 'Standardized Public Services',
-    secServicesSub: 'Transparent government-regulated base pricing with verified trade certifications',
+    secServicesSub: 'Transparent cooperative-regulated base pricing with verified trade certifications',
     catElectrical: 'Electrical Repair & Wiring',
     catPlumbing: 'Plumbing & Pipe Fitting',
     catCarpentry: 'Carpentry & Furniture',
@@ -162,7 +162,7 @@ export const TRANSLATIONS = {
     descDriving: 'Verified commercial & private transit drivers',
     descDomestic: 'Household helpers, cooks & housekeeping',
     descTechnician: 'CCTV setup, Wi-Fi networking & PC repair',
-    descEmergency: 'Immediate priority dispatch within 30 mins',
+    descEmergency: 'Immediate priority dispatch within 60 mins',
 
     startingAt: 'Starting at',
     verifiedArtisans: 'verified artisans',
@@ -173,7 +173,7 @@ export const TRANSLATIONS = {
     // 3-Step Simple Guide
     howItWorksBadge: 'Simple & Transparent • Easy 3-Step Booking',
     howItWorksTitle: 'How to Book a Certified Artisan from Home?',
-    howItWorksSub: 'Safe, government-regulated process ensuring quality work and peace of mind.',
+    howItWorksSub: 'Safe, cooperative-regulated process ensuring quality work and peace of mind.',
     step1Title: 'Select Service & Problem',
     step1Desc: 'Choose service or dictate your issue by voice. Regulated base rate displays instantly.',
     step2Title: 'Schedule Time & Location',
@@ -242,7 +242,7 @@ export const TRANSLATIONS = {
     close: 'Close',
 
     // Services Page
-    servicesDirectoryBadge: 'Standardized Government Service Tariff Directory',
+    servicesDirectoryBadge: 'Standardized Cooperative Service Tariff Directory',
     zeroSurgeBannerTitle: 'Zero Surge Pricing Guarantee',
     zeroSurgeBannerDesc: 'All prices are standardized by the State Cooperative Federation. No algorithmic peak pricing or hidden fees.',
     tollFreeBookingLabel: 'Toll-Free Phone Booking',
@@ -256,7 +256,7 @@ export const TRANSLATIONS = {
     verifiedWorkerCount: 'verified workers',
     coopBaseRate: 'Coop Base Rate',
     priorityEmergency: '24/7 Priority Emergency Service',
-    responseTime: '30 Min Response',
+    responseTime: '60 Min Response',
 
     // CustomerBookings Page
     myBookingsTitle: 'My Service Bookings',
@@ -275,8 +275,8 @@ export const TRANSLATIONS = {
     confirmCancel: 'Are you sure you want to cancel this booking?',
     noBookings: 'No bookings found.',
     bookFirstService: 'Book your first service to get started.',
-    warrantyBadge: '7-Day Free Workmanship Guarantee',
-    warrantySub: 'If any issue arises within 7 days, a Senior Master Artisan resolves it at zero cost.',
+    warrantyBadge: '30-Day Free Workmanship Guarantee',
+    warrantySub: 'If any issue arises within 30 days, a Senior Master Artisan resolves it at zero cost.',
 
     // Trade Categories
     catElectrical: 'Electrical',
@@ -302,7 +302,7 @@ export const TRANSLATIONS = {
     searchIssuePlaceholder: 'Type your issue (e.g. leaking tap, fan not working, AC gas, switch sparking)...',
     btnFindServiceRate: 'Find Service & Tariff',
     matchedService: 'Matched Service',
-    govStandardRate: 'Govt. Regulated Tariff',
+    govStandardRate: 'Cooperative Regulated Tariff',
     orSelectManual: 'Or Select from All Standardized Public Services',
     matchingServicesFound: 'Matching Services Found',
     clearSearch: 'Clear Search',
@@ -311,8 +311,8 @@ export const TRANSLATIONS = {
 
   HI: {
     // Top Bar & Branding
-    govSupportTag: 'भारत सरकार एवं सहकारिता मंत्रालय समर्थित',
-    portalSubHeader: 'भारत सरकार • श्रम सहकारी महासंघ पोर्टल',
+    govSupportTag: 'राष्ट्रीय श्रम सहकारी महासंघ (NLCF) समर्थित',
+    portalSubHeader: 'राष्ट्रीय श्रम सहकारी महासंघ पोर्टल',
     brandName: 'श्रम सेतु',
     brandSubtitle: 'सहकारी गिग सेवा पोर्टल',
     tollFreeLabel: 'टोल-फ्री हेल्पलाइन',
@@ -326,13 +326,13 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'लाइव सूचना',
-    tickerText: 'सभी 30 जिलों में 100% आईटीआई एवं पुलिस-सत्यापित सहकारी कारीगर उपलब्ध • सरकारी नियंत्रित दरें • 7-दिवसीय निःशुल्क मरम्मत वारंटी • टोल-फ्री बुकिंग: 1800-345-7788',
+    tickerText: 'सभी 30 जिलों में 100% आईटीआई एवं पुलिस-सत्यापित सहकारी कारीगर उपलब्ध • सहकारी नियंत्रित दरें • 30-दिवसीय निःशुल्क मरम्मत वारंटी • टोल-फ्री बुकिंग: 1800-345-7788',
 
     // Hero Section
     heroTitlePart1: 'सत्यापित ट्रेड कौशल।',
-    heroTitlePart2: 'उचित सरकारी दरें।',
+    heroTitlePart2: 'उचित सहकारी दरें।',
     heroTitlePart3: 'सशक्त श्रमिक समुदाय।',
-    heroSubtitle: 'ओडिशा भर के क्षेत्रीय श्रम सहकारी संघों से जुड़े प्रमाणित, पृष्ठभूमि-सत्यापित कुशल पेशेवरों से जुड़ें। सरकारी दरें, शून्य अतिरिक्त शुल्क और सामाजिक सुरक्षा।',
+    heroSubtitle: 'क्षेत्रीय श्रम सहकारी संघों से जुड़े प्रमाणित, पृष्ठभूमि-सत्यापित कुशल पेशेवरों से जुड़ें। सहकारी विनियमित दरें, शून्य अतिरिक्त शुल्क और सामाजिक सुरक्षा।',
     btnBookNow: 'सेवा बुक करें',
     btnFindWorker: 'कारीगर खोजें',
     btnJoinWorker: 'क्या आप एक कुशल श्रमिक हैं? अपने स्थानीय सहकारी संघ से जुड़ें →',
@@ -355,16 +355,16 @@ export const TRANSLATIONS = {
     sampleWorkerStats: '124+ कार्य पूर्ण • 1.2 km दूर',
     policeVerifiedBadge: 'पुलिस एवं आधार सत्यापित',
     bookNowShort: 'तुरंत बुक करें →',
-    guaranteeCardTitle: '7-दिवसीय सरकारी मरम्मत वारंटी',
-    guaranteeCardDesc: 'कार्य में असंतुष्टि पर 7 दिन में मास्टर कारीगर द्वारा ₹0 में निःशुल्क सुधार।',
+    guaranteeCardTitle: '30-दिवसीय सहकारी मरम्मत वारंटी',
+    guaranteeCardDesc: 'कार्य में असंतुष्टि पर 30 दिन में मास्टर कारीगर द्वारा ₹0 में निःशुल्क सुधार।',
     welfareCardTitle: '100% कारीगर सामाजिक सुरक्षा',
-    welfareCardDesc: 'प्रत्येक बुकिंग से सीधा 10% अंशदान श्रमिक के ESIC स्वास्थ्य व पेंशन खाते में।',
+    welfareCardDesc: 'प्रत्येक बुकिंग से सीधा 5% अंशदान श्रमिक के पीएफ व बीमा खाते में।',
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% प्रमाणित कारीगर',
     pillar1Desc: 'ITI / NSDC एवं पुलिस सत्यापित',
     pillar2Title: 'शून्य अतिरिक्त शुल्क',
-    pillar2Desc: 'सरकारी विनियमित आधार दरें',
+    pillar2Desc: 'सहकारी विनियमित आधार दरें',
     pillar3Title: '100% सामाजिक सुरक्षा',
     pillar3Desc: 'श्रमिक स्वास्थ्य व पेंशन कवर',
 
@@ -377,7 +377,7 @@ export const TRANSLATIONS = {
     tabCarpentry: '🔨 बढ़ई / ताला',
     likelyPartsLabel: 'संभावित मानक सामग्री:',
     baseRateTag: 'मानक श्रम आधार दर:',
-    zeroSurgeNotice: '✓ शून्य सर्च मूल्य • फॉर्म IV पक्का टैक्स बिल • 7-दिन वारंटी',
+    zeroSurgeNotice: '✓ शून्य सर्च मूल्य • फॉर्म IV पक्का टैक्स बिल • 30-दिन वारंटी',
     bookThisServiceBtn: 'यह सेवा तुरंत बुक करें',
 
     // Problem Items
@@ -432,18 +432,18 @@ export const TRANSLATIONS = {
     cscBookingTitle: 'जन सेवा केंद्र (CSC)',
     cscBookingDesc: 'अपने नजदीकी पंचायत मो सेवा केंद्र (CSC) से रसीद सहित बुकिंग कराएं।',
     cscBookingSub: 'नजदीकी केंद्र देखें →',
-    guaranteeTag: 'सरकारी आश्वासन',
-    guaranteeTitle: '7-दिवसीय वारंटी',
-    guaranteeDesc: 'कार्य में कोई कमी आने पर 7 दिनों के भीतर वरिष्ठ मास्टर कारीगर द्वारा ₹0 में सुधार।',
-    guaranteeSub: '100% सरकारी गारंटी',
+    guaranteeTag: 'सहकारी आश्वासन',
+    guaranteeTitle: '30-दिवसीय वारंटी',
+    guaranteeDesc: 'कार्य में कोई कमी आने पर 30 दिनों के भीतर वरिष्ठ मास्टर कारीगर द्वारा ₹0 में सुधार।',
+    guaranteeSub: '100% सहकारी गारंटी',
     emergencyTag: 'तत्काल प्राथमिकता',
     emergencyTitle: '24/7 आपातकालीन सेवा',
-    emergencyDesc: 'शॉर्ट-सर्किट या मुख्य पाइप फटने पर 30 मिनट में प्राथमिकता आवंटन।',
+    emergencyDesc: 'शॉर्ट-सर्किट या मुख्य पाइप फटने पर 60 मिनट में प्राथमिकता आवंटन।',
     emergencySub: 'आपातकालीन बुकिंग →',
 
     // Categories / Services Section
     secServices: 'मानकीकृत सार्वजनिक सेवाएँ',
-    secServicesSub: 'सत्यापित व्यापार प्रमाणपत्रों के साथ पारदर्शी सरकारी-विनियमित आधार मूल्य निर्धारण',
+    secServicesSub: 'सत्यापित व्यापार प्रमाणपत्रों के साथ पारदर्शी सहकारी-विनियमित आधार मूल्य निर्धारण',
     catElectrical: 'विद्युत मरम्मत एवं वायरिंग',
     catPlumbing: 'नलसाजी (प्लंबर) कार्य',
     catCarpentry: 'बढ़ईगीरी एवं फर्नीचर',
@@ -468,23 +468,23 @@ export const TRANSLATIONS = {
     descDriving: 'सत्यापित वाणिज्यिक और निजी ड्राइवर',
     descDomestic: 'घरेलू सहायक, रसोइये एवं हाउसकीपिंग',
     descTechnician: 'सीसीटीवी सेटअप, वाई-फाई और पीसी मरम्मत',
-    descEmergency: '30 मिनट के भीतर तत्काल प्राथमिकता सेवा',
+    descEmergency: '60 मिनट के भीतर तत्काल प्राथमिकता सेवा',
 
     startingAt: 'प्रारंभिक मूल्य',
     verifiedArtisans: 'सत्यापित कारीगर',
     viewArtisansBtn: 'कारीगर',
     bookBtn: 'बुक करें',
-    viewAllTariffsBtn: 'सभी 12 ट्रेड की सरकारी दर सूची देखें',
+    viewAllTariffsBtn: 'सभी 12 ट्रेड की सहकारी दर सूची देखें',
 
     // 3-Step Simple Guide
     howItWorksBadge: 'सरल व सुरक्षित प्रक्रिया • आसान 3-चरणीय बुकिंग',
-    howItWorksTitle: 'घर बैठे सरकारी प्रमाणित कारीगर कैसे बुलाएं?',
-    howItWorksSub: 'बिना किसी परेशानी के पारदर्शी सरकारी प्रक्रिया द्वारा सुरक्षित कार्य संपन्न कराएं।',
+    howItWorksTitle: 'घर बैठे प्रमाणित सहकारी कारीगर कैसे बुलाएं?',
+    howItWorksSub: 'बिना किसी परेशानी के पारदर्शी सहकारी प्रक्रिया द्वारा सुरक्षित कार्य संपन्न कराएं।',
     step1Title: 'समस्या व सेवा चुनें',
-    step1Desc: 'वेबसाइट पर सेवा चुनें या बोलकर अपनी समस्या बताएं। तय सरकारी आधार मूल्य तुरंत दिखेगा।',
+    step1Desc: 'वेबसाइट पर सेवा चुनें या बोलकर अपनी समस्या बताएं। तय सहकारी आधार मूल्य तुरंत दिखेगा।',
     step2Title: 'समय व पता निश्चित करें',
     step2Desc: 'अपनी सुविधानुसार समय चुनें। निकटतम सहकारी महासंघ द्वारा सत्यापित कारीगर आवंटित होगा।',
-    step3Title: 'सुरक्षित कार्य व सरकारी बिल',
+    step3Title: 'सुरक्षित कार्य व आधिकारिक बिल',
     step3Desc: 'कारीगर पहचान पत्र एवं ओटीपी सत्यापन के साथ पहुंचेगा। कार्य पूर्ण होने पर फॉर्म IV बिल प्राप्त करें।',
 
     // Stats Section
@@ -546,7 +546,7 @@ export const TRANSLATIONS = {
     artisanBio: 'कारीगर परिचय',
     close: 'बंद करें',
 
-    servicesDirectoryBadge: 'मानकीकृत सरकारी सेवा दर सूची',
+    servicesDirectoryBadge: 'मानकीकृत सहकारी सेवा दर सूची',
     zeroSurgeBannerTitle: 'शून्य अतिरिक्त शुल्क गारंटी',
     zeroSurgeBannerDesc: 'सभी मूल्य राज्य सहकारी संघ द्वारा मानकीकृत हैं। कोई छिपा शुल्क नहीं।',
     tollFreeBookingLabel: 'टोल-फ्री फोन बुकिंग',
@@ -560,7 +560,7 @@ export const TRANSLATIONS = {
     verifiedWorkerCount: 'सत्यापित कारीगर',
     coopBaseRate: 'सहकारी आधार दर',
     priorityEmergency: '24/7 प्राथमिकता आपातकालीन सेवा',
-    responseTime: '30 मिनट प्रतिक्रिया',
+    responseTime: '60 मिनट प्रतिक्रिया',
 
     myBookingsTitle: 'मेरी सेवा बुकिंग्स',
     myBookingsSub: 'अपने घरेलू सेवा ऑर्डर ट्रैक और प्रबंधित करें',
@@ -578,8 +578,8 @@ export const TRANSLATIONS = {
     confirmCancel: 'क्या आप वाकई यह बुकिंग रद्द करना चाहते हैं?',
     noBookings: 'कोई बुकिंग नहीं मिली।',
     bookFirstService: 'शुरू करने के लिए अपनी पहली सेवा बुक करें।',
-    warrantyBadge: '7-दिवसीय निःशुल्क मरम्मत गारंटी',
-    warrantySub: 'कार्य में कोई कमी आने पर 7 दिनों में वरिष्ठ मास्टर कारीगर द्वारा ₹0 में सुधार।',
+    warrantyBadge: '30-दिवसीय निःशुल्क मरम्मत गारंटी',
+    warrantySub: 'कार्य में कोई कमी आने पर 30 दिनों में वरिष्ठ मास्टर कारीगर द्वारा ₹0 में सुधार।',
 
     catElectrical: 'विद्युत',
     catPlumbing: 'नलसाजी',
@@ -595,13 +595,13 @@ export const TRANSLATIONS = {
     searchBtn: 'खोजें',
     resetAllFilters: 'सभी फ़िल्टर रीसेट करें',
 
-    problemSearchTitle: 'समस्या खोज एवं सरकारी दर सूची',
+    problemSearchTitle: 'समस्या खोज एवं सहकारी दर सूची',
     problemSearchSub: 'अपनी मरम्मत समस्या लिखें या नीचे दिए गए विकल्पों में से चुनें',
-    problemSearchDesc: 'हमारा पोर्टल आपकी आवश्यकता को तुरंत प्रमाणित सरकारी दर एवं मानक सामग्री से जोड़ता है।',
+    problemSearchDesc: 'हमारा पोर्टल आपकी आवश्यकता को तुरंत प्रमाणित सहकारी दर एवं मानक सामग्री से जोड़ता है।',
     searchIssuePlaceholder: 'समस्या लिखें (जैसे नल से पानी टपकना, पंखा खराब, एसी गैस, स्विच स्पार्किंग)...',
     btnFindServiceRate: 'सेवा व दर खोजें',
     matchedService: 'संबंधित सेवा',
-    govStandardRate: 'सरकारी विनियमित दर',
+    govStandardRate: 'सहकारी विनियमित दर',
     orSelectManual: 'या सभी मानकीकृत सार्वजनिक सेवाओं में से चुनें',
     matchingServicesFound: 'संबंधित सेवाएँ मिलीं',
     clearSearch: 'खोज साफ करें',
@@ -610,8 +610,8 @@ export const TRANSLATIONS = {
 
   OR: {
     // Top Bar & Branding
-    govSupportTag: 'ଭାରତ ସରକାର ଓ ସମବାୟ ମନ୍ତ୍ରଣାଳୟ ଦ୍ୱାରା ସମର୍ଥିତ',
-    portalSubHeader: 'ଭାରତ ସରକାର • ଶ୍ରମ ସମବାୟ ମହାସଂଘ ପୋର୍ଟାଲ',
+    govSupportTag: 'ଜାତୀୟ ଶ୍ରମ ସମବାୟ ମହାସଂଘ (NLCF) ଦ୍ୱାରା ସମର୍ଥିତ',
+    portalSubHeader: 'ଜାତୀୟ ଶ୍ରମ ସମବାୟ ମହାସଂଘ ପୋର୍ଟାଲ',
     brandName: 'ଶ୍ରମ ସେତୁ',
     brandSubtitle: 'ସମବାୟ ଗିଗ୍ ସେବା ପୋର୍ଟାଲ',
     tollFreeLabel: 'ଟୋଲ୍-ଫ୍ରି ହେଲ୍ପଲାଇନ୍',
@@ -625,13 +625,13 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'ସଦ୍ୟ ସୂଚନା',
-    tickerText: 'ସମସ୍ତ ୩୦ ଜିଲ୍ଲାରେ ୧୦୦% ଆଇଟିଆଇ ଓ ପୋଲିସ ଯାଞ୍ଚ ହୋଇଥିବା ଶ୍ରମିକ ଉପଲବ୍ଧ • ସରକାରୀ ଦର • ୭-ଦିନିଆ ମାଗଣା ମରାମତି ଗ୍ୟାରେଣ୍ଟି • ଟୋଲ୍-ଫ୍ରି: ୧୮୦୦-୩୪୫-୭୭୮୮',
+    tickerText: 'ସମସ୍ତ ୩୦ ଜିଲ୍ଲାରେ ୧୦୦% ଆଇଟିଆଇ ଓ ପୋଲିସ ଯାଞ୍ଚ ହୋଇଥିବା ଶ୍ରମିକ ଉପଲବ୍ଧ • ସମବାୟ ଦର • ୩୦-ଦିନିଆ ମାଗଣା ମରାମତି ଗ୍ୟାରେଣ୍ଟି • ଟୋଲ୍-ଫ୍ରି: ୧୮୦୦-୩୪୫-୭୭୮୮',
 
     // Hero Section
     heroTitlePart1: 'ଯାଞ୍ଚ ହୋଇଥିବା ଦକ୍ଷତା।',
-    heroTitlePart2: 'ନ୍ୟାଯ୍ୟ ସରକାରୀ ଦର।',
+    heroTitlePart2: 'ନ୍ୟାଯ୍ୟ ସମବାୟ ଦର।',
     heroTitlePart3: 'ସଶକ୍ତ ଶ୍ରମିକ ସମାଜ।',
-    heroSubtitle: 'ଓଡ଼ିଶାର ଆଞ୍ଚଳିକ ଶ୍ରମ ସମବାୟ ମହାସଂଘ ସହିତ ଜଡ଼ିତ ପ୍ରମାଣିତ ତଥା ପୃଷ୍ଠଭୂମି-ଯାଞ୍ଚ ହୋଇଥିବା କୁଶଳୀ ଶ୍ରମିକମାନଙ୍କ ସହିତ ସଂଯୋଗ କରନ୍ତୁ। ନିୟନ୍ତ୍ରିତ ଦର, କୌଣସି ଅତିରିକ୍ତ ଶୁଳ୍କ ନାହିଁ ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା।',
+    heroSubtitle: 'ଆଞ୍ଚଳିକ ଶ୍ରମ ସମବାୟ ମହାସଂଘ ସହିତ ଜଡ଼ିତ ପ୍ରମାଣିତ ତଥା ପୃଷ୍ଠଭୂମି-ଯାଞ୍ଚ ହୋଇଥିବା କୁଶଳୀ ଶ୍ରମିକମାନଙ୍କ ସହିତ ସଂଯୋଗ କରନ୍ତୁ। ନିୟନ୍ତ୍ରିତ ଦର, କୌଣସି ଅତିରିକ୍ତ ଶୁଳ୍କ ନାହିଁ ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା।',
     btnBookNow: 'ସେବା ବୁକ୍ କରନ୍ତୁ',
     btnFindWorker: 'ଶ୍ରମିକ ଖୋଜନ୍ତୁ',
     btnJoinWorker: 'ଆପଣ ଜଣେ କୁଶଳୀ ଶ୍ରମିକ କି? ନିଜ ସ୍ଥାନୀୟ ସମବାୟ ସମିତିରେ ଯୋଗ ଦିଅନ୍ତୁ →',
@@ -654,16 +654,16 @@ export const TRANSLATIONS = {
     sampleWorkerStats: '୧୨୪+ କାର୍ଯ୍ୟ ସମ୍ପନ୍ନ • ୧.୨ କିମି ଦୂର',
     policeVerifiedBadge: 'ପୋଲିସ ଓ ଆଧାର ଯାଞ୍ଚ ହୋଇଥିବା',
     bookNowShort: 'ତୁରନ୍ତ ବୁକ୍ କରନ୍ତୁ →',
-    guaranteeCardTitle: '୭-ଦିନିଆ ସରକାରୀ ମରାମତି ଗ୍ୟାରେଣ୍ଟି',
-    guaranteeCardDesc: 'କାର୍ଯ୍ୟରେ ଅସନ୍ତୋଷ ହେଲେ ୭ ଦିନ ମଧ୍ୟରେ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ ମୂଲ୍ୟରେ ମାଗଣା ସଂଶୋଧନ।',
+    guaranteeCardTitle: '୩୦-ଦିନିଆ ସମବାୟ ମରାମତି ଗ୍ୟାରେଣ୍ଟି',
+    guaranteeCardDesc: 'କାର୍ଯ୍ୟରେ ଅସନ୍ତୋଷ ହେଲେ ୩୦ ଦିନ ମଧ୍ୟରେ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ ମୂଲ୍ୟରେ ମାଗଣା ସଂଶୋଧନ।',
     welfareCardTitle: '୧୦୦% ଶ୍ରମିକ ସାମାଜିକ ସୁରକ୍ଷା',
-    welfareCardDesc: 'ପ୍ରତ୍ୟେକ ବୁକିଂରୁ ସିଧାସଳଖ ୧୦% ଅଂଶଦାନ ଶ୍ରମିକଙ୍କ ଇଏସଆଇସି ସ୍ୱାସ୍ଥ୍ୟ ଓ ପେନସନ ପାଣ୍ଠିକୁ ଯାଏ।',
+    welfareCardDesc: 'ପ୍ରତ୍ୟେକ ବୁକିଂରୁ ସିଧାସଳଖ ୫% ଅଂଶଦାନ ଶ୍ରମିକଙ୍କ ପିଏଫ୍ ଓ ବୀମା ପାଣ୍ଠିକୁ ଯାଏ।',
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '୧୦୦% ପ୍ରମାଣିତ ଶ୍ରମିକ',
     pillar1Desc: 'ITI / NSDC ଓ ପୋଲିସ ଯାଞ୍ଚ ହୋଇଥିବା',
     pillar2Title: 'କୌଣସି ଅତିରିକ୍ତ ଶୁଳ୍କ ନାହିଁ',
-    pillar2Desc: 'ସରକାରୀ ନିୟନ୍ତ୍ରିତ ମୂଳ ଦର',
+    pillar2Desc: 'ସମବାୟ ନିୟନ୍ତ୍ରିତ ମୂଳ ଦର',
     pillar3Title: '୧୦୦% ସାମାଜିକ ସୁରକ୍ଷା',
     pillar3Desc: 'ଶ୍ରମିକ ସ୍ୱାସ୍ଥ୍ୟ ଓ ପେନସନ ବୀମା',
 
@@ -676,7 +676,7 @@ export const TRANSLATIONS = {
     tabCarpentry: '🔨 କାଠ କାମ / ତାଲା',
     likelyPartsLabel: 'ସମ୍ଭାବ୍ୟ ମାନକ ସାମଗ୍ରୀ:',
     baseRateTag: 'ମାନକ ଶ୍ରମ ମୂଳ ଦର:',
-    zeroSurgeNotice: '✓ କୌଣସି ଅଧିକ ଦର ନାହିଁ • ଫର୍ମ IV ପକ୍କା ବିଲ୍ • ୭-ଦିନିଆ ୱାରେଣ୍ଟି',
+    zeroSurgeNotice: '✓ କୌଣସି ଅଧିକ ଦର ନାହିଁ • ଫର୍ମ IV ପକ୍କା ବିଲ୍ • ୩୦-ଦିନିଆ ୱାରେଣ୍ଟି',
     bookThisServiceBtn: 'ଏହି ସେବା ତୁରନ୍ତ ବୁକ୍ କରନ୍ତୁ',
 
     // Problem Items
@@ -731,18 +731,18 @@ export const TRANSLATIONS = {
     cscBookingTitle: 'ଜନ ସେବା କେନ୍ଦ୍ର (CSC)',
     cscBookingDesc: 'ନିଜ ନିକଟସ୍ଥ ପଞ୍ଚାୟତ \'ମୋ ସେବା କେନ୍ଦ୍ର\' (CSC)ରୁ ରସିଦ ସହିତ ବୁକ୍ କରନ୍ତୁ।',
     cscBookingSub: 'ନିକଟସ୍ଥ କେନ୍ଦ୍ର ଦେଖନ୍ତୁ →',
-    guaranteeTag: 'ସରକାରୀ ପ୍ରତିଶ୍ରୁତି',
-    guaranteeTitle: '୭-ଦିନିଆ ୱାରେଣ୍ଟି',
-    guaranteeDesc: 'କାର୍ଯ୍ୟରେ ତ୍ରୁଟି ଥିଲେ ୭ ଦିନ ମଧ୍ୟରେ ବରିଷ୍ଠ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ରେ ସୁଧାର।',
-    guaranteeSub: '୧୦୦% ସରକାରୀ ଗ୍ୟାରେଣ୍ଟି',
+    guaranteeTag: 'ସମବାୟ ପ୍ରତିଶ୍ରୁତି',
+    guaranteeTitle: '୩୦-ଦିନିଆ ୱାରେଣ୍ଟି',
+    guaranteeDesc: 'କାର୍ଯ୍ୟରେ ତ୍ରୁଟି ଥିଲେ ୩୦ ଦିନ ମଧ୍ୟରେ ବରିଷ୍ଠ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ରେ ସୁଧାର।',
+    guaranteeSub: '୧୦୦% ସମବାୟ ଗ୍ୟାରେଣ୍ଟି',
     emergencyTag: 'ଜରୁରୀକାଳୀନ ଅଗ୍ରାଧିକାର',
     emergencyTitle: '୨୪/୭ ଜରୁରୀକାଳୀନ ସେବା',
-    emergencyDesc: 'ସର୍ଟ ସର୍କିଟ୍ ବା ମୁଖ୍ୟ ପାଇପ୍ ଫାଟିଗଲେ ୩୦ ମିନିଟ୍ ମଧ୍ୟରେ ଶ୍ରମିକ ବଣ୍ଟନ।',
+    emergencyDesc: 'ସର୍ଟ ସର୍କିଟ୍ ବା ମୁଖ୍ୟ ପାଇପ୍ ଫାଟିଗଲେ ୬୦ ମିନିଟ୍ ମଧ୍ୟରେ ଶ୍ରମିକ ବଣ୍ଟନ।',
     emergencySub: 'ଜରୁରୀକାଳୀନ ବୁକିଂ →',
 
     // Categories / Services Section
     secServices: 'ମାନକୀକୃତ ସାର୍ବଜନୀନ ସେବା',
-    secServicesSub: 'ପ୍ରମାଣିତ ବାଣିଜ୍ୟ ପ୍ରମାଣପତ୍ର ସହିତ ସ୍ୱଚ୍ଛ ସରକାରୀ-ନିୟନ୍ତ୍ରିତ ମୂଲ୍ୟ ନିର୍ଦ୍ଧାରଣ',
+    secServicesSub: 'ପ୍ରମାଣିତ ବାଣିଜ୍ୟ ପ୍ରମାଣପତ୍ର ସହିତ ସ୍ୱଚ୍ଛ ସମବାୟ-ନିୟନ୍ତ୍ରିତ ମୂଲ୍ୟ ନିର୍ଦ୍ଧାରଣ',
     catElectrical: 'ବିଦ୍ୟୁତ୍ ମରାମତି ଓ ୱେୟାରିଂ',
     catPlumbing: 'ପ୍ଲମ୍ବିଂ / ନଳକୂପ କାର୍ଯ୍ୟ',
     catCarpentry: 'କାଠ କାର୍ଯ୍ୟ ଓ ଆସବାବପତ୍ର',
@@ -767,20 +767,20 @@ export const TRANSLATIONS = {
     descDriving: 'ପ୍ରମାଣିତ ବ୍ୟକ୍ତିଗତ ଓ ବ୍ୟବସାୟିକ ଗାଡ଼ି ଚାଳକ',
     descDomestic: 'ଘରୋଇ ସହାୟକ, ରୋଷେଇଆ ଓ ଘରୋଇ କାର୍ଯ୍ୟ',
     descTechnician: 'ସିସିଟିଭି କ୍ୟାମେରା ସେଟଅପ୍, ୱାଇ-ଫାଇ ଓ କମ୍ପ୍ୟୁଟର ମରାମତି',
-    descEmergency: '୩୦ ମିନିଟ୍ ମଧ୍ୟରେ ତ୍ୱରିତ ଜରୁରୀକାଳୀନ ସେବା',
+    descEmergency: '୬୦ ମିନିଟ୍ ମଧ୍ୟରେ ତ୍ୱରିତ ଜରୁରୀକାଳୀନ ସେବା',
 
     startingAt: 'ପ୍ରାରମ୍ଭିକ ମୂଲ୍ୟ',
     verifiedArtisans: 'ପ୍ରମାଣିତ କାରିଗର',
     viewArtisansBtn: 'ଶ୍ରମିକ',
     bookBtn: 'ବୁକ୍ କରନ୍ତୁ',
-    viewAllTariffsBtn: 'ସମସ୍ତ ୧୨ ସେବାର ସରକାରୀ ଦର ଦେଖନ୍ତୁ',
+    viewAllTariffsBtn: 'ସମସ୍ତ ୧୨ ସେବାର ସମବାୟ ଦର ଦେଖନ୍ତୁ',
 
     // 3-Step Simple Guide
     howItWorksBadge: 'ସରଳ ଓ ସୁରକ୍ଷିତ ପ୍ରକ୍ରିୟା • ୩-ପର୍ଯ୍ୟାୟ ବିଶିଷ୍ଟ ବୁକିଂ',
-    howItWorksTitle: 'ଘରେ ବସି ସରକାରୀ ପ୍ରମାଣିତ ଶ୍ରମିକ କିପରି ଡାକିବେ?',
-    howItWorksSub: 'ପାରଦର୍ଶୀ ସରକାରୀ ପ୍ରକ୍ରିୟା ଦ୍ୱାରା ନିରାପଦ ସେବା ପାଆନ୍ତୁ।',
+    howItWorksTitle: 'ଘରେ ବସି ପ୍ରମାଣିତ ସମବାୟ ଶ୍ରମିକ କିପରି ଡାକିବେ?',
+    howItWorksSub: 'ପାରଦର୍ଶୀ ସମବାୟ ପ୍ରକ୍ରିୟା ଦ୍ୱାରା ନିରାପଦ ସେବା ପାଆନ୍ତୁ।',
     step1Title: 'ସମସ୍ୟା ଓ ସେବା ଚୟନ',
-    step1Desc: 'ୱେବସାଇଟରେ ସେବା ବାଛନ୍ତୁ ବା କହି ସମସ୍ୟା ଜଣାନ୍ତୁ। ସ୍ଥିର ସରକାରୀ ମୂଲ୍ୟ ତୁରନ୍ତ ଦେଖିପାରିବେ।',
+    step1Desc: 'ୱେବସାଇଟରେ ସେବା ବାଛନ୍ତୁ ବା କହି ସମସ୍ୟା ଜଣାନ୍ତୁ। ସ୍ଥିର ସମବାୟ ମୂଲ୍ୟ ତୁରନ୍ତ ଦେଖିପାରିବେ।',
     step2Title: 'ସମୟ ଓ ଠିକଣା ନିର୍ଦ୍ଧାରଣ',
     step2Desc: 'ନିଜ ସୁବିଧା ଅନୁଯାୟୀ ସମୟ ଚୟନ କରନ୍ତୁ। ନିକଟସ୍ଥ ପ୍ରମାଣିତ ଶ୍ରମିକ ନିଯୁକ୍ତ ହେବେ।',
     step3Title: 'ସୁରକ୍ଷିତ କାର୍ଯ୍ୟ ଓ ବିଲ୍',
@@ -845,7 +845,7 @@ export const TRANSLATIONS = {
     artisanBio: 'ଶ୍ରମିକ ପରିଚୟ',
     close: 'ବନ୍ଦ କରନ୍ତୁ',
 
-    servicesDirectoryBadge: 'ମାନକୀକୃତ ସରକାରୀ ସେବା ଦର ତାଲିକା',
+    servicesDirectoryBadge: 'ମାନକୀକୃତ ସମବାୟ ସେବା ଦର ତାଲିକା',
     zeroSurgeBannerTitle: 'ଶୂନ୍ୟ ଅତିରିକ୍ତ ଶୁଳ୍କ ଗ୍ୟାରେଣ୍ଟି',
     zeroSurgeBannerDesc: 'ସମସ୍ତ ମୂଲ୍ୟ ରାଜ୍ୟ ସମବାୟ ସଂଘ ଦ୍ୱାରା ମାନକୀକୃତ। କୌଣସି ଲୁକ୍କାୟିତ ଶୁଳ୍କ ନାହିଁ।',
     tollFreeBookingLabel: 'ଟୋଲ୍-ଫ୍ରି ଫୋନ ବୁକିଂ',
@@ -859,7 +859,7 @@ export const TRANSLATIONS = {
     verifiedWorkerCount: 'ସତ୍ୟାପିତ ଶ୍ରମିକ',
     coopBaseRate: 'ସମବାୟ ମୂଳ ଦର',
     priorityEmergency: '୨୪/୭ ଜରୁରୀକାଳୀନ ସେବା',
-    responseTime: '୩୦ ମିନିଟ୍ ପ୍ରତିକ୍ରିୟା',
+    responseTime: '୬୦ ମିନିଟ୍ ପ୍ରତିକ୍ରିୟା',
 
     myBookingsTitle: 'ମୋ ସେବା ବୁକିଂ',
     myBookingsSub: 'ଆପଣଙ୍କ ଘରୋଇ ସେବା ଅର୍ଡର ଟ୍ରାକ ଓ ପରିଚାଳନା କରନ୍ତୁ',
@@ -877,8 +877,8 @@ export const TRANSLATIONS = {
     confirmCancel: 'ଆପଣ ନିଶ୍ଚିତ କି ଏହି ବୁକିଂ ବାତିଲ କରିବାକୁ ଚାହୁଁଛନ୍ତି?',
     noBookings: 'କୌଣସି ବୁକିଂ ମିଳିଲା ନାହିଁ।',
     bookFirstService: 'ଆରମ୍ଭ କରିବାକୁ ଆପଣଙ୍କ ପ୍ରଥମ ସେବା ବୁକ୍ କରନ୍ତୁ।',
-    warrantyBadge: '୭-ଦିନିଆ ମାଗଣା ମରାମତି ଗ୍ୟାରେଣ୍ଟି',
-    warrantySub: 'କାର୍ଯ୍ୟରେ ତ୍ରୁଟି ଥିଲେ ୭ ଦିନ ମଧ୍ୟରେ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ରେ ସୁଧାର।',
+    warrantyBadge: '୩୦-ଦିନିଆ ମାଗଣା ମରାମତି ଗ୍ୟାରେଣ୍ଟି',
+    warrantySub: 'କାର୍ଯ୍ୟରେ ତ୍ରୁଟି ଥିଲେ ୩୦ ଦିନ ମଧ୍ୟରେ ମାଷ୍ଟର ଶ୍ରମିକଙ୍କ ଦ୍ୱାରା ₹୦ରେ ସୁଧାର।',
 
     catElectrical: 'ବିଦ୍ୟୁତ୍',
     catPlumbing: 'ନଳସାଜୀ',
@@ -894,14 +894,14 @@ export const TRANSLATIONS = {
     searchBtn: 'ଖୋଜନ୍ତୁ',
     resetAllFilters: 'ସମସ୍ତ ଫିଲ୍ଟର ରିସେଟ୍ କରନ୍ତୁ',
 
-    problemSearchTitle: 'ସମସ୍ୟା ଖୋଜ ଓ ସରକାରୀ ଦର ତାଲିକା',
+    problemSearchTitle: 'ସମସ୍ୟା ଖୋଜ ଓ ସମବାୟ ଦର ତାଲିକା',
     problemSearchSub: 'ଆପଣଙ୍କ ମରାମତି ସମସ୍ୟା ଲେଖନ୍ତୁ କିମ୍ବା ତଳେ ଥିବା ବିକଳ୍ପ ବାଛନ୍ତୁ',
-    problemSearchDesc: 'ଆମର ପୋର୍ଟାଲ ଆପଣଙ୍କ ଆବଶ୍ୟକତାକୁ ତୁରନ୍ତ ପ୍ରମାଣିତ ସରକାରୀ ଦର ସହିତ ସଂଯୋଗ କରେ।',
+    problemSearchDesc: 'ଆମର ପୋର୍ଟାଲ ଆପଣଙ୍କ ଆବଶ୍ୟକତାକୁ ତୁରନ୍ତ ପ୍ରମାଣିତ ସମବାୟ ଦର ସହିତ ସଂଯୋଗ କରେ।',
     searchIssuePlaceholder: 'ସମସ୍ୟା ଲେଖନ୍ତୁ (ଯଥା ନଳରୁ ପାଣି ପଡିବା, ପଙ୍ଖା ଖରାପ, ଏସି ଗ୍ୟାସ)...',
     btnFindServiceRate: 'ସେବା ଓ ଦର ଖୋଜନ୍ତୁ',
     matchedService: 'ସଂପୃକ୍ତ ସେବା',
-    govStandardRate: 'ସରକାରୀ ନିୟନ୍ତ୍ରିତ ଦର',
-    orSelectManual: 'କିମ୍ବା ସମସ୍ତ ମାନକୀକୃତ ସରକାରୀ ସେବାରୁ ବାଛନ୍ତୁ',
+    govStandardRate: 'ସମବାୟ ନିୟନ୍ତ୍ରିତ ଦର',
+    orSelectManual: 'କିମ୍ବା ସମସ୍ତ ମାନକୀକୃତ ସମବାୟ ସେବାରୁ ବାଛନ୍ତୁ',
     matchingServicesFound: 'ମେଳ ଖାଉଥିବା ସେବା ମିଳିଲା',
     clearSearch: 'ଖୋଜ ସଫା କରନ୍ତୁ',
     btnContinueQuote: 'ଚୟନିତ ସେବା ସହିତ ଆଗକୁ ବଢ଼ନ୍ତୁ',
@@ -909,8 +909,8 @@ export const TRANSLATIONS = {
 
   BN: {
     // Top Bar & Branding
-    govSupportTag: 'ভারত সরকার ও সমবায় মন্ত্রণালয় সমর্থিত',
-    portalSubHeader: 'ভারত সরকার • শ্রম সমবায় ফেডারেশন পোর্টাল',
+    govSupportTag: 'জাতীয় শ্রম সমবায় ফেডারেশন (NLCF) সমর্থিত',
+    portalSubHeader: 'জাতীয় শ্রম সমবায় ফেডারেশন পোর্টাল',
     brandName: 'শ্রম সেতু',
     brandSubtitle: 'সমবায় গিগ সেবা প্ল্যাটফর্ম',
     tollFreeLabel: 'টোল-ফ্রি হেল্পলাইন',
@@ -924,13 +924,13 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'সরাসরি বিজ্ঞপ্তি',
-    tickerText: 'সকল ৩০টি জেলায় ১০০% আইটিআই ও পুলিশ যাচাইকৃত কর্মী উপলব্ধ • সরকারি নিয়ন্ত্রিত মূল্য • ৭-দিনের বিনামূল্যের মেরামত ওয়ারেন্টি • কল করুন: ১৮০০-৩৪৫-৭৭৮৮',
+    tickerText: 'সকল ৩০টি জেলায় ১০০% আইটিআই ও পুলিশ যাচাইকৃত কর্মী উপলব্ধ • সমবায় নিয়ন্ত্রিত মূল্য • ৩০-দিনের বিনামূল্যের মেরামত ওয়ারেন্টি • কল করুন: ১৮০০-৩৪৫-৭৭৮৮',
 
     // Hero Section
     heroTitlePart1: 'যাচাইকৃত ট্রেড দক্ষতা।',
-    heroTitlePart2: 'ন্যায্য সরকারি মূল্য।',
+    heroTitlePart2: 'ন্যায্য সমবায় মূল্য।',
     heroTitlePart3: 'শক্তিশালী শ্রমিক সমাজ।',
-    heroSubtitle: 'আঞ্চলিক শ্রম সমবায় ফেডারেশনের সাথে যুক্ত দক্ষ ও যাচাইকৃত পেশাদারদের সাথে সংযোগ করুন। সরকারি নিয়ন্ত্রিত মূল্য, অতিরিক্ত চার্জ নেই এবং সামাজিক নিরাপত্তা।',
+    heroSubtitle: 'আঞ্চলিক শ্রম সমবায় ফেডারেশনের সাথে যুক্ত দক্ষ ও যাচাইকৃত পেশাদারদের সাথে সংযোগ করুন। সমবায় নিয়ন্ত্রিত মূল্য, অতিরিক্ত চার্জ নেই এবং সামাজিক নিরাপত্তা।',
     btnBookNow: 'সেবা বুক করুন',
     btnFindWorker: 'কর্মী খুঁজুন',
     btnJoinWorker: 'আপনি কি একজন দক্ষ কর্মী? আপনার স্থানীয় সমবায়ে যোগ দিন →',
@@ -953,16 +953,16 @@ export const TRANSLATIONS = {
     sampleWorkerStats: '১২৪+ কাজ সম্পন্ন • ১.২ কিমি দূরে',
     policeVerifiedBadge: 'পুলিশ ও আধার যাচাইকৃত',
     bookNowShort: 'বুক করুন →',
-    guaranteeCardTitle: '৭-দিনের সরকারি মেরামত ওয়ারেন্টি',
-    guaranteeCardDesc: 'কাজে কোনো ত্রুটি থাকলে ৭ দিনের মধ্যে মাস্টার কর্মী দ্বারা ₹০ খরচে বিনামূল্যে সমাধান।',
+    guaranteeCardTitle: '৩০-দিনের সমবায় মেরামত ওয়ারেন্টি',
+    guaranteeCardDesc: 'কাজে কোনো ত্রুটি থাকলে ৩০ দিনের মধ্যে মাস্টার কর্মী দ্বারা ₹০ খরচে বিনামূল্যে সমাধান।',
     welfareCardTitle: '১০০% কর্মী সামাজিক নিরাপত্তা',
-    welfareCardDesc: 'প্রতিটি বুকিং থেকে সরাসরি ১০% অর্থ কর্মীর স্বাস্থ্য ও পেনশন তহবিলে জমা হয়।',
+    welfareCardDesc: 'প্রতিটি বুকিং থেকে সরাসরি ৫% অর্থ কর্মীর পিএফ ও বিমা তহবিলে জমা হয়।',
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '১০০% যাচাইকৃত কর্মী',
     pillar1Desc: 'ITI / NSDC ও পুলিশ যাচাইকৃত',
     pillar2Title: 'অতিরিক্ত চার্জ নেই',
-    pillar2Desc: 'সরকারি নিয়ন্ত্রিত মূল হার',
+    pillar2Desc: 'সমবায় নিয়ন্ত্রিত মূল হার',
     pillar3Title: '১০০% সামাজিক নিরাপত্তা',
     pillar3Desc: 'স্বাস্থ্য ও পেনশন সুরক্ষা কভার',
 
@@ -975,7 +975,7 @@ export const TRANSLATIONS = {
     tabCarpentry: '🔨 কাঠের কাজ / তালা',
     likelyPartsLabel: 'সম্ভাব্য মানক সামগ্রী:',
     baseRateTag: 'মানক শ্রম মূল হার:',
-    zeroSurgeNotice: '✓ কোনো অতিরিক্ত মূল্য নেই • ফর্ম IV ট্যাক্স বিল • ৭-দিনের ওয়ারেন্টি',
+    zeroSurgeNotice: '✓ কোনো অতিরিক্ত মূল্য নেই • ফর্ম IV ট্যাক্স বিল • ৩০-দিনের ওয়ারেন্টি',
     bookThisServiceBtn: 'এখনই সেবাটি বুক করুন',
 
     // Problem Items
@@ -1030,18 +1030,18 @@ export const TRANSLATIONS = {
     cscBookingTitle: 'জন সেবা কেন্দ্র (CSC)',
     cscBookingDesc: 'আপনার নিকটস্থ পঞ্চায়েত \'মো সেবা কেন্দ্র\' (CSC) থেকে রশিদসহ বুক করুন।',
     cscBookingSub: 'নিকটস্থ কেন্দ্র দেখুন →',
-    guaranteeTag: 'সরকারি নিশ্চয়তা',
-    guaranteeTitle: '৭-দিনের ওয়ারেন্টি',
-    guaranteeDesc: 'কাজে ত্রুটি থাকলে ৭ দিনের মধ্যে মাস্টার কর্মী দ্বারা বিনামূল্যে সমাধান।',
-    guaranteeSub: '১০০% সরকারি গ্যারান্টি',
+    guaranteeTag: 'সমবায় নিশ্চয়তা',
+    guaranteeTitle: '৩০-দিনের ওয়ারেন্টি',
+    guaranteeDesc: 'কাজে ত্রুটি থাকলে ৩০ দিনের মধ্যে মাস্টার কর্মী দ্বারা বিনামূল্যে সমাধান।',
+    guaranteeSub: '১০০% সমবায় গ্যারান্টি',
     emergencyTag: 'জরুরি অগ্রাধিকার',
     emergencyTitle: '২৪/৭ জরুরি পরিষেবা',
-    emergencyDesc: 'শর্ট সার্কিট বা পাইপ ফাটলে ৩০ মিনিটের মধ্যে অগ্রাধিকার ভিত্তিতে বরাদ্দ।',
+    emergencyDesc: 'শর্ট সার্কিট বা পাইপ ফাটলে ৬০ মিনিটের মধ্যে অগ্রাধিকার ভিত্তিতে বরাদ্দ।',
     emergencySub: 'জরুরি বুকিং →',
 
     // Categories / Services Section
     secServices: 'মানক সার্বজনীন পরিষেবা',
-    secServicesSub: 'স্বচ্ছ সরকারি নিয়ন্ত্রিত মূল্য এবং যাচাইকৃত ট্রেড শংসাপত্র',
+    secServicesSub: 'স্বচ্ছ সমবায় নিয়ন্ত্রিত মূল্য এবং যাচাইকৃত ট্রেড শংসাপত্র',
     catElectrical: 'বৈদ্যুতিক মেরামত ও ওয়্যারিং',
     catPlumbing: 'প্লাম্বিং ও পাইপ ফিটিং',
     catCarpentry: 'কাঠের কাজ ও আসবাবপত্র',
@@ -1066,23 +1066,23 @@ export const TRANSLATIONS = {
     descDriving: 'যাচাইকৃত পেশাদার গাড়ি চালক',
     descDomestic: 'গৃহকর্মী ও রান্নার সাহায্য',
     descTechnician: 'সিসিটিভি ক্যামেরা ও কম্পিউটার মেরামত',
-    descEmergency: '৩০ মিনিটের মধ্যে জরুরি সেবা',
+    descEmergency: '৬০ মিনিটের মধ্যে জরুরি সেবা',
 
     startingAt: 'প্রারম্ভিক মূল্য',
     verifiedArtisans: 'যাচাইকৃত কারিগর',
     viewArtisansBtn: 'কর্মী',
     bookBtn: 'বুক করুন',
-    viewAllTariffsBtn: 'সকল ১২টি সেবার সরকারি দর দেখুন',
+    viewAllTariffsBtn: 'সকল ১২টি সেবার সমবায় দর দেখুন',
 
     // 3-Step Simple Guide
     howItWorksBadge: 'সহজ ও নিরাপদ প্রক্রিয়া • ৩-ধাপে বুকিং',
-    howItWorksTitle: 'ঘরে বসে সরকারি যাচাইকৃত কর্মী কীভাবে ডাকবেন?',
-    howItWorksSub: 'স্বচ্ছ সরকারি প্রক্রিয়ায় নিরাপদ সেবা নিশ্চিত করুন।',
+    howItWorksTitle: 'ঘরে বসে যাচাইকৃত সমবায় কর্মী কীভাবে ডাকবেন?',
+    howItWorksSub: 'স্বচ্ছ সমবায় প্রক্রিয়ায় নিরাপদ সেবা নিশ্চিত করুন।',
     step1Title: 'সমস্যা ও সেবা নির্বাচন',
-    step1Desc: 'ওয়েবসাইটে সেবা নির্বাচন করুন বা মুখে বলুন। নির্ধারিত সরকারি মূল্য তাৎক্ষণিক দেখা যাবে।',
+    step1Desc: 'ওয়েবসাইটে সেবা নির্বাচন করুন বা মুখে বলুন। নির্ধারিত সমবায় মূল্য তাৎক্ষণিক দেখা যাবে।',
     step2Title: 'সময় ও ঠিকানা নির্ধারণ',
     step2Desc: 'আপনার সুবিধাজনক সময় নির্বাচন করুন। নিকটতম সমবায় কর্মী নিযুক্ত হবেন।',
-    step3Title: 'নিরাপদ কাজ ও সরকারি বিল',
+    step3Title: 'নিরাপদ কাজ ও প্রাতিষ্ঠানিক বিল',
     step3Desc: 'কর্মী পরিচয়পত্র ও ওটিপি যাচাইসহ পৌঁছাবেন। কাজ শেষে ফর্ম IV বিল গ্রহণ করুন।',
 
     // Stats Section
@@ -1144,7 +1144,7 @@ export const TRANSLATIONS = {
     artisanBio: 'কারিগরের পরিচয়',
     close: 'বন্ধ করুন',
 
-    servicesDirectoryBadge: 'প্রমিত সরকারি সেবা মূল্য তালিকা',
+    servicesDirectoryBadge: 'প্রমিত সমবায় সেবা মূল্য তালিকা',
     zeroSurgeBannerTitle: 'শূন্য অতিরিক্ত চার্জ গ্যারান্টি',
     zeroSurgeBannerDesc: 'সকল মূল্য রাজ্য সমবায় সংঘ দ্বারা নির্ধারিত। কোনো লুকানো চার্জ নেই।',
     tollFreeBookingLabel: 'টোল-ফ্রি ফোন বুকিং',
@@ -1158,7 +1158,7 @@ export const TRANSLATIONS = {
     verifiedWorkerCount: 'যাচাইকৃত কর্মী',
     coopBaseRate: 'সমবায় মূল মূল্য',
     priorityEmergency: '২৪/৭ জরুরি পরিষেবা',
-    responseTime: '৩০ মিনিটে প্রতিক্রিয়া',
+    responseTime: '৬০ মিনিটে প্রতিক্রিয়া',
 
     myBookingsTitle: 'আমার পরিষেবা বুকিং',
     myBookingsSub: 'আপনার গৃহস্থালি পরিষেবা অর্ডার ট্র্যাক ও পরিচালনা করুন',
@@ -1176,8 +1176,8 @@ export const TRANSLATIONS = {
     confirmCancel: 'আপনি কি নিশ্চিত যে এই বুকিং বাতিল করতে চান?',
     noBookings: 'কোনো বুকিং পাওয়া যায়নি।',
     bookFirstService: 'শুরু করতে আপনার প্রথম পরিষেবা বুক করুন।',
-    warrantyBadge: '৭-দিনের বিনামূল্যে মেরামত গ্যারান্টি',
-    warrantySub: 'কাজে ত্রুটি থাকলে ৭ দিনের মধ্যে মাস্টার কর্মী দ্বারা ₹০ খরচে সমাধান।',
+    warrantyBadge: '৩০-দিনের বিনামূল্যে মেরামত গ্যারান্টি',
+    warrantySub: 'কাজে ত্রুটি থাকলে ৩০ দিনের মধ্যে মাস্টার কর্মী দ্বারা ₹০ খরচে সমাধান।',
 
     catElectrical: 'বৈদ্যুতিক',
     catPlumbing: 'প্লাম্বিং',
@@ -1193,14 +1193,14 @@ export const TRANSLATIONS = {
     searchBtn: 'খুঁজুন',
     resetAllFilters: 'সকল ফিল্টার রিসেট করুন',
 
-    problemSearchTitle: 'সমস্যা অনুসন্ধান ও সরকারি মূল্য তালিকা',
+    problemSearchTitle: 'সমস্যা অনুসন্ধান ও সমবায় মূল্য তালিকা',
     problemSearchSub: 'আপনার মেরামতের সমস্যা লিখুন বা নিচের বিকল্প থেকে নির্বাচন করুন',
-    problemSearchDesc: 'আমাদের পোর্টাল আপনার প্রয়োজনকে অবিলম্বে প্রত্যয়িত সরকারি মূল্যের সাথে যুক্ত করে।',
+    problemSearchDesc: 'আমাদের পোর্টাল আপনার প্রয়োজনকে অবিলম্বে প্রত্যয়িত সমবায় মূল্যের সাথে যুক্ত করে।',
     searchIssuePlaceholder: 'সমস্যা লিখুন (যেমন জলের কল লিক, পাখা নষ্ট, এসি গ্যাস)...',
     btnFindServiceRate: 'সেবা ও মূল্য খুঁজুন',
     matchedService: 'সম্পর্কিত পরিষেবা',
-    govStandardRate: 'সরকারি নির্ধারিত মূল্য',
-    orSelectManual: 'বা সকল প্রমিত সরকারি পরিষেবা থেকে বেছে নিন',
+    govStandardRate: 'সমবায় নির্ধারিত মূল্য',
+    orSelectManual: 'বা সকল প্রমিত সমবায় পরিষেবা থেকে বেছে নিন',
     matchingServicesFound: 'সম্পর্কিত পরিষেবা পাওয়া গেছে',
     clearSearch: 'অনুসন্ধান মুছুন',
     btnContinueQuote: 'নির্বাচিত পরিষেবার সাথে এগিয়ে যান',
@@ -1208,8 +1208,8 @@ export const TRANSLATIONS = {
 
   TE: {
     // Top Bar & Branding
-    govSupportTag: 'భారత ప్రభుత్వం & సహకార మంత్రిత్వ శాఖ మద్దతు',
-    portalSubHeader: 'భారత ప్రభుత్వం • లేబర్ కోఆపరేటివ్ ఫెడరేషన్ పోర్టల్',
+    govSupportTag: 'నేషనల్ లేబర్ కోఆపరేటివ్ ఫెడరేషన్ (NLCF) మద్దతు',
+    portalSubHeader: 'జాతీయ లేబర్ కోఆపరేటివ్ ఫెడరేషన్ పోర్టల్',
     brandName: 'శ్రమ్ సేతు',
     brandSubtitle: 'కోఆపరేటివ్ గిగ్ సర్వీసెస్ పోర్టల్',
     tollFreeLabel: 'టోల్-ఫ్రీ హెల్ప్‌లైన్',
@@ -1223,13 +1223,13 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'ప్రత్యక్ష సమాచారం',
-    tickerText: 'అన్ని 30 జిల్లాల్లో 100% ITI మరియు పోలీస్ ధృవీకరించిన కార్మికులు అందుబాటులో ఉన్నారు • ప్రభుత్వ నియంత్రిత ధరలు • 7 రోజుల ఉచిత మరమ్మతు హామీ • కాల్ చేయండి: 1800-345-7788',
+    tickerText: 'అన్ని 30 జిల్లాల్లో 100% ITI మరియు పోలీస్ ధృవీకరించిన కార్మికులు అందుబాటులో ఉన్నారు • సహకార నియంత్రిత ధరలు • 30 రోజుల ఉచిత మరమ్మతు హామీ • కాల్ చేయండి: 1800-345-7788',
 
     // Hero Section
     heroTitlePart1: 'ధృవీకరించబడిన నైపుణ్యాలు.',
     heroTitlePart2: 'సహకార కార్మికులు.',
     heroTitlePart3: 'బలమైన సమాజం.',
-    heroSubtitle: 'ఒడిశా వ్యాప్తంగా ప్రాంతీయ లేబర్ కోఆపరేటివ్ ఫెడరేషన్లతో అనుబంధంగా ఉన్న ధృవీకరించబడిన నైపుణ్యం కలిగిన నిపుణులతో కనెక్ట్ అవ్వండి. నియంత్రిత టారిఫ్‌లు మరియు సామాజిక భద్రత.',
+    heroSubtitle: 'ప్రాంతీయ లేబర్ కోఆపరేటివ్ ఫెడరేషన్లతో అనుబంధంగా ఉన్న ధృవీకరించబడిన నైపుణ్యం కలిగిన నిపుణులతో కనెక్ట్ అవ్వండి. నియంత్రిత టారిఫ్‌లు మరియు సామాజిక భద్రత.',
     btnBookNow: 'సేవను బుక్ చేయండి',
     btnFindWorker: 'కార్మికుడిని కనుగొనండి',
     btnJoinWorker: 'మీరు నైపుణ్యం కలిగిన కార్మికులా? మీ స్థానిక సహకార సంఘంలో చేరండి →',
@@ -1252,16 +1252,16 @@ export const TRANSLATIONS = {
     sampleWorkerStats: '124+ పనులు పూర్తి • 1.2 కి.మీ దూరం',
     policeVerifiedBadge: 'పోలీస్ & ఆధార్ ధృవీకరించబడింది',
     bookNowShort: 'ఇప్పుడే బుక్ చేయండి →',
-    guaranteeCardTitle: '7 రోజుల ఉచిత ప్రభుత్వ మరమ్మతు హామీ',
-    guaranteeCardDesc: 'పనిలో ఏదైనా లోపం ఉంటే 7 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ₹0 ఖర్చుతో ఉచిత పరిష్కారం.',
+    guaranteeCardTitle: '30 రోజుల ఉచిత సహకార మరమ్మతు హామీ',
+    guaranteeCardDesc: 'పనిలో ఏదైనా లోపం ఉంటే 30 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ₹0 ఖర్చుతో ఉచిత పరిష్కారం.',
     welfareCardTitle: '100% కార్మిక సామాజిక భద్రత',
-    welfareCardDesc: 'ప్రతి బుకింగ్ నుండి నేరుగా 10% కార్మికుడి ఆరోగ్య & పెన్షన్ నిధికి చేరుతుంది.',
+    welfareCardDesc: 'ప్రతి బుకింగ్ నుండి నేరుగా 5% కార్మికుడి పీఎఫ్ & బీమా నిధికి చేరుతుంది.',
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% ధృవీకరించబడిన కార్మికులు',
     pillar1Desc: 'ITI / NSDC మరియు పోలీస్ ధృవీకరించబడింది',
     pillar2Title: 'అదనపు ఛార్జీలు లేవు',
-    pillar2Desc: 'ప్రభుత్వ నియంత్రిత బేస్ టారిఫ్‌లు',
+    pillar2Desc: 'సహకార నియంత్రిత బేస్ టారిఫ్‌లు',
     pillar3Title: '100% సామాజిక భద్రత',
     pillar3Desc: 'ఆరోగ్య & పెన్షన్ భద్రతా కవర్',
 
@@ -1274,7 +1274,7 @@ export const TRANSLATIONS = {
     tabCarpentry: '🔨 వడ్రంగి / తాళాలు',
     likelyPartsLabel: 'ప్రామాణిక సామగ్రి:',
     baseRateTag: 'ప్రామాణిక లేబర్ బేస్ రేటు:',
-    zeroSurgeNotice: '✓ అదనపు ధర లేదు • ఫారం IV బిల్లు • 7 రోజుల వారంటీ',
+    zeroSurgeNotice: '✓ అదనపు ధర లేదు • ఫారం IV బిల్లు • 30 రోజుల వారంటీ',
     bookThisServiceBtn: 'ఈ సేవను ఇప్పుడే బుక్ చేయండి',
 
     // Problem Items
@@ -1329,18 +1329,18 @@ export const TRANSLATIONS = {
     cscBookingTitle: 'జన సేవా కేంద్రం (CSC)',
     cscBookingDesc: 'మీ సమీప పంచాయతీ \'మో సేవా కేంద్రం\' (CSC) నుండి రసీదుతో బుక్ చేయండి.',
     cscBookingSub: 'సమీప కేంద్రాన్ని చూడండి →',
-    guaranteeTag: 'ప్రభుత్వ హామీ',
-    guaranteeTitle: '7 రోజుల వారంటీ',
-    guaranteeDesc: 'పనిలో లోపం ఉంటే 7 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ఉచిత పరిష్కారం.',
-    guaranteeSub: '100% ప్రభుత్వ హామీ',
+    guaranteeTag: 'సహకార హామీ',
+    guaranteeTitle: '30 రోజుల వారంటీ',
+    guaranteeDesc: 'పనిలో లోపం ఉంటే 30 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ఉచిత పరిష్కారం.',
+    guaranteeSub: '100% సహకార హామీ',
     emergencyTag: 'తక్షణ ప్రాధాన్యత',
     emergencyTitle: '24/7 అత్యవసర సేవ',
-    emergencyDesc: 'షార్ట్ సర్క్యూట్ లేదా పైప్ పగిలితే 30 నిమిషాల్లో ప్రాధాన్యత కేటాయింపు.',
+    emergencyDesc: 'షార్ట్ సర్క్యూట్ లేదా పైప్ పగిలితే 60 నిమిషాల్లో ప్రాధాన్యత కేటాయింపు.',
     emergencySub: 'అత్యవసర బుకింగ్ →',
 
     // Categories / Services Section
     secServices: 'ప్రామాణిక ప్రజా సేవలు',
-    secServicesSub: 'ధృవీకరించబడిన ట్రేడ్ సర్టిఫికేట్‌లతో పారదర్శక ప్రభుత్వ నియంత్రిత ధరలు',
+    secServicesSub: 'ధృవీకరించబడిన ట్రేడ్ సర్టిఫికేట్‌లతో పారదర్శక సహకార నియంత్రిత ధరలు',
     catElectrical: 'విద్యుత్ మరమ్మతు & వైరింగ్',
     catPlumbing: 'ప్లంబింగ్ & పైప్ ఫిట్టింగ్',
     catCarpentry: 'వడ్రంగి & ఫర్నిచర్',
@@ -1365,23 +1365,23 @@ export const TRANSLATIONS = {
     descDriving: 'ధృవీకరించబడిన ప్రైవేట్ మరియు వాణిజ్య డ్రైవర్లు',
     descDomestic: 'ఇంటి సహాయకులు, వంటవారు & హౌస్‌కీపింగ్',
     descTechnician: 'CCTV కెమెరా, వై-ఫై & కంప్యూటర్ మరమ్మతు',
-    descEmergency: '30 నిమిషాల్లో తక్షణ ప్రాధాన్యత సేవ',
+    descEmergency: '60 నిమిషాల్లో తక్షణ ప్రాధాన్యత సేవ',
 
     startingAt: 'ప్రారంభ ధర',
     verifiedArtisans: 'ధృవీకరించబడిన కార్మికులు',
     viewArtisansBtn: 'కార్మికులు',
     bookBtn: 'బుక్ చేయండి',
-    viewAllTariffsBtn: 'అన్ని 12 సేవల ప్రభుత్వ ధరల జాబితాను చూడండి',
+    viewAllTariffsBtn: 'అన్ని 12 సేవల సహకార ధరల జాబితాను చూడండి',
 
     // 3-Step Simple Guide
     howItWorksBadge: 'సులభమైన & సురక్షితమైన ప్రక్రియ • 3-దశల బుకింగ్',
-    howItWorksTitle: 'ఇంటి నుండే ప్రభుత్వ ధృవీకరించిన కార్మికుడిని ఎలా పిలవాలి?',
-    howItWorksSub: 'పారదర్శక ప్రభుత్వ ప్రక్రియ ద్వారా సురక్షితమైన సేవను పొందండి.',
+    howItWorksTitle: 'ఇంటి నుండే ధృవీకరించిన సహకార కార్మికుడిని ఎలా పిలవాలి?',
+    howItWorksSub: 'పారదర్శక సహకార ప్రక్రియ ద్వారా సురక్షితమైన సేవను పొందండి.',
     step1Title: 'సమస్య & సేవను ఎంచుకోండి',
-    step1Desc: 'వెబ్‌సైట్‌లో సేవను ఎంచుకోండి లేదా మాట్లాడి చెప్పండి. స్థిరమైన ప్రభుత్వ ధర తక్షణమే కనిపిస్తుంది.',
+    step1Desc: 'వెబ్‌సైట్‌లో సేవను ఎంచుకోండి లేదా మాట్లాడి చెప్పండి. స్థిరమైన సహకార ధర తక్షణమే కనిపిస్తుంది.',
     step2Title: 'సమయం & చిరునామా నిర్ణయించండి',
     step2Desc: 'మీ అనుకూల సమయాన్ని ఎంచుకోండి. సమీపంలోని సహకార కార్మికుడు కేటాయించబడతారు.',
-    step3Title: 'సురక్షితమైన పని & ప్రభుత్వ బిల్లు',
+    step3Title: 'సురక్షితమైన పని & అధికారిక బిల్లు',
     step3Desc: 'కార్మికుడు ఐడీ కార్డు & ఓటీపీ ధృవీకరణతో వస్తారు. పని ముగిసిన తర్వాత ఫారం IV బిల్లు పొందండి.',
 
     // Stats Section
@@ -1443,7 +1443,7 @@ export const TRANSLATIONS = {
     artisanBio: 'కార్మిక పరిచయం',
     close: 'మూసివేయండి',
 
-    servicesDirectoryBadge: 'ప్రామాణిక ప్రభుత్వ సేవా ధరల డైరెక్టరీ',
+    servicesDirectoryBadge: 'ప్రామాణిక సహకార సేవా ధరల డైరెక్టరీ',
     zeroSurgeBannerTitle: 'అదనపు ధర లేదు - హామీ',
     zeroSurgeBannerDesc: 'అన్ని ధరలు రాష్ట్ర సహకార సంఘం ద్వారా ప్రామాణీకరించబడ్డాయి. దాచిన ఛార్జీలు లేవు.',
     tollFreeBookingLabel: 'టోల్-ఫ్రీ ఫోన్ బుకింగ్',
@@ -1457,7 +1457,7 @@ export const TRANSLATIONS = {
     verifiedWorkerCount: 'ధృవీకరించబడిన కార్మికులు',
     coopBaseRate: 'సహకార బేస్ రేటు',
     priorityEmergency: '24/7 అత్యవసర సేవ',
-    responseTime: '30 నిమిషాల్లో స్పందన',
+    responseTime: '60 నిమిషాల్లో స్పందన',
 
     myBookingsTitle: 'నా సేవా బుకింగ్‌లు',
     myBookingsSub: 'మీ గృహ సేవా ఆర్డర్లను ట్రాక్ మరియు నిర్వహించండి',
@@ -1476,7 +1476,7 @@ export const TRANSLATIONS = {
     noBookings: 'బుకింగ్‌లు కనుగొనబడలేదు.',
     bookFirstService: 'ప్రారంభించడానికి మీ మొదటి సేవను బుక్ చేయండి.',
     warrantyBadge: '7-రోజుల ఉచిత మరమ్మతు హామీ',
-    warrantySub: 'పనిలో లోపం ఉంటే 7 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ₹0 ఖర్చుతో పరిష్కారం.',
+    warrantySub: 'పనిలో లోపం ఉంటే 30 రోజుల్లో మాస్టర్ కార్మికుడి ద్వారా ₹0 ఖర్చుతో పరిష్కారం.',
 
     catElectrical: 'విద్యుత్',
     catPlumbing: 'ప్లంబింగ్',
@@ -1492,13 +1492,13 @@ export const TRANSLATIONS = {
     searchBtn: 'శోధించండి',
     resetAllFilters: 'అన్ని ఫిల్టర్లను రీసెట్ చేయండి',
 
-    problemSearchTitle: 'సమస్య శోధన & ప్రభుత్వ ధరల పట్టిక',
+    problemSearchTitle: 'సమస్య శోధన & సహకార ధరల పట్టిక',
     problemSearchSub: 'మీ మరమ్మతు సమస్యను వివరించండి లేదా దిగువ ఎంపికలను ఎంచుకోండి',
-    problemSearchDesc: 'మా పోర్టల్ మీ అవసరాన్ని తక్షణమే ధృవీకరించబడిన ప్రభుత్వ ధరలతో కలుపుతుంది.',
+    problemSearchDesc: 'మా పోర్టల్ మీ అవసరాన్ని తక్షణమే ధృవీకరించబడిన సహకార ధరలతో కలుపుతుంది.',
     searchIssuePlaceholder: 'సమస్యను టైప్ చేయండి (ఉదా. కుళాయి లీక్, ఫ్యాన్ పని చేయకపోవడం, ఏసీ గ్యాస్)...',
     btnFindServiceRate: 'సేవ & ధరను కనుగొనండి',
     matchedService: 'సరిపోలిన సేవ',
-    govStandardRate: 'ప్రభుత్వ నియంత్రిత ధర',
+    govStandardRate: 'సహకార నియంత్రిత ధర',
     orSelectManual: 'లేదా అన్ని ప్రామాణిక ప్రజా సేవల నుండి ఎంచుకోండి',
     matchingServicesFound: 'సరిపోలే సేవలు కనుగొనబడ్డాయి',
     clearSearch: 'శోధనను క్లియర్ చేయండి',

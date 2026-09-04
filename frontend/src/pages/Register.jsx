@@ -42,17 +42,20 @@ export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Selected Role: 'CUSTOMER' | 'WORKER'
-  const initialRole = searchParams.get('role') === 'worker' ? 'WORKER' : 'CUSTOMER';
+  // Selected Role: 'CUSTOMER' | 'WORKER' | 'FEDERATION'
+  const urlRole = searchParams.get('role');
+  const initialRole = urlRole === 'worker' ? 'WORKER' : (urlRole === 'federation' || urlRole === 'society' || urlRole === 'admin') ? 'FEDERATION' : 'CUSTOMER';
   const [role, setRole] = useState(initialRole);
 
   // Sync role with URL search param if it changes
   useEffect(() => {
-    const urlRole = searchParams.get('role');
-    if (urlRole === 'worker') {
+    const paramRole = searchParams.get('role');
+    if (paramRole === 'worker') {
       setRole('WORKER');
-    } else if (urlRole === 'customer') {
+    } else if (paramRole === 'customer') {
       setRole('CUSTOMER');
+    } else if (paramRole === 'federation' || paramRole === 'society' || paramRole === 'admin') {
+      setRole('FEDERATION');
     }
   }, [searchParams]);
 
@@ -72,6 +75,12 @@ export default function Register() {
     address: '',
     pincode: '751024',
 
+    // Federation Specifics
+    societyName: '',
+    isNlcfAffiliated: true,
+    initialCapitalBalance: 25000,
+    cooperativeBankName: 'District Central Cooperative Bank',
+
     // Step 2: Trade Skills & Work Profile
     primaryTrade: 'Electrical',
     subSkills: ['Single-Phase Wiring', 'MCB Short Circuit Faults'],
@@ -83,7 +92,7 @@ export default function Register() {
     // Step 3: Certifications
     certificationType: 'ITI_NCVT',
     certificationName: 'National Trade Certificate (NTC) — Electrician',
-    issuingOrganization: 'Government ITI Bhubaneswar / NCVT',
+    issuingOrganization: 'National ITI Bhubaneswar / NCVT',
     certificateNumber: 'ITI-OD-2022-8821',
     issueDate: '2022-07-15',
     hasUploadedCert: true,
@@ -160,7 +169,7 @@ export default function Register() {
       return 'Please enter a valid 10-character PAN Card number.';
     }
     if (!formData.bankAccount.trim()) {
-      return 'Please enter your bank account number for direct 90% instant earnings payout.';
+      return 'Please enter your bank account number for direct 93% instant earnings payout.';
     }
     if (formData.bankAccount !== formData.confirmBankAccount) {
       return 'Bank account numbers do not match.';
@@ -172,7 +181,7 @@ export default function Register() {
       return 'Please provide an emergency contact name and phone number.';
     }
     if (!formData.acceptedUndertaking) {
-      return 'You must accept the statutory legal undertaking under the Odisha Cooperative Societies Act.';
+      return 'You must accept the statutory legal undertaking under the Multi-State Cooperative Societies Act.';
     }
     return null;
   };
@@ -208,6 +217,19 @@ export default function Register() {
         setLocalError(err);
         return;
       }
+    } else if (role === 'FEDERATION') {
+      if (!formData.societyName.trim()) {
+        setLocalError('Please enter the Society / Federation Name.');
+        return;
+      }
+      if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+        setLocalError('Please fill in Federation Administrator Name, Email, and Password.');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setLocalError('Passwords do not match.');
+        return;
+      }
     } else {
       const err = validateStep4();
       if (err) {
@@ -223,11 +245,17 @@ export default function Register() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        role: role,
+        role: role === 'FEDERATION' ? 'COOPERATIVE_ADMIN' : role,
         district: formData.district,
         city: formData.city,
         address: formData.address,
         pincode: formData.pincode,
+
+        // Federation specifics
+        societyName: formData.societyName,
+        isNlcfAffiliated: formData.isNlcfAffiliated,
+        initialCapitalBalance: formData.initialCapitalBalance,
+        cooperativeBankName: formData.cooperativeBankName,
 
         // Worker rich fields
         primaryTrade: formData.primaryTrade,
@@ -259,6 +287,8 @@ export default function Register() {
         const appNo = `APP-OD-2026-${String(1000 + (user?.id || 88)).padStart(4, '0')}`;
         setSubmittedApplicationNo(appNo);
         setWizardStep(5); // Success step
+      } else if (role === 'FEDERATION') {
+        navigate('/federation/portal');
       } else {
         navigate('/customer/bookings');
       }
@@ -271,13 +301,15 @@ export default function Register() {
 
   return (
     <div className="container py-10 max-w-3xl mx-auto px-4">
-      {/* Top Government Seal Header */}
+      {/* Top Seal Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-950 text-amber-400 mb-3 shadow-md border border-amber-500/30">
-          <Building2 size={28} />
-        </div>
+        <img
+          src="/logo.png"
+          alt="Shram Setu Brand Logo"
+          className="w-20 h-20 mx-auto mb-3 object-contain rounded-2xl shadow-md border border-slate-200 bg-white p-1.5"
+        />
         <div className="text-[11px] font-bold text-blue-900 uppercase tracking-wider mb-1">
-          Government of India • Department of Cooperation
+          National Labour Cooperatives Federation • Autonomous Apex Body
         </div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-blue-950">
           Official Cooperative Portal Registration
@@ -294,7 +326,7 @@ export default function Register() {
             <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
               Select Registration Category:
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -308,7 +340,7 @@ export default function Register() {
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                   role === 'CUSTOMER' ? 'bg-blue-900 text-white' : 'bg-slate-100 text-slate-600'
                 }`}>
                   <UserCheck size={18} />
@@ -332,7 +364,7 @@ export default function Register() {
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                   role === 'WORKER' ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-600'
                 }`}>
                   <Briefcase size={18} />
@@ -340,6 +372,30 @@ export default function Register() {
                 <div>
                   <div className="font-bold text-xs">Skilled Worker / Artisan</div>
                   <div className="text-[11px] text-slate-500">Accreditation & direct dispatch</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRole('FEDERATION');
+                  setWizardStep(1);
+                  setLocalError('');
+                }}
+                className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
+                  role === 'FEDERATION'
+                    ? 'border-amber-600 bg-amber-50 text-amber-950 ring-2 ring-amber-600/20'
+                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                }`}
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  role === 'FEDERATION' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <div className="font-bold text-xs">Cooperative Society / Federation</div>
+                  <div className="text-[11px] text-slate-500">Formation charter & NLCF tenders</div>
                 </div>
               </button>
             </div>
@@ -466,7 +522,7 @@ export default function Register() {
         {/* ─────────────────────────────────────────────────────────────
             CASE B: CITIZEN REGISTRATION (1 STEP) OR WORKER STEP 1
            ───────────────────────────────────────────────────────────── */}
-        {wizardStep === 1 && (
+        {(role === 'CUSTOMER' || role === 'WORKER') && wizardStep === 1 && (
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
               <h3 className="font-bold text-sm text-slate-900">
@@ -573,7 +629,7 @@ export default function Register() {
                   placeholder="e.g. 751007"
                   value={formData.pincode}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
                 />
               </div>
             </div>
@@ -584,7 +640,6 @@ export default function Register() {
               </label>
               <textarea
                 rows={2}
-                required
                 name="address"
                 placeholder="Plot / House No, Street, Landmark"
                 value={formData.address}
@@ -645,6 +700,240 @@ export default function Register() {
                   {loading ? 'Creating Citizen Account...' : 'Register as Citizen →'}
                 </button>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────
+            CASE B2: COOPERATIVE SOCIETY / FEDERATION REGISTRATION
+           ───────────────────────────────────────────────────────────── */}
+        {role === 'FEDERATION' && (
+          <div className="space-y-6">
+            <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-300 text-xs text-amber-950 flex items-start gap-3">
+              <Building2 size={22} className="shrink-0 text-amber-700 mt-0.5" />
+              <div>
+                <strong className="font-bold text-amber-900 block text-xs">
+                  Cooperative Society & Federation Portal Registration
+                </strong>
+                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                  Societies & Federations affiliate with State & National federations (like <strong>NLCF</strong>) for coordination, subsidized NCCT training, and access to large institutional public contracts.
+                </p>
+              </div>
+            </div>
+
+            {/* 2 Pathways */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="p-4 rounded-xl border-2 border-blue-900 bg-blue-50/40 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-900 bg-blue-100 px-2 py-0.5 rounded">
+                    New Unregistered Societies
+                  </span>
+                  <h4 className="font-bold text-gray-900 text-xs mt-1.5">
+                    9-Step Legal Formation Charter Wizard
+                  </h4>
+                  <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                    Full statutory dossier with 10 founding members roster, model bylaws, ₹10k bank deposit check, affidavit, and Registrar tracking.
+                  </p>
+                </div>
+                <Link
+                  to="/society/register"
+                  className="btn btn-primary btn-sm text-xs font-bold w-full justify-center flex items-center gap-1.5 mt-2 shadow-xs"
+                >
+                  Launch 9-Step Formation Wizard <ChevronRight size={14} />
+                </Link>
+              </div>
+
+              <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70 space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                    Formed Societies / Federations
+                  </span>
+                  <h4 className="font-bold text-gray-900 text-xs mt-1.5">
+                    Quick Federation Leadership Account
+                  </h4>
+                  <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                    Complete the form below to create your official federation administrator credentials and access the dual-console desk immediately.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('federation-quick-form');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="btn btn-secondary btn-sm text-xs font-bold w-full justify-center"
+                >
+                  Fill Quick Registration Below ↓
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Federation Onboarding Form */}
+            <div id="federation-quick-form" className="space-y-4 pt-4 border-t border-slate-100">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Federation / Society Details & Leadership Account
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Society / Federation Full Legal Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="societyName"
+                    placeholder="e.g. Kalinga Shramik Seva Sahakari Federation"
+                    value={formData.societyName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Federation Admin / President Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="name"
+                    placeholder="e.g. Arun Pattnaik"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Official Registered Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    name="email"
+                    placeholder="e.g. kalinga.federation@coop.gov.in"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Office Phone / WhatsApp *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    name="phone"
+                    placeholder="e.g. 0674-2548800"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Operational District *
+                  </label>
+                  <select
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs bg-white"
+                  >
+                    <option value="Khordha">Khordha (Bhubaneswar Metro Federation)</option>
+                    <option value="Cuttack">Cuttack District Cooperative Society</option>
+                    <option value="Puri">Puri Coastal Labour Cooperative</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Initial Capital Deposited (₹ Min 10,000) *
+                  </label>
+                  <input
+                    type="number"
+                    min="10000"
+                    name="initialCapitalBalance"
+                    value={formData.initialCapitalBalance}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Cooperative Bank Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="cooperativeBankName"
+                    value={formData.cooperativeBankName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Create Admin Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    name="password"
+                    placeholder="Minimum 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Confirm Admin Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    name="confirmPassword"
+                    placeholder="Re-type password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* NLCF Affiliation Checkbox */}
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  id="is-nlcf-reg"
+                  name="isNlcfAffiliated"
+                  checked={formData.isNlcfAffiliated}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-amber-600 rounded"
+                />
+                <label htmlFor="is-nlcf-reg" className="text-xs font-bold text-amber-950 cursor-pointer">
+                  🌟 Affiliate with National Labour Cooperatives Federation (NLCF) — Unlocks "Trusted Federation" badge & institutional tender contracts.
+                </label>
+              </div>
+
+              <div className="pt-3">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleSubmit}
+                  className="w-full btn btn-primary py-3 text-xs font-bold bg-amber-600 hover:bg-amber-500 border-amber-600 text-white shadow-xs"
+                >
+                  {loading ? 'Registering Society / Federation...' : 'Register Society / Federation & Enter Portal →'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -875,7 +1164,7 @@ export default function Register() {
                   type="text"
                   required
                   name="issuingOrganization"
-                  placeholder="e.g. Government ITI Bhubaneswar / NCVT"
+                  placeholder="e.g. National ITI Bhubaneswar / NCVT"
                   value={formData.issuingOrganization}
                   onChange={handleChange}
                   className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
@@ -941,7 +1230,7 @@ export default function Register() {
                 Step 4: Statutory KYC & Bank Account Details
               </h3>
               <p className="text-xs text-slate-500">
-                Required for direct 90% instant pay settlement, ESIC accident coverage, and police verification.
+                Required for direct 93% instant pay settlement, PF & ESIC accident coverage, and police verification.
               </p>
             </div>
 

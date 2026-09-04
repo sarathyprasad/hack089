@@ -34,8 +34,16 @@ export default function CustomerBookings() {
   };
 
   useEffect(() => {
+    if (user && user.role === 'WORKER') {
+      navigate('/worker/dashboard', { replace: true });
+      return;
+    }
+    if (user && user.role === 'COOPERATIVE_ADMIN') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
     fetchBookings();
-  }, []);
+  }, [user]);
 
   const handleSimulateStatus = async (bookingId, nextStatus) => {
     setActionLoadingId(bookingId);
@@ -133,7 +141,7 @@ export default function CustomerBookings() {
         </div>
       </div>
 
-      {/* 7-Day Guarantee Assurance Box */}
+      {/* 30-Day Guarantee Assurance Box */}
       <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 text-xs text-amber-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">

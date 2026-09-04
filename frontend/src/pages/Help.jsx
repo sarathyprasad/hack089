@@ -7,19 +7,19 @@ import {
 const FAQS = [
   {
     q: 'How does Shram Setu verify worker credentials?',
-    a: 'Every worker registered on Shram Setu is affiliated with a licensed District Labour Cooperative. Government ITI certificates, NSDC skill cards, and state trade licenses are physically and digitally verified by the Cooperative Administration before activation.',
+    a: 'Every worker registered on Shram Setu is affiliated with a licensed District Labour Cooperative. Accredited ITI certificates, NSDC skill cards, and state trade licenses are physically and digitally verified by the Cooperative Administration before activation.',
   },
   {
     q: 'What is the pricing model? Are there hidden fees?',
-    a: 'Prices are standardized based on Government Labour Board notifications. Customers pay a transparent base fee + cooperative welfare levy (10%) and platform administration fee (5%). There are no surge prices or dynamic algorithmic inflation.',
+    a: 'Prices are standardized based on National Labour Board notifications. Customers pay a transparent base fee (93% worker labour) + 5% PF & insurance contribution and 2% platform administration fee. There are no surge prices or dynamic algorithmic inflation.',
   },
   {
     q: 'How do emergency bookings work?',
-    a: 'Emergency service requests (e.g. electrical short circuits, major pipe bursts) are instantly routed with highest priority to the nearest available verified cooperative worker with an average response time of under 30 minutes in urban centers.',
+    a: 'Emergency service requests (e.g. electrical short circuits, major pipe bursts) are instantly routed with highest priority to the nearest available verified cooperative worker with an average response time of under 60 minutes in urban centers.',
   },
   {
     q: 'How are workers compensated?',
-    a: '85% of every transaction amount goes directly to the worker. 10% is directed to the Cooperative Worker Welfare Fund (ESIC insurance, pension, skill development), and 5% maintains digital infrastructure.',
+    a: 'Under our transparent 93-2-5 model, 93% of every transaction amount goes directly to the worker. 5% is directed to PF & Insurance (ESIC insurance, pension, social security), and 2% covers digital platform infrastructure.',
   },
   {
     q: 'What if I am not satisfied with the work?',

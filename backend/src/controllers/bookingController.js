@@ -56,9 +56,9 @@ async function createBooking(req, res) {
       baseAmount = baseAmount - bulkDiscount;
     }
 
-    // Phase 5 Split: 5% Cooperative Welfare Fund + 5% Platform Infra (Total 10% levy over base)
-    const cooperativeFee = Math.round(baseAmount * 0.05 * 100) / 100;
-    const platformFee = Math.round(baseAmount * 0.05 * 100) / 100;
+    // Model: 93% Worker + 2% Platform Fee + 5% PF & Insurance (93-2-5 model)
+    const cooperativeFee = Math.round(baseAmount * 0.05 * 100) / 100; // 5% PF & Insurance
+    const platformFee = Math.round(baseAmount * 0.02 * 100) / 100; // 2% Platform Fee
     const totalAmount = Math.round((baseAmount + cooperativeFee + platformFee) * 100) / 100;
 
     // Generate Guaranteed Unique Booking Code and Invoice Code
@@ -92,110 +92,12 @@ async function createBooking(req, res) {
       }
     }
 
-    // Determine initial status & validate worker assignment
-    let initialStatus = 'REQUESTED';
-    let validWorkerId = null;
-
-    if (workerId) {
-      const workerRes = await query(`
-        SELECT w.id, w.availability, w.verification_status, u.name
-        FROM workers w
-        JOIN users u ON w.user_id = u.id
-        WHERE w.id = $1
-      `, [workerId]);
-      const targetWorker = workerRes.rows[0];
-
-      if (!targetWorker) {
-        return res.status(404).json({ error: 'Not Found', message: 'Selected worker not found.' });
-      }
-
-      // 1. Check real-time duty availability
-      if (targetWorker.availability === 'BUSY') {
-        return res.status(409).json({
-          error: 'Worker Busy',
-          message: `Artisan ${targetWorker.name} is currently busy on an active job assignment. You cannot assign another booking to this worker at this time.`
-        });
-      }
-
-      if (targetWorker.availability === 'OFFLINE' || targetWorker.availability === 'ON_LEAVE') {
-        return res.status(409).json({
-          error: 'Worker Unavailable',
-          message: `Artisan ${targetWorker.name} is currently ${targetWorker.availability}. Please select an available artisan or choose another time slot.`
-        });
-      }
-
-      // 2. Check schedule slot conflict for this worker
-      const slotCollision = await query(`
-        SELECT id, booking_code, scheduled_date, scheduled_time, status
-        FROM bookings
-        WHERE worker_id = $1
-          AND scheduled_date = $2
-          AND (scheduled_time = $3 OR $3 = 'Immediate' OR scheduled_time = 'Immediate')
-          AND status IN ('MATCHED', 'ACCEPTED', 'IN_PROGRESS')
-        LIMIT 1
-      `, [workerId, todayDate, defaultTime]);
-
-      if (slotCollision.rows.length > 0) {
-        return res.status(409).json({
-          error: 'Slot Conflict',
-          message: `Artisan ${targetWorker.name} is already booked for ${defaultTime} on ${todayDate} (${slotCollision.rows[0].booking_code}). You cannot assign another work from another customer to this worker in the same time slot.`
-        });
-      }
-
-      validWorkerId = targetWorker.id;
-      initialStatus = 'MATCHED';
-    } else {
-      // Auto-assign: pick the closest available, verified worker in this trade & district with NO slot collision
-      const autoWorkerRes = await query(`
-        SELECT w.id, w.latitude, w.longitude, w.rating, w.experience_years
-        FROM workers w
-        JOIN users u ON w.user_id = u.id
-        WHERE (w.verification_status = 'VERIFIED' OR w.verification_status IS NULL)
-          AND (u.is_active = 1 OR u.is_active IS NULL)
-          AND w.availability = 'AVAILABLE'
-          AND EXISTS (
-            SELECT 1 FROM worker_skills ws
-            JOIN skills s ON ws.skill_id = s.id
-            WHERE ws.worker_id = w.id
-              AND (s.category ILIKE $1 OR s.name ILIKE $2)
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM bookings b
-            WHERE b.worker_id = w.id
-              AND b.scheduled_date = $3
-              AND (b.scheduled_time = $4 OR $4 = 'Immediate' OR b.scheduled_time = 'Immediate')
-              AND b.status IN ('MATCHED', 'ACCEPTED', 'IN_PROGRESS')
-          )
-      `, [
-        service.category,
-        `%${service.category}%`,
-        todayDate,
-        defaultTime
-      ]);
-
-      const candidateWorkers = autoWorkerRes.rows.map(w => {
-        const dist = (w.latitude && w.longitude)
-          ? calculateHaversineDistanceKm(customerLat, customerLng, w.latitude, w.longitude)
-          : 5.0;
-        return { ...w, distanceKm: dist };
-      });
-
-      // Sort by closest proximity, then rating
-      candidateWorkers.sort((a, b) => {
-        if (Math.abs(a.distanceKm - b.distanceKm) >= 1.0) {
-          return a.distanceKm - b.distanceKm;
-        }
-        return b.rating - a.rating;
-      });
-
-      if (candidateWorkers.length > 0) {
-        validWorkerId = candidateWorkers[0].id;
-        initialStatus = 'MATCHED';
-      } else {
-        validWorkerId = null;
-        initialStatus = 'REQUESTED';
-      }
-    }
+    // Fair Cooperative Broadcast Dispatch Protocol:
+    // Customer does NOT have authority to choose an individual worker.
+    // The service request is broadcasted to all nearby verified cooperative artisans in the matching trade and district.
+    // The first nearby qualified artisan who accepts receives the order.
+    const validWorkerId = null;
+    const initialStatus = 'REQUESTED';
 
     const insertResult = await query(`
       INSERT INTO bookings (
@@ -568,8 +470,8 @@ async function verifyCompletionOtp(req, res) {
     }
 
     const completedAt = new Date().toISOString();
-    // Arm 7-day cooperative guarantee
-    const guaranteeUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    // Arm 30-day cooperative guarantee
+    const guaranteeUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const updateRes = await query(`
       UPDATE bookings
@@ -617,13 +519,13 @@ async function verifyCompletionOtp(req, res) {
       service ? service.name : 'General Maintenance',
       booking.notes || 'Routine Servicing',
       completedAt.split('T')[0],
-      `Completed service under booking ${booking.booking_code}. Standard 7-Day Guarantee active.`,
+      `Completed service under booking ${booking.booking_code}. Standard 30-Day Guarantee active.`,
       bookingId,
       guaranteeUntil.split('T')[0]
     ]);
 
     res.json({
-      message: 'Job completed verified! 7-Day Cooperative Repair Guarantee is armed.',
+      message: 'Job completed verified! 30-Day Cooperative Repair Guarantee is armed.',
       booking: updateRes.rows[0],
     });
   } catch (err) {
@@ -710,7 +612,7 @@ async function addParts(req, res) {
 }
 
 /**
- * POST /api/bookings/:id/claim-guarantee (Phase 6 7-Day Free Repair Guarantee)
+ * POST /api/bookings/:id/claim-guarantee (Phase 6 30-Day Free Repair Guarantee)
  */
 async function claimGuarantee(req, res) {
   try {
@@ -723,7 +625,7 @@ async function claimGuarantee(req, res) {
     }
 
     if (!booking.guarantee_armed_until || new Date() > new Date(booking.guarantee_armed_until)) {
-      return res.status(400).json({ error: 'Expired', message: 'The 7-Day Guarantee period for this service has expired.' });
+      return res.status(400).json({ error: 'Expired', message: 'The 30-Day Guarantee period for this service has expired.' });
     }
 
     // Find top Master Artisan in district
@@ -759,8 +661,8 @@ async function claimGuarantee(req, res) {
       booking.location_address,
       booking.location_pincode,
       new Date().toISOString().split('T')[0],
-      'Express 30 Mins',
-      `7-Day Guarantee Claim for original order ${booking.booking_code}. Master Artisan re-dispatched at ₹0 cost.`,
+      'Express 60 Mins',
+      `30-Day Guarantee Claim for original order ${booking.booking_code}. Master Artisan re-dispatched at ₹0 cost.`,
       newArrivalOtp,
       newCompletionOtp
     ]);
@@ -769,7 +671,7 @@ async function claimGuarantee(req, res) {
     await query('UPDATE bookings SET guarantee_claimed = 1 WHERE id = $1', [bookingId]);
 
     res.json({
-      message: '7-Day Guarantee Claim Approved! Master Artisan dispatched at ₹0 labour cost.',
+      message: '30-Day Guarantee Claim Approved! Master Artisan dispatched at ₹0 labour cost.',
       rebooking: newBookingRes.rows[0],
     });
   } catch (err) {

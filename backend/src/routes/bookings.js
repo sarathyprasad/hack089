@@ -12,12 +12,14 @@ const {
   updateBookingStatus,
   cancelBooking,
 } = require('../controllers/bookingController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
 router.use(authenticate);
 
-router.post('/', createBooking);
-router.get('/', getBookings);
+// Citizens only can create new service orders
+router.post('/', authorize('CUSTOMER'), createBooking);
+// Customers and admins only can list customer bookings (workers use /api/worker-portal/dashboard)
+router.get('/', authorize('CUSTOMER', 'COOPERATIVE_ADMIN'), getBookings);
 router.get('/:id', getBookingById);
 router.put('/:id/status', updateBookingStatus);
 router.post('/:id/cancel', cancelBooking);

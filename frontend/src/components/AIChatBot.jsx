@@ -13,12 +13,12 @@ const SESSION_STORAGE_KEY = 'shram_setu_ai_chat_session';
 
 const INITIAL_GREETING = {
   role: 'assistant',
-  content: `👋 **Namaste! I am Sahayak AI**, your official **Shram Setu** Virtual Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Government 90-5-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **7-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
+  content: `👋 **Namaste! I am Sahayak AI**, your official **Shram Setu** Virtual Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Cooperative 93-2-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **30-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
   suggestions: [
-    'How does the 90-5-5 tariff split work?',
+    'How does the 93-2-5 tariff split work?',
     'Book an Electrician or Plumber',
     'What is the 2-Stage OTP Handshake?',
-    'How to claim 7-Day Free Guarantee?',
+    'How to claim 30-Day Free Guarantee?',
     'How can artisans register with cooperative?',
     'Emergency SOS & 112 helpline',
   ],
@@ -250,28 +250,31 @@ export default function AIChatBot() {
         <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => setIsOpen(true)}
-            className="group relative flex items-center gap-2.5 px-4 py-3 bg-linear-to-r from-blue-950 via-blue-900 to-indigo-950 text-white rounded-full shadow-2xl hover:shadow-blue-950/40 hover:scale-105 transition-all border border-blue-700/50"
+            className="group relative flex items-center gap-3 pl-2.5 pr-5 py-2 bg-gradient-to-r from-[#0F294A] via-[#122F55] to-[#0A1D36] text-white rounded-full shadow-2xl shadow-blue-950/40 hover:shadow-blue-900/60 hover:scale-[1.03] active:scale-95 transition-all border border-blue-500/30 backdrop-blur-md"
             aria-label="Open Shram Setu AI Assistant"
           >
-            {/* Pulsing online indicator */}
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-
-            <div className="w-8 h-8 rounded-full bg-amber-400 text-blue-950 flex items-center justify-center font-bold shadow-xs">
-              <Sparkles size={18} className="animate-pulse" />
-            </div>
-
-            <div className="text-left hidden sm:block">
-              <div className="text-xs font-bold leading-tight flex items-center gap-1">
-                <span>Sahayak AI</span>
-                <span className="text-[9px] bg-amber-400/20 text-amber-300 px-1 py-0.2 rounded font-mono">Govt. AI</span>
+            {/* Medallion Avatar with Live Status Dot */}
+            <div className="relative">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-sm border border-amber-400 shrink-0 p-0.5">
+                <img src="/logo-emblem.png" alt="Sahayak AI" className="w-full h-full object-contain" />
               </div>
-              <div className="text-[10px] text-blue-200">Instant Help & Tariffs</div>
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#0F294A]"></span>
+              </span>
             </div>
 
-            <div className="sm:hidden text-xs font-bold">Sahayak AI</div>
+            <div className="text-left">
+              <div className="text-xs font-black tracking-tight leading-tight flex items-center gap-1.5">
+                <span className="text-white">Sahayak AI</span>
+                <span className="text-[9px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full shadow-2xs">
+                  Coop AI
+                </span>
+              </div>
+              <div className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                <span>Instant Tariffs & Support</span>
+              </div>
+            </div>
           </button>
         </div>
       )}
@@ -286,20 +289,20 @@ export default function AIChatBot() {
           }`}
         >
           {/* Header */}
-          <div className="p-3.5 sm:p-4 bg-linear-to-r from-blue-950 via-blue-900 to-slate-950 text-white flex items-center justify-between shadow-md select-none">
-            <div className="flex items-center gap-2.5">
+          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#0F294A] via-[#15355E] to-[#0A1931] text-white flex items-center justify-between shadow-md select-none">
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-amber-400 text-blue-950 flex items-center justify-center font-bold shadow-md">
-                  <Bot size={22} />
+                <div className="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden border border-amber-400/80 shrink-0">
+                  <img src="/logo-emblem.png" alt="Sahayak AI" className="w-full h-full object-contain" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-blue-950"></span>
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F294A]"></span>
               </div>
 
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-extrabold text-sm text-white">Sahayak AI</h3>
                   <span className="text-[9px] font-bold bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/30">
-                    Shram Setu Official
+                    Cooperative Portal
                   </span>
                 </div>
                 <div className="text-[10px] text-blue-200 flex items-center gap-1.5">
@@ -361,7 +364,7 @@ export default function AIChatBot() {
                     <div
                       className={`p-3.5 rounded-2xl text-xs shadow-xs relative ${
                         isUser
-                          ? 'bg-linear-to-r from-blue-900 to-blue-950 text-white rounded-tr-xs'
+                          ? 'bg-gradient-to-r from-blue-900 to-blue-950 text-white rounded-tr-xs'
                           : 'bg-white text-gray-800 border border-gray-200/80 rounded-tl-xs'
                       }`}
                     >

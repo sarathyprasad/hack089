@@ -7,8 +7,8 @@ import {
   Zap, Droplets, Hammer, Paintbrush, SprayCan, Flower2,
   HeartPulse, Car, Wrench, Home as HomeIcon, Settings, AlertTriangle,
   Building2, ArrowRight, CheckCircle2, ChevronRight,
-  ShieldCheck, Sparkles, IndianRupee, PhoneCall, Landmark,
-  Volume2, VolumeX, Search, Mic, MicOff, Radio, Users
+  ShieldCheck, Sparkles, IndianRupee, PhoneCall,
+  Search, Mic, MicOff, MapPin, Check, Clock, ThumbsUp, Snowflake
 } from 'lucide-react';
 
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
   const [dbStats, setDbStats] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('Khordha');
-  const [selectedTrade, setSelectedTrade] = useState('');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [isListeningMic, setIsListeningMic] = useState(false);
 
   useEffect(() => {
@@ -30,34 +30,163 @@ export default function Home() {
 
   // 12 Standardized Cooperative Trade Services
   const serviceCategories = [
-    { icon: Zap, key: 'catElectrical', categoryName: 'Electrical', descKey: 'descElectrical', starting: '₹249', popular: true, count: 48, id: 1, iconColor: 'text-amber-600 bg-amber-50' },
-    { icon: Droplets, key: 'catPlumbing', categoryName: 'Plumbing', descKey: 'descPlumbing', starting: '₹249', popular: true, count: 42, id: 2, iconColor: 'text-blue-600 bg-blue-50' },
-    { icon: Wrench, key: 'catAppliance', categoryName: 'Appliance Repair', descKey: 'descAppliance', starting: '₹349', popular: true, count: 36, id: 6, iconColor: 'text-indigo-600 bg-indigo-50' },
-    { icon: Hammer, key: 'catCarpentry', categoryName: 'Carpentry', descKey: 'descCarpentry', starting: '₹299', popular: false, count: 28, id: 3, iconColor: 'text-yellow-700 bg-yellow-50' },
-    { icon: Paintbrush, key: 'catPainting', categoryName: 'Painting', descKey: 'descPainting', starting: '₹499', popular: true, count: 32, id: 4, iconColor: 'text-purple-600 bg-purple-50' },
-    { icon: SprayCan, key: 'catCleaning', categoryName: 'Cleaning', descKey: 'descCleaning', starting: '₹399', popular: false, count: 25, id: 5, iconColor: 'text-emerald-600 bg-emerald-50' },
-    { icon: Flower2, key: 'catGardening', categoryName: 'Gardening', descKey: 'descGardening', starting: '₹249', popular: false, count: 18, id: 7, iconColor: 'text-green-600 bg-green-50' },
-    { icon: HeartPulse, key: 'catCaregiving', categoryName: 'Caregiving', descKey: 'descCaregiving', starting: '₹599', popular: false, count: 15, id: 8, iconColor: 'text-rose-600 bg-rose-50' },
-    { icon: Car, key: 'catDriving', categoryName: 'Driving', descKey: 'descDriving', starting: '₹399', popular: false, count: 22, id: 9, iconColor: 'text-sky-600 bg-sky-50' },
-    { icon: HomeIcon, key: 'catDomestic', categoryName: 'Domestic Services', descKey: 'descDomestic', starting: '₹299', popular: false, count: 30, id: 10, iconColor: 'text-orange-600 bg-orange-50' },
-    { icon: Settings, key: 'catTechnician', categoryName: 'Technician Services', descKey: 'descTechnician', starting: '₹349', popular: false, count: 19, id: 11, iconColor: 'text-slate-600 bg-slate-50' },
-    { icon: AlertTriangle, key: 'catEmergency', categoryName: 'Emergency Services', descKey: 'descEmergency', starting: '₹499', emergency: true, count: 12, id: 12, iconColor: 'text-red-600 bg-red-50' },
+    {
+      id: 1,
+      categoryName: 'Electrical',
+      key: 'catElectrical',
+      descKey: 'descElectrical',
+      descFallback: 'Switches, wiring, ceiling fans, MCB tripping & fuse repairs',
+      starting: '₹249',
+      popular: true,
+      count: 48,
+      group: 'electrical',
+      icon: Zap,
+      iconColor: 'text-amber-600 bg-amber-50 border-amber-200'
+    },
+    {
+      id: 2,
+      categoryName: 'Plumbing',
+      key: 'catPlumbing',
+      descKey: 'descPlumbing',
+      descFallback: 'Tap leaks, pipe repair, toilet cisterns, tank & motor fittings',
+      starting: '₹249',
+      popular: true,
+      count: 42,
+      group: 'plumbing',
+      icon: Droplets,
+      iconColor: 'text-blue-600 bg-blue-50 border-blue-200'
+    },
+    {
+      id: 6,
+      categoryName: 'Appliance Repair',
+      key: 'catAppliance',
+      descKey: 'descAppliance',
+      descFallback: 'AC servicing, gas refills, washing machines & refrigerators',
+      starting: '₹349',
+      popular: true,
+      count: 36,
+      group: 'electrical',
+      icon: Wrench,
+      iconColor: 'text-indigo-600 bg-indigo-50 border-indigo-200'
+    },
+    {
+      id: 3,
+      categoryName: 'Carpentry',
+      key: 'catCarpentry',
+      descKey: 'descCarpentry',
+      descFallback: 'Door locks, hinges, wooden furniture repair & assembly',
+      starting: '₹299',
+      popular: false,
+      count: 28,
+      group: 'home',
+      icon: Hammer,
+      iconColor: 'text-amber-700 bg-amber-50 border-amber-200'
+    },
+    {
+      id: 4,
+      categoryName: 'Painting',
+      key: 'catPainting',
+      descKey: 'descPainting',
+      descFallback: 'Room repainting, waterproof wall putty & enamel coatings',
+      starting: '₹499',
+      popular: true,
+      count: 32,
+      group: 'home',
+      icon: Paintbrush,
+      iconColor: 'text-purple-600 bg-purple-50 border-purple-200'
+    },
+    {
+      id: 5,
+      categoryName: 'Cleaning',
+      key: 'catCleaning',
+      descKey: 'descCleaning',
+      descFallback: 'Deep bathroom cleaning, kitchen degreasing & sofa wash',
+      starting: '₹399',
+      popular: false,
+      count: 25,
+      group: 'home',
+      icon: SprayCan,
+      iconColor: 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    },
+    {
+      id: 7,
+      categoryName: 'Gardening',
+      key: 'catGardening',
+      descKey: 'descGardening',
+      descFallback: 'Lawn trimming, potting, plant pruning & terrace gardens',
+      starting: '₹249',
+      popular: false,
+      count: 18,
+      group: 'home',
+      icon: Flower2,
+      iconColor: 'text-green-600 bg-green-50 border-green-200'
+    },
+    {
+      id: 8,
+      categoryName: 'Caregiving',
+      key: 'catCaregiving',
+      descKey: 'descCaregiving',
+      descFallback: 'Elderly assistance, patient care & home nursing aides',
+      starting: '₹599',
+      popular: false,
+      count: 15,
+      group: 'home',
+      icon: HeartPulse,
+      iconColor: 'text-rose-600 bg-rose-50 border-rose-200'
+    },
+    {
+      id: 9,
+      categoryName: 'Driving',
+      key: 'catDriving',
+      descKey: 'descDriving',
+      descFallback: 'Verified personal drivers for local & outstation trips',
+      starting: '₹399',
+      popular: false,
+      count: 22,
+      group: 'home',
+      icon: Car,
+      iconColor: 'text-sky-600 bg-sky-50 border-sky-200'
+    },
+    {
+      id: 10,
+      categoryName: 'Domestic Services',
+      key: 'catDomestic',
+      descKey: 'descDomestic',
+      descFallback: 'General housekeeping, errand support & home upkeep',
+      starting: '₹299',
+      popular: false,
+      count: 30,
+      group: 'home',
+      icon: HomeIcon,
+      iconColor: 'text-orange-600 bg-orange-50 border-orange-200'
+    },
+    {
+      id: 11,
+      categoryName: 'Technician Services',
+      key: 'catTechnician',
+      descKey: 'descTechnician',
+      descFallback: 'CCTV installation, WiFi router setup & inverter wiring',
+      starting: '₹349',
+      popular: false,
+      count: 19,
+      group: 'electrical',
+      icon: Settings,
+      iconColor: 'text-slate-600 bg-slate-50 border-slate-200'
+    },
+    {
+      id: 12,
+      categoryName: 'Emergency Services',
+      key: 'catEmergency',
+      descKey: 'descEmergency',
+      descFallback: '24/7 rapid dispatch for burst pipes, power outage & lockouts',
+      starting: '₹499',
+      emergency: true,
+      count: 12,
+      group: 'emergency',
+      icon: AlertTriangle,
+      iconColor: 'text-red-600 bg-red-50 border-red-200'
+    },
   ];
-
-  const handleHeroSpeech = () => {
-    if (isSpeaking) {
-      stopSpeaking();
-      return;
-    }
-    const currentText = {
-      EN: "Welcome to Shram Setu, the official Government Cooperative Labour Services Portal. Verified skills, fair wages, zero surge pricing, and direct social security for all artisans. You can book an electrician, plumber, carpenter, or appliance mechanic online or dial toll free 1800-345-7788.",
-      HI: "श्रम सेतु में आपका स्वागत है। यह सरकारी श्रम सहकारी सेवा पोर्टल है। प्रमाणित कारीगर, उचित सरकारी दरें, शून्य अतिरिक्त शुल्क और 100% सामाजिक सुरक्षा। आप ऑनलाइन सेवा बुक कर सकते हैं या टोल-फ्री 1800-345-7788 पर कॉल करें।",
-      OR: "ଶ୍ରମ ସେତୁ ପୋର୍ଟାଲକୁ ସ୍ୱାଗତ। ଏହା ସରକାରୀ ଶ୍ରମ ସମବାୟ ମହାସଂଘର ଏକ ପ୍ରୟାସ। ପ୍ରମାଣିତ ଶ୍ରମିକ, ସରକାରୀ ଦର ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା। ସେବା ବୁକ୍ କରିବା ପାଇଁ ଟୋଲ୍ ଫ୍ରି ୧୮୦୦-୩୪୫-୭୭୮୮ ଡାଏଲ କରନ୍ତୁ।",
-      BN: "শ্রম সেতুতে স্বাগতম। এটি সরকারি সমবায় শ্রম সেবা পোর্টাল। যাচাইকৃত কর্মী, ন্যায্য সরকারি মূল্য এবং সামাজিক সুরক্ষা। সেবা বুক করতে ১৮০০-৩৪৫-৭৭৮৮ নম্বরে কল করুন।",
-      TE: "శ్రమ్ సేతుకు స్వాగతం. ఇది ప్రభుత్వ సహకార కార్మిక సేవల పోర్టల్. ధృవీకరించబడిన నైపుణ్యాలు మరియు సామాజిక భద్రత. సేవను బుక్ చేయడానికి టోల్ ఫ్రీ 1800-345-7788 కు కాల్ చేయండి."
-    };
-    speakText(currentText[lang] || currentText.EN);
-  };
 
   const handleVoiceSearch = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -74,7 +203,7 @@ export default function Home() {
       const speechResult = event.results[0][0].transcript;
       setSearchQuery(speechResult);
       setIsListeningMic(false);
-      navigate(`/services?search=${encodeURIComponent(speechResult)}`);
+      navigate(`/book-service?search=${encodeURIComponent(speechResult)}&district=${encodeURIComponent(selectedDistrict)}`);
     };
     recognition.onerror = () => setIsListeningMic(false);
     recognition.onend = () => setIsListeningMic(false);
@@ -84,360 +213,431 @@ export default function Home() {
   const handleUnifiedSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (selectedTrade) params.set('category', selectedTrade);
     if (selectedDistrict) params.set('district', selectedDistrict);
     if (searchQuery.trim()) params.set('search', searchQuery.trim());
-
     navigate(`/book-service?${params.toString()}`);
   };
 
+  const filteredCategories = serviceCategories.filter(cat => {
+    if (activeCategoryFilter === 'all') return true;
+    if (activeCategoryFilter === 'popular') return cat.popular;
+    if (activeCategoryFilter === 'emergency') return cat.emergency;
+    return cat.group === activeCategoryFilter;
+  });
+
   return (
-    <div className="space-y-0 bg-[#F8FAFC]">
-      {/* ─────────────────────────────────────────────────────────────
-          1. TRICOLOR TOP STRIPE & OFFICIAL LIVE NOTICE BAR
-         ───────────────────────────────────────────────────────────── */}
-      <div className="h-1 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808]" />
+    <div className="space-y-0 bg-white text-slate-900">
       
-      <div className="bg-[#0A1931] border-b border-white/10 text-white text-xs py-2 px-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 overflow-hidden">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="inline-flex items-center gap-1 bg-red-600 text-white font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider animate-pulse">
-              <Radio size={12} /> {t('tickerLabel')}
-            </span>
-          </div>
-
-          <div className="flex-1 truncate text-[11px] text-blue-100 font-medium">
-            <span>{t('tickerText')}</span>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-2 shrink-0 text-[11px] text-amber-300 font-bold">
-            <PhoneCall size={13} />
-            <span>{t('tollFreeLabel')}: <strong className="text-white font-mono">1800-345-7788</strong></span>
-          </div>
-        </div>
-      </div>
-
       {/* ─────────────────────────────────────────────────────────────
-          2. MINIMALIST HERO & UNIFIED SEARCH CONSOLE
+          1. CLEAN, MODERN, LIGHT HERO SECTION
          ───────────────────────────────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-[#0A1931] via-[#102A45] to-[#153457] text-white pt-10 pb-12 px-4 border-b border-amber-500/20">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9]/50 to-white pt-10 sm:pt-14 pb-14 sm:pb-16 px-4 border-b border-slate-200/80">
+        
+        {/* Soft Ambient Radial Background Highlights */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[760px] h-[340px] bg-gradient-to-b from-blue-100/60 via-amber-100/30 to-transparent blur-3xl pointer-events-none rounded-full" />
+
+        <div className="relative max-w-4xl mx-auto text-center space-y-4">
           
-          {/* Government Authority Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/15 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-xs">
-            <Landmark size={14} className="text-amber-400 shrink-0" />
-            <span>{t('portalSubHeader')}</span>
+          {/* Subtle Trust Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-900 text-xs font-semibold tracking-wide shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>Verified Artisans • Fixed Tariffs</span>
           </div>
 
-          {/* Clean Main Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-white">
-            {t('heroTitlePart1')} <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200">
-              {t('heroTitlePart2')}
+          {/* Punchy, Clear Headline */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.14] text-slate-950">
+            Expert Repairs.{' '}
+            <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-blue-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
+              Fixed Rates.
             </span>
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-blue-100/90 leading-relaxed max-w-2xl mx-auto">
-            {t('heroSubtitle')}
+          {/* Simple, Minimal Subtitle */}
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-lg mx-auto font-normal">
+            Certified electricians, plumbers & mechanics with 30-day warranty and zero surge pricing.
           </p>
 
-          {/* Unified Search & Booking Bar */}
-          <div className="pt-3 max-w-3xl mx-auto">
+          {/* Minimalist Floating Search Capsule */}
+          <div className="pt-2 max-w-3xl mx-auto">
             <form
               onSubmit={handleUnifiedSearch}
-              className="bg-white p-2 sm:p-2.5 rounded-2xl shadow-2xl border-2 border-amber-400/80 grid grid-cols-1 sm:grid-cols-12 gap-2 text-gray-900"
+              className="bg-white p-2 rounded-2xl shadow-xl shadow-slate-200/70 border border-slate-200/90 flex flex-col sm:flex-row items-center gap-2 text-slate-900"
             >
-              {/* Trade Selector */}
-              <div className="sm:col-span-4">
-                <select
-                  value={selectedTrade}
-                  onChange={(e) => setSelectedTrade(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 text-gray-900 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                >
-                  <option value="">{t('allServicesOption')}</option>
-                  <option value="Electrical">⚡ {t('catElectrical')}</option>
-                  <option value="Plumbing">🚰 {t('catPlumbing')}</option>
-                  <option value="Appliance Repair">🔧 {t('catAppliance')}</option>
-                  <option value="Carpentry">🔨 {t('catCarpentry')}</option>
-                  <option value="Painting">🎨 {t('catPainting')}</option>
-                  <option value="Cleaning">🧹 {t('catCleaning')}</option>
-                  <option value="Gardening">🌿 {t('catGardening')}</option>
-                  <option value="Caregiving">🩺 {t('catCaregiving')}</option>
-                  <option value="Driving">🚗 {t('catDriving')}</option>
-                  <option value="Domestic Services">🏠 {t('catDomestic')}</option>
-                  <option value="Technician Services">⚙️ {t('catTechnician')}</option>
-                  <option value="Emergency Services">🚨 {t('catEmergency')}</option>
-                </select>
-              </div>
-
               {/* District Selector */}
-              <div className="sm:col-span-3">
+              <div className="relative w-full sm:w-52 flex items-center border-b sm:border-b-0 sm:border-r border-slate-200 pb-2 sm:pb-0 sm:pr-2">
+                <MapPin className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                 <select
                   value={selectedDistrict}
                   onChange={(e) => setSelectedDistrict(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 text-gray-900 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
+                  className="w-full pl-9 pr-6 py-2.5 bg-slate-50 hover:bg-slate-100/80 text-slate-800 rounded-xl text-xs sm:text-sm font-bold border-0 focus:outline-none focus:ring-2 focus:ring-blue-900 transition cursor-pointer appearance-none"
                 >
                   <option value="Khordha">Khordha (Bhubaneswar)</option>
                   <option value="Cuttack">Cuttack</option>
                   <option value="Puri">Puri</option>
                   <option value="Ganjam">Ganjam</option>
+                  <option value="Sambalpur">Sambalpur</option>
+                  <option value="Balasore">Balasore</option>
                 </select>
+                <ChevronRight size={13} className="absolute right-3 text-slate-400 pointer-events-none rotate-90" />
               </div>
 
-              {/* Keyword / Voice Input */}
-              <div className="sm:col-span-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={t('searchIssuePlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2.5 bg-gray-50 text-gray-900 rounded-xl text-xs font-semibold border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVoiceSearch}
-                    className={`absolute inset-y-0 right-0 pr-2.5 flex items-center ${isListeningMic ? 'text-red-600 animate-pulse' : 'text-gray-400 hover:text-blue-900'}`}
-                    title={t('voiceSearchTitle')}
-                  >
-                    {isListeningMic ? <MicOff size={16} /> : <Mic size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="sm:col-span-2">
+              {/* Main Issue Search Input */}
+              <div className="relative flex-1 w-full flex items-center">
+                <Search className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="What needs repair? (e.g. tap leaking, fan sparking, AC cooling)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                />
                 <button
-                  type="submit"
-                  className="w-full btn btn-saffron text-xs font-extrabold py-2.5 rounded-xl shadow-md flex items-center justify-center gap-1"
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  className={`absolute right-3 p-1 rounded-lg ${isListeningMic ? 'text-red-600 bg-red-50 animate-pulse' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200/60'}`}
+                  title="Voice Search"
                 >
-                  <Search size={14} />
-                  <span>{t('searchBtn')}</span>
+                  {isListeningMic ? <MicOff size={16} /> : <Mic size={16} />}
                 </button>
               </div>
+
+              {/* Action Button */}
+              <button
+                type="submit"
+                className="w-full sm:w-auto bg-[#0F294A] hover:bg-blue-900 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0"
+              >
+                <span>Find Service</span>
+                <ArrowRight size={15} />
+              </button>
             </form>
           </div>
 
-          {/* Quick Direct Actions for Non-Typing Citizens */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs">
-            {/* Call Helpline Button */}
+          {/* Clean Trust Assurance Strip */}
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-600 font-semibold border-t border-slate-200/80 max-w-2xl mx-auto">
+            <div className="flex items-center gap-1.5 text-emerald-700">
+              <ShieldCheck size={16} className="text-emerald-600" />
+              <span>100% ITI Verified</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-amber-700">
+              <CheckCircle2 size={16} className="text-amber-600" />
+              <span>Zero Surge Pricing</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-blue-700">
+              <Sparkles size={16} className="text-blue-600" />
+              <span>30-Day Free Warranty</span>
+            </div>
             <a
               href="tel:18003457788"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-blue-950 font-extrabold shadow-md transition"
+              className="flex items-center gap-1.5 text-slate-700 hover:text-blue-900 transition font-bold pl-2 border-l border-slate-200"
             >
-              <PhoneCall size={15} />
-              <span>{t('callBookingTag')}: 1800-345-7788</span>
+              <PhoneCall size={13} className="text-emerald-600" />
+              <span>Toll-Free: <strong className="font-mono text-slate-900">1800-345-7788</strong></span>
             </a>
-
-            {/* Read aloud button */}
-            <button
-              type="button"
-              onClick={handleHeroSpeech}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition border ${
-                isSpeaking
-                  ? 'bg-white text-blue-950 font-black'
-                  : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
-              }`}
-            >
-              {isSpeaking ? <VolumeX size={15} className="text-red-600" /> : <Volume2 size={15} />}
-              <span>{isSpeaking ? t('stopVoice') : t('listenVoice')}</span>
-            </button>
           </div>
 
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          3. 12 PUBLIC COOPERATIVE SERVICES (SINGLE CLEAN DIRECTORY)
+          2. STANDARDIZED SERVICES CATALOG (WITH MINIMAL FILTER TABS)
          ───────────────────────────────────────────────────────────── */}
       <section className="py-12 px-4 max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <span className="inline-block text-[11px] font-bold text-blue-900 uppercase tracking-wider px-3 py-1 bg-blue-100 rounded-full mb-1.5">
-            {t('secServices')}
+          <span className="inline-block text-[11px] font-bold text-blue-900 uppercase tracking-wider px-3 py-1 bg-blue-50 rounded-full mb-2 border border-blue-200">
+            Regulated Tariffs
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
-            {t('secServices')}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            Standardized Trade Services
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            {t('secServicesSub')}
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            Official base tariffs for all household trades. Transparent labour rates, zero hidden fees.
           </p>
+
+          {/* Filter Pills */}
+          <div className="flex items-center justify-center gap-1.5 flex-wrap mt-5">
+            {[
+              { id: 'all', label: 'All Services (12)' },
+              { id: 'popular', label: '🔥 Popular' },
+              { id: 'electrical', label: '⚡ Electrical & AC' },
+              { id: 'plumbing', label: '🚰 Plumbing' },
+              { id: 'home', label: '🔨 Carpentry & Home' },
+              { id: 'emergency', label: '🚨 Emergency 24/7' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveCategoryFilter(tab.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${
+                  activeCategoryFilter === tab.id
+                    ? 'bg-[#0F294A] text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
-          {serviceCategories.map((cat, idx) => {
+        {/* 12 Modern Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredCategories.map((cat) => {
             const Icon = cat.icon;
             return (
               <div
-                key={idx}
-                className={`p-4 sm:p-5 flex flex-col justify-between rounded-2xl transition border text-left bg-white shadow-xs hover:shadow-md ${
+                key={cat.id}
+                className={`p-5 flex flex-col justify-between rounded-2xl transition-all duration-200 border text-left bg-white shadow-2xs hover:shadow-md ${
                   cat.emergency
-                    ? 'border-red-300 bg-red-50/30 hover:border-red-500'
-                    : 'border-gray-200 hover:border-blue-900'
+                    ? 'border-red-200 hover:border-red-400 bg-gradient-to-b from-white to-red-50/20'
+                    : 'border-slate-200/90 hover:border-blue-900'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${cat.iconColor}`}>
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${cat.iconColor}`}>
                       <Icon size={22} />
                     </div>
 
                     {cat.popular && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
                         Popular
                       </span>
                     )}
                     {cat.emergency && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse">
-                        24/7
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-600 text-white animate-pulse">
+                        24/7 Rapid
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-extrabold text-sm sm:text-base text-gray-900 mb-1 leading-snug">
-                    {t(cat.key)}
+                  <h3 className="font-extrabold text-base text-slate-900 mb-1 leading-snug">
+                    {t(cat.key) || cat.categoryName}
                   </h3>
-                  <p className="text-[11px] text-gray-500 line-clamp-2 mb-3">
-                    {t(cat.descKey)}
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">
+                    {t(cat.descKey) || cat.descFallback}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-gray-100 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
+                <div className="pt-3 border-t border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 block uppercase font-bold">{t('startingAt')}</span>
-                      <span className="font-extrabold text-blue-950 text-base font-mono">{cat.starting}</span>
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Fixed Base</span>
+                      <span className="font-black text-slate-950 text-base font-mono">{cat.starting}</span>
                     </div>
-                    <span className="text-[10px] text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                      {cat.count} {t('verifiedArtisans')}
+                    <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      {cat.count} verified pros
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1.5 pt-1">
-                    <Link
-                      to={`/find-worker?skill=${encodeURIComponent(cat.categoryName)}`}
-                      className="btn btn-secondary btn-sm text-[11px] font-bold p-1 text-center"
-                    >
-                      {t('viewArtisansBtn')}
-                    </Link>
-                    <Link
-                      to={`/book-service?category=${encodeURIComponent(cat.categoryName)}`}
-                      className="btn btn-primary btn-sm text-[11px] font-bold p-1 text-center"
-                    >
-                      {t('bookBtn')}
-                    </Link>
-                  </div>
+                  <Link
+                    to={`/book-service?category=${encodeURIComponent(cat.categoryName)}&district=${encodeURIComponent(selectedDistrict)}`}
+                    className="w-full bg-[#0F294A] hover:bg-blue-900 text-white rounded-xl py-2.5 px-3 text-xs font-bold text-center flex items-center justify-center gap-1.5 transition shadow-2xs hover:shadow-xs"
+                  >
+                    <span>Book Service</span>
+                    <ArrowRight size={13} />
+                  </Link>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="text-center mt-6">
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+          {/* Card 1: Transparent Rate Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 text-white border border-slate-800 flex flex-col justify-between shadow-xs">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  <ShieldCheck size={11} />
+                  93-2-5 Model
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">Labour Capped ₹199-₹349</span>
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">
+                Regulated Fixed Rate Card
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                Know the exact price of every replacement capacitor, PCB, and gas charge upfront. Zero surge pricing and direct 93% living wage artisan payout.
+              </p>
+            </div>
+            <Link
+              to="/rate-card"
+              className="inline-flex items-center justify-between text-xs font-bold text-emerald-400 hover:text-emerald-300 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl border border-white/10 transition"
+            >
+              <span>View Itemized Rate Card</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          {/* Card 2: Foam-Jet AC Showcase & 5-Step Process */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-950 to-slate-900 text-white border border-blue-900/50 flex flex-col justify-between shadow-xs">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-0.5 rounded-full">
+                  <Snowflake size={11} />
+                  Standard Operating Procedure
+                </span>
+                <span className="text-[11px] text-amber-300 font-bold">30-Day Free Warranty</span>
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">
+                Foam-Jet AC Deep Overhaul Process
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                High-pressure coil wash with leak-proof protection apron, calibrated digital gas audit, and delta-T cold airflow verification.
+              </p>
+            </div>
+            <Link
+              to="/services/1"
+              className="inline-flex items-center justify-between text-xs font-bold text-blue-300 hover:text-blue-200 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl border border-white/10 transition"
+            >
+              <span>Explore 5-Step AC Process</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        </div>
+
+        <div className="text-center mt-8">
           <Link
             to="/services"
-            className="btn btn-secondary text-xs font-bold inline-flex items-center gap-2 border-blue-900 text-blue-950 px-6 py-2.5"
+            className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 font-bold text-xs px-6 py-2.5 rounded-xl shadow-2xs hover:bg-slate-50 transition"
           >
-            <span>{t('viewAllTariffsBtn')}</span>
+            <span>Browse All 47 Granular Trade Services</span>
             <ArrowRight size={14} />
           </Link>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          4. HOW IT WORKS (SIMPLE 3-STEP CITIZEN GUIDE)
+          3. HOW IT WORKS (SIMPLE 3-STEP GUIDE)
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-14 bg-white border-y border-gray-200 px-4">
+      <section className="py-14 bg-slate-50/80 border-y border-slate-200/80 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="inline-block text-[11px] font-bold text-green-900 uppercase tracking-wider px-3 py-1 bg-green-100 rounded-full mb-1.5">
-              {t('howItWorksBadge')}
+            <span className="inline-block text-[11px] font-bold text-emerald-900 uppercase tracking-wider px-3 py-1 bg-emerald-100 rounded-full mb-2">
+              Transparent & Simple
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
-              {t('howItWorksTitle')}
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              How Shram Setu Works
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              {t('howItWorksSub')}
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              Book skilled cooperative artisans in 3 easy steps with zero surge pricing.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            
             {/* Step 1 */}
-            <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
-              <div className="w-10 h-10 rounded-xl bg-blue-950 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs">
                 1
               </div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-1.5">{t('step1Title')}</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {t('step1Desc')}
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">1. Select Your Repair</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Search your problem (e.g. leaking tap or AC repair). View transparent fixed base tariffs upfront—no hidden charges.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs">
                 2
               </div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-1.5">{t('step2Title')}</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {t('step2Desc')}
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">2. Nearby Pro Dispatched</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                An ITI-certified, police background-verified cooperative technician arrives at your door at the requested time.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
-              <div className="w-10 h-10 rounded-xl bg-green-700 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs">
                 3
               </div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-1.5">{t('step3Title')}</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {t('step3Desc')}
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">3. Pay Fixed Rate & Relax</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Pay standard regulated rates via UPI or cash only after job completion. Enjoy our 30-day free repair warranty.
               </p>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          5. 4 PILLARS OF CITIZEN ASSURANCE & SOCIAL SECURITY
+          4. COMPARISON: SHRAM SETU VS PRIVATE APPS (EASY TO UNDERSTAND)
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-12 bg-[#F8FAFC] px-4 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+      <section className="py-14 bg-white px-4 border-b border-slate-200/80">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="inline-block text-[11px] font-bold text-amber-900 uppercase tracking-wider px-3 py-1 bg-amber-100 rounded-full mb-2">
+            Why Cooperative
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            Cooperative Standards vs. Private Aggregators
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl mx-auto">
+            Fair tariffs for citizens, dignified earnings and direct social security for skilled workers.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8 text-left">
             
-            {/* Pillar 1: Verified */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-green-100 text-green-800 flex items-center justify-center font-bold mb-3">
-                <ShieldCheck size={22} />
+            {/* Shram Setu Card */}
+            <div className="p-6 rounded-2xl bg-blue-50/50 border-2 border-blue-600/60 shadow-xs relative overflow-hidden">
+              <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-900 text-white">
+                SHRAM SETU
               </div>
-              <h4 className="font-extrabold text-sm text-gray-900">{t('pillar1Title')}</h4>
-              <p className="text-xs text-gray-600 mt-1">{t('pillar1Desc')}</p>
+              <h3 className="font-extrabold text-lg text-blue-950 mb-4">Labour Cooperative Model</h3>
+              <ul className="space-y-3 text-xs text-slate-700">
+                <li className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <span><strong>Regulated Fixed Tariffs:</strong> Zero surge pricing during rains, rush hours, or holidays.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <span><strong>100% ITI Certified:</strong> Biometric Aadhaar & police background verification.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <span><strong>100% Fair Pay to Artisans:</strong> Direct social security & accident insurance.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <span><strong>30-Day Free Warranty:</strong> Dedicated nodal dispute & re-repair desk.</span>
+                </li>
+              </ul>
             </div>
 
-            {/* Pillar 2: Fixed Govt Rate */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold mb-3">
-                <IndianRupee size={22} />
+            {/* Commercial Apps Card */}
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Commercial Gig Apps
               </div>
-              <h4 className="font-extrabold text-sm text-gray-900">{t('pillar2Title')}</h4>
-              <p className="text-xs text-gray-600 mt-1">{t('pillar2Desc')}</p>
-            </div>
-
-            {/* Pillar 3: 7-Day Guarantee */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold mb-3">
-                <CheckCircle2 size={22} />
-              </div>
-              <h4 className="font-extrabold text-sm text-gray-900">{t('guaranteeTitle')}</h4>
-              <p className="text-xs text-gray-600 mt-1">{t('guaranteeDesc')}</p>
-            </div>
-
-            {/* Pillar 4: Social Security */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center font-bold mb-3">
-                <HeartPulse size={22} />
-              </div>
-              <h4 className="font-extrabold text-sm text-gray-900">{t('pillar3Title')}</h4>
-              <p className="text-xs text-gray-600 mt-1">{t('pillar3Desc')}</p>
+              <h3 className="font-extrabold text-lg text-slate-700 mb-4">Private Aggregators</h3>
+              <ul className="space-y-3 text-xs text-slate-500">
+                <li className="flex items-center gap-2.5">
+                  <span className="text-red-500 font-bold shrink-0">✕</span>
+                  <span>Unpredictable surge pricing up to 2x during peak weather or emergency hours.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <span className="text-red-500 font-bold shrink-0">✕</span>
+                  <span>Heavy commissions (20% to 30%) deducted from workers' hard-earned fees.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <span className="text-red-500 font-bold shrink-0">✕</span>
+                  <span>Often gig workers with self-proclaimed experience and no trade certifications.</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <span className="text-red-500 font-bold shrink-0">✕</span>
+                  <span>Complex bot-based customer care with difficult warranty claims.</span>
+                </li>
+              </ul>
             </div>
 
           </div>
@@ -445,108 +645,112 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          6. PANCHAYAT CSC / MO SEVA KENDRA KIOSK SUPPORT
+          5. PHONE BOOKING & ASSISTED KIOSK BANNER
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-10 bg-[#FFFBF0] border-b border-amber-200 px-4">
-        <div className="max-w-5xl mx-auto p-6 sm:p-7 rounded-3xl bg-white border-2 border-amber-300 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-left">
+      <section className="py-10 bg-[#FFFDF7] border-b border-amber-200/70 px-4">
+        <div className="max-w-5xl mx-auto p-6 sm:p-7 rounded-2xl bg-white border border-amber-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-left">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-950 text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
-              <Building2 size={26} />
+            <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <PhoneCall size={24} />
             </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-950">
-                {t('cscBookingTag')}
+            <div className="space-y-1">
+              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                Assisted Phone Booking
               </span>
-              <h3 className="text-lg font-extrabold text-gray-900">{t('cscBookingTitle')}</h3>
-              <p className="text-xs text-gray-600 max-w-xl leading-relaxed">
-                {t('cscBookingDesc')}
+              <h3 className="text-lg font-extrabold text-slate-900">
+                Prefer to book by phone? Call our Toll-Free Helpline
+              </h3>
+              <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                Dial <strong className="font-mono text-slate-900">1800-345-7788</strong> (toll-free, 8 AM to 8 PM) or visit your nearest Gram Panchayat Mo Seva Kendra / CSC kiosk for in-person assisted bookings.
               </p>
             </div>
           </div>
 
-          <div className="shrink-0 w-full md:w-auto">
+          <div className="shrink-0 w-full md:w-auto flex flex-col sm:flex-row gap-2.5">
+            <a
+              href="tel:18003457788"
+              className="btn bg-[#0F294A] hover:bg-blue-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
+            >
+              <PhoneCall size={14} />
+              <span>Call 1800-345-7788</span>
+            </a>
             <Link
               to="/help"
-              className="w-full md:w-auto btn btn-primary text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
+              className="btn bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1"
             >
-              <span>{t('cscBookingSub')}</span>
-              <ChevronRight size={15} />
+              <span>Kiosk Directory</span>
+              <ChevronRight size={14} />
             </Link>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          7. LIVE COOPERATIVE METRICS & SOCIAL IMPACT
+          6. LIVE COOPERATIVE STATS
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-10 bg-gradient-to-r from-[#0A1931] via-[#152A55] to-[#1E3A8A] text-white px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <h3 className="text-lg font-bold mb-1">{t('welfareHeading')}</h3>
-          <p className="text-xs text-blue-200 max-w-xl mx-auto mb-6">
-            {t('welfareSub')}
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
-            <div className="p-3.5 rounded-xl bg-white/10 border border-white/10">
-              <div className="text-2xl font-black text-amber-400 font-mono">
-                {dbStats?.verifiedWorkers || 18}+
+      <section className="py-10 bg-slate-900 text-white px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+                {dbStats?.verifiedWorkers || 50}+
               </div>
-              <div className="text-[11px] text-blue-200 font-bold mt-0.5">{t('statVerifiedWorkers')}</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">Verified Artisans</div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white/10 border border-white/10">
-              <div className="text-2xl font-black text-white font-mono">
-                {dbStats?.cooperatives || 5}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+                12
               </div>
-              <div className="text-[11px] text-blue-200 font-bold mt-0.5">{t('statCooperatives')}</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">Trade Specializations</div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white/10 border border-white/10">
-              <div className="text-2xl font-black text-green-400 font-mono">
-                {dbStats?.completedBookings || 24}+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
+                30
               </div>
-              <div className="text-[11px] text-blue-200 font-bold mt-0.5">{t('statJobsCompleted')}</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">Districts Covered</div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white/10 border border-white/10">
-              <div className="text-2xl font-black text-amber-300 font-mono">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
                 99.4%
               </div>
-              <div className="text-[11px] text-blue-200 font-bold mt-0.5">{t('statSatisfaction')}</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">Citizen Satisfaction</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          8. WORKER REGISTRATION CALLOUT BANNER
+          7. ARTISAN REGISTRATION CALLOUT
          ───────────────────────────────────────────────────────────── */}
       <section className="py-10 bg-white px-4">
-        <div className="max-w-4xl mx-auto p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-5 text-left">
+        <div className="max-w-4xl mx-auto p-6 sm:p-7 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-5 text-left">
           <div className="space-y-1">
             <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">
-              {t('workerCampaignBadge')}
+              Artisan Cooperative Membership
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold leading-tight">
-              {t('workerCampaignTitle')}
+              Are you an ITI or skilled trade artisan?
             </h3>
             <p className="text-xs text-amber-100 max-w-lg leading-relaxed">
-              {t('workerCampaignDesc')}
+              Join your regional Labour Cooperative. Get regular bookings, guaranteed regulated tariffs, ESIC health coverage, and zero agency exploitation.
             </p>
           </div>
 
           <div className="shrink-0 w-full md:w-auto">
             <Link
               to="/register?role=worker"
-              className="w-full md:w-auto btn bg-blue-950 hover:bg-black text-white text-xs font-black px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 border border-white/20"
+              className="w-full md:w-auto btn bg-slate-950 hover:bg-black text-white text-xs font-black px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 border border-white/20"
             >
-              <span>{t('workerJoinBtn')}</span>
+              <span>Join as an Artisan</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
-
-

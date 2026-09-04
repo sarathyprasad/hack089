@@ -32,9 +32,9 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
     amount: booking.amount || 299,
     parts_cost: booking.parts_cost || 0,
     parts_details: booking.parts_details,
-    cooperative_fee: booking.cooperative_fee || 14.95,
-    platform_fee: booking.platform_fee || 14.95,
-    total_amount: booking.total_amount || 328.9,
+    cooperative_fee: booking.cooperative_fee !== undefined ? booking.cooperative_fee : 14.95,
+    platform_fee: booking.platform_fee !== undefined ? booking.platform_fee : 5.98,
+    total_amount: booking.total_amount || 319.93,
     payment_status: booking.status === 'COMPLETED' ? 'PAID' : 'UNPAID / ESCROW HOLD',
     transaction_id: `TXN-OD-${booking.id}-2026`,
   } : null);
@@ -51,7 +51,7 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
         <div className="p-4 bg-gray-900 text-white flex items-center justify-between no-print">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <FileText size={16} className="text-amber-400" />
-            <span>Official Government Cooperative Tax Invoice (Form IV)</span>
+            <span>Official Cooperative Tax Invoice (Form IV)</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -74,20 +74,23 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
         <div ref={printRef} className="p-8 space-y-6 text-xs text-gray-800 bg-white">
           {/* Header Banner */}
           <div className="border-b-2 border-blue-900 pb-5 flex items-start justify-between">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-900 uppercase tracking-wider">
-                <Landmark size={12} /> Labour Cooperative Society Form IV
-              </div>
-              <h1 className="text-lg font-bold text-gray-900 uppercase tracking-tight">
-                {activeInvoice.cooperative_name || 'Bhubaneswar Labour Cooperative Federation'}
-              </h1>
+            <div className="flex items-start gap-3.5">
+              <img src="/logo.png" alt="Shram Setu" className="w-14 h-14 object-contain rounded-xl border border-gray-200 p-1 bg-white shrink-0 shadow-xs" />
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-900 uppercase tracking-wider">
+                  <Landmark size={12} /> Labour Cooperative Society Form IV
+                </div>
+                <h1 className="text-lg font-bold text-gray-900 uppercase tracking-tight">
+                  {activeInvoice.cooperative_name || 'Bhubaneswar Labour Cooperative Federation'}
+                </h1>
               <p className="text-[11px] text-gray-500">
                 Registered under Multi-State Cooperative Societies Act, 2002 • Reg No: <span className="font-mono font-bold text-gray-700">{activeInvoice.cooperative_reg || 'COOP-OD-2024-001'}</span>
               </p>
               <p className="text-[10px] text-gray-400">
-                Headquarters: {activeInvoice.cooperative_address || 'Saheed Nagar, Unit-8, Bhubaneswar, Khordha, Odisha'}
+                Headquarters: {activeInvoice.cooperative_address || 'Saheed Nagar, Unit-8, Bhubaneswar, Khordha'}
               </p>
             </div>
+          </div>
 
             <div className="text-right space-y-1">
               <div className="inline-block px-2.5 py-1 rounded bg-green-100 text-green-900 font-bold font-mono text-xs uppercase">
@@ -185,8 +188,8 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
 
                 <tr className="bg-blue-50/30">
                   <td className="p-3">
-                    <div className="font-semibold text-blue-950">Worker Welfare Fund (5%)</div>
-                    <div className="text-[10px] text-gray-500">ESIC accident insurance, health & pension contribution</div>
+                    <div className="font-semibold text-blue-950">PF & Insurance (5%)</div>
+                    <div className="text-[10px] text-gray-500">ESIC accident insurance, PF, health & pension contribution</div>
                   </td>
                   <td className="p-3 font-mono text-gray-500">COOP-WLF</td>
                   <td className="p-3 text-right font-mono">5.0%</td>
@@ -195,11 +198,11 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
 
                 <tr>
                   <td className="p-3">
-                    <div className="font-semibold text-gray-800">Platform Infra & Operations (5%)</div>
+                    <div className="font-semibold text-gray-800">Platform Fee (2%)</div>
                     <div className="text-[10px] text-gray-500">Dispatch helpline, quality assurance & server infra</div>
                   </td>
                   <td className="p-3 font-mono text-gray-500">PLAT-FEE</td>
-                  <td className="p-3 text-right font-mono">5.0%</td>
+                  <td className="p-3 text-right font-mono">2.0%</td>
                   <td className="p-3 text-right font-mono font-bold">₹{activeInvoice.platform_fee}</td>
                 </tr>
               </tbody>
@@ -224,7 +227,7 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
               </div>
               <div className="space-y-0.5 text-[10px] text-gray-500">
                 <div className="font-bold text-gray-700">Digital Verification Seal</div>
-                <div>Scan with Odisha Cooperative Citizen App to verify authenticity.</div>
+                <div>Scan with Shram Setu Citizen App to verify authenticity.</div>
                 <div className="text-green-700 font-semibold flex items-center gap-1">
                   <ShieldCheck size={12} /> Verified by Labour Federation Officer
                 </div>

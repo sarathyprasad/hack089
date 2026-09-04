@@ -16,7 +16,7 @@ graph TD
     E --> G[Smart Matching Engine: Skill + Proximity + Availability]
     F --> G
     G --> H[Select Top-Ranked Verified Worker]
-    H --> I[Review Standardized Tariff: Base + 10% Welfare + 5% Fee]
+    H --> I[Review Standardized Tariff: 93% Worker + 2% Platform Fee + 5% PF & Insurance]
     I --> J[Order Placed -> Booking Status: REQUESTED]
     J --> K[Assigned Worker Accepts -> Status: ACCEPTED]
     K --> L[Worker Arrives On-Site -> Status: IN_PROGRESS]
@@ -29,7 +29,7 @@ graph TD
 ### Key Customer Steps:
 1. **Service Selection**: Citizen explores catalog with government standard rates.
 2. **Smart Matching Wizard**: 4-step wizard with location selection and instant worker recommendations scored by algorithm.
-3. **Transparent Quotation**: Clear breakdown of 10% worker social security contribution.
+3. **Transparent Quotation**: Clear breakdown of 93-2-5 model (93% worker, 2% platform fee, 5% PF & insurance contribution).
 4. **Lifecycle Tracking**: 5-step visual progress bar with direct phone link to assigned worker.
 5. **Payment & Invoicing**: Instant UPI simulation and printable tax invoice.
 6. **Citizen Review**: 5-star rating with quality tags to support cooperative worker ranking.
@@ -47,8 +47,8 @@ graph TD
     W4 -->|Accept| W6[Job Moves to Active Work Orders]
     W6 --> W7[Travel to Site -> Click 'Start Work']
     W7 --> W8[Execute Repairs -> Click 'Mark Task Completed']
-    W8 --> W9[Earnings Credited to Worker Ledger]
-    W9 --> W10[10% Capped Levy Contributed to Welfare Pool]
+    W8 --> W9[Direct 93% Earnings Credited to Worker Wallet]
+    W9 --> W10[5% PF & Insurance Levy Contributed to Welfare Pool]
     W10 --> W11[Worker Explores Enrolled Welfare Programs in Welfare Centre]
 ```
 

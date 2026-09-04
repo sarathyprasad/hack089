@@ -249,9 +249,11 @@ export default function PortalLayout() {
           </button>
 
           <Link to="/" className="flex items-center gap-2.5 text-white" title={t('brandName')}>
-            <div className="w-8 h-8 rounded-lg bg-amber-400 text-blue-950 flex items-center justify-center font-bold shadow-xs">
-              <Building2 size={18} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Shram Setu Logo"
+              className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 shadow-sm shrink-0"
+            />
             <div>
               <div className="text-sm font-extrabold tracking-tight flex items-center gap-2">
                 <span>{roleConfig.title}</span>

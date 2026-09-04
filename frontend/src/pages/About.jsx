@@ -62,7 +62,7 @@ export default function About() {
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle2 size={14} className="text-green-700 shrink-0" />
-              Skill upgrading with NSDC and Government ITI partner institutions
+              Skill upgrading with NSDC and National ITI partner institutions
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle2 size={14} className="text-green-700 shrink-0" />
@@ -94,7 +94,7 @@ export default function About() {
             <Scale size={28} className="mx-auto mb-2 text-amber-400" />
             <h3 className="font-bold text-sm mb-1">Standardized Pricing</h3>
             <p className="text-xs text-blue-200">
-              Transparent government-notified base rates. No hidden surge charges or algorithmic price gouging.
+              Transparent cooperative-regulated base rates. No hidden surge charges or algorithmic price gouging.
             </p>
           </div>
 
@@ -119,7 +119,7 @@ export default function About() {
       {/* Participatory Cooperatives */}
       <div className="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-xs mb-10">
         <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">
-          <Landmark size={20} className="text-blue-900" /> Participating Labour Cooperatives (Demo Pilot)
+          <Landmark size={20} className="text-blue-900" /> Participating Labour Cooperatives
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">

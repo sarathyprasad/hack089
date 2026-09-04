@@ -10,7 +10,7 @@ const LOCALES = {
     nativeName: 'English',
     direction: 'ltr',
     dictionary: {
-      portalTitle: 'Government Cooperative Labour Services Portal',
+      portalTitle: 'National Cooperative Labour Services Federation Portal',
       brandName: 'Shram Setu',
       brandSubtitle: 'Cooperative Gig Services Platform',
       tagline: 'Verified Skills. Fair Work. Stronger Communities.',
@@ -57,7 +57,7 @@ const LOCALES = {
     nativeName: 'हिंदी',
     direction: 'ltr',
     dictionary: {
-      portalTitle: 'सरकारी श्रम सहकारी सेवा पोर्टल',
+      portalTitle: 'राष्ट्रीय श्रम सहकारी सेवा पोर्टल',
       brandName: 'श्रम सेतु',
       brandSubtitle: 'सहकारी गिग सेवा मंच',
       tagline: 'सत्यापित कौशल। उचित कार्य। सशक्त समुदाय।',
@@ -74,7 +74,7 @@ const LOCALES = {
       btnJoinWorker: 'क्या आप एक कुशल श्रमिक हैं? अपने स्थानीय सहकारी संघ से जुड़ें →',
       btnPayNow: 'यूपीआई / कार्ड से भुगतान करें',
       btnRateWorker: 'रेटिंग और समीक्षा दें',
-      btnViewInvoice: 'सरकारी टैक्स चालान देखें',
+      btnViewInvoice: 'आधिकारिक टैक्स चालान देखें',
       categories: {
         Electrical: 'विद्युत मरम्मत एवं वायरिंग',
         Plumbing: 'नलसाजी (प्लंबर) कार्य',
@@ -104,7 +104,7 @@ const LOCALES = {
     nativeName: 'ଓଡ଼ିଆ',
     direction: 'ltr',
     dictionary: {
-      portalTitle: 'ସରକାରୀ ଶ୍ରମ ସମବାୟ ସେବା ପୋର୍ଟାଲ',
+      portalTitle: 'ଶ୍ରମ ସମବାୟ ସେବା ପୋର୍ଟାଲ',
       brandName: 'ଶ୍ରମ ସେତୁ',
       brandSubtitle: 'ସମବାୟ ଗିଗ୍ ସେବା ମଞ୍ଚ',
       tagline: 'ଯାଞ୍ଚ ହୋଇଥିବା ଦକ୍ଷତା। ନ୍ୟାଯ୍ୟ କାର୍ଯ୍ୟ। ସଶକ୍ତ ସମୁଦାୟ।',
@@ -121,7 +121,7 @@ const LOCALES = {
       btnJoinWorker: 'ଆପଣ ଜଣେ କୁଶଳୀ ଶ୍ରମିକ କି? ନିଜ ସ୍ଥାନୀୟ ସମବାୟ ସମିତିରେ ଯୋଗ ଦିଅନ୍ତୁ →',
       btnPayNow: 'ୟୁପିଆଇ / କାର୍ଡ ମାଧ୍ୟମରେ ଦେୟ ପ୍ରଦାନ କରନ୍ତୁ',
       btnRateWorker: 'ମତାମତ ଏବଂ ରେଟିଂ ଦିଅନ୍ତୁ',
-      btnViewInvoice: 'ସରକାରୀ ଟିକସ ଚାଲାଣ ଦେଖନ୍ତୁ',
+      btnViewInvoice: 'ଆଧିକାରିକ ଟିକସ ଚାଲାଣ ଦେଖନ୍ତୁ',
       categories: {
         Electrical: 'ବିଦ୍ୟୁତ୍ ମରାମତି ଓ ୱେୟାରିଂ',
         Plumbing: 'ପ୍ଲମ୍ବିଂ / ନଳକୂପ କାର୍ଯ୍ୟ',
@@ -151,7 +151,7 @@ const LOCALES = {
     nativeName: 'বাংলা',
     direction: 'ltr',
     dictionary: {
-      portalTitle: 'সরকারি সমবায় শ্রম সেবা পোর্টাল',
+      portalTitle: 'সমবায় শ্রম সেবা পোর্টাল',
       brandName: 'শ্রম সেতু',
       brandSubtitle: 'সমবায় গিগ সেবা প্ল্যাটফর্ম',
       tagline: 'যাচাইকৃত দক্ষতা। ন্যায্য কাজ। শক্তিশালী সমাজ।',
@@ -198,7 +198,7 @@ const LOCALES = {
     nativeName: 'తెలుగు',
     direction: 'ltr',
     dictionary: {
-      portalTitle: 'ప్రభుత్వ సహకార కార్మిక సేవల పోర్టల్',
+      portalTitle: 'సహకార కార్మిక సేవల పోర్టల్',
       brandName: 'శ్రమ్ సేతు',
       brandSubtitle: 'సహకార గిగ్ సేవల వేదిక',
       tagline: 'ధృవీకరించబడిన నైపుణ్యాలు. న్యాయమైన పని. బలమైన సమాజం.',

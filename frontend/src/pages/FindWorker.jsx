@@ -325,8 +325,28 @@ export default function FindWorker() {
 
                 {/* Primary Trade & Skills */}
                 <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold text-blue-950">
-                    {t('primaryTrade')}: <span className="font-normal text-gray-700">{worker.primary_trade}</span>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-blue-950">{t('primaryTrade')}: <span className="font-normal text-gray-700">{worker.primary_trade}</span></span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                      worker.tier === 'MASTER' ? 'bg-amber-400 text-blue-950 ring-1 ring-amber-500' :
+                      worker.tier === 'GOLD' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                      worker.tier === 'SILVER' ? 'bg-slate-200 text-slate-900' : 'bg-orange-100 text-orange-900'
+                    }`}>
+                      {worker.tier || 'BRONZE'} TIER
+                    </span>
+                  </div>
+
+                  {/* Federation Affiliation Badge (Page 3) */}
+                  <div className="pt-1">
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      worker.cooperative_id === 1 || worker.is_nlcf_affiliated
+                        ? 'bg-amber-50 text-amber-900 border border-amber-300'
+                        : 'bg-blue-50 text-blue-900 border border-blue-200'
+                    }`}>
+                      {worker.cooperative_id === 1 || worker.is_nlcf_affiliated
+                        ? '🌟 Trusted Federation under NLCF'
+                        : '🛡️ Verified Federation'}
+                    </span>
                   </div>
 
                   {worker.certification_type && (
@@ -349,10 +369,10 @@ export default function FindWorker() {
 
                 <button
                   type="button"
-                  onClick={() => navigate(`/book-service?workerId=${worker.id}`)}
+                  onClick={() => navigate(`/book-service?category=${encodeURIComponent(worker.primary_trade || '')}&district=${encodeURIComponent(worker.district || '')}`)}
                   className="btn btn-primary btn-sm text-xs font-bold"
                 >
-                  {t('bookThisArtisan')}
+                  Book Service ({worker.primary_trade || 'Trade'})
                 </button>
               </div>
             </div>
@@ -407,6 +427,10 @@ export default function FindWorker() {
               )}
             </div>
 
+            <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200 text-[11px] text-blue-900 leading-relaxed">
+              ⚖️ <strong>Cooperative Policy:</strong> Service orders are broadcasted to all verified artisans in this trade and locality. The first available artisan to accept will be dispatched.
+            </div>
+
             <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
               <button
                 onClick={() => setSelectedWorker(null)}
@@ -416,13 +440,14 @@ export default function FindWorker() {
               </button>
               <button
                 onClick={() => {
-                  const wId = selectedWorker.id;
+                  const trade = selectedWorker.primary_trade || '';
+                  const dist = selectedWorker.district || '';
                   setSelectedWorker(null);
-                  navigate(`/book-service?workerId=${wId}`);
+                  navigate(`/book-service?category=${encodeURIComponent(trade)}&district=${encodeURIComponent(dist)}`);
                 }}
                 className="btn btn-primary btn-sm font-bold"
               >
-                {t('bookThisArtisan')}
+                Book Service in This Trade
               </button>
             </div>
           </div>

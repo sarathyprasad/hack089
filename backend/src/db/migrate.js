@@ -229,6 +229,7 @@ async function migrate() {
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guarantee_claimed INTEGER DEFAULT 0;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS declined_worker_ids TEXT DEFAULT '';
 
     -- =============================================
     -- Payments (Phase 5 Escrow Model)
@@ -367,6 +368,193 @@ async function migrate() {
     );
 
     -- =============================================
+    -- Newly Registered / Formed Societies (Pages 1 & 2)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS societies (
+      id SERIAL PRIMARY KEY,
+      society_code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'SUBMITTED', 'DCO_REVIEW', 'REGISTRAR_APPROVED', 'ACTIVE', 'REJECTED')),
+      registration_number TEXT,
+      registered_email TEXT UNIQUE NOT NULL,
+      registered_phone TEXT,
+      district TEXT NOT NULL,
+      city TEXT,
+      address TEXT,
+      pincode TEXT,
+      objectives TEXT,
+      is_nlcf_affiliated INTEGER DEFAULT 0,
+      nlcf_certificate_no TEXT,
+      nlcf_affiliation_date TEXT,
+      dco_office_name TEXT,
+      dco_officer_name TEXT,
+      dco_linked INTEGER DEFAULT 0,
+      ncct_training_completed INTEGER DEFAULT 0,
+      ministry_recognized INTEGER DEFAULT 0,
+      initial_capital_balance REAL DEFAULT 10000.0,
+      bank_account_no TEXT,
+      cooperative_bank_name TEXT,
+      bank_ifsc TEXT,
+      audit_frequency VARCHAR(50) DEFAULT 'QUARTERLY' CHECK(audit_frequency IN ('QUARTERLY', 'HALF_YEARLY')),
+      timeline_stage INTEGER DEFAULT 1,
+      tracking_id TEXT UNIQUE NOT NULL,
+      total_workers_count INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- =============================================
+    -- Society Founding Members (Page 1: Min 10 Members)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS society_founding_members (
+      id SERIAL PRIMARY KEY,
+      society_id INTEGER NOT NULL,
+      full_name TEXT NOT NULL,
+      occupation TEXT NOT NULL,
+      address TEXT NOT NULL,
+      phone TEXT,
+      aadhaar_number TEXT,
+      id_proof_url TEXT,
+      role_in_society VARCHAR(50) DEFAULT 'MEMBER' CHECK(role_in_society IN ('PRESIDENT', 'SECRETARY', 'TREASURER', 'MEMBER')),
+      is_signatory INTEGER DEFAULT 1,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (society_id) REFERENCES societies(id) ON DELETE CASCADE
+    );
+
+    -- =============================================
+    -- Society Statutory Documents (Page 1 Dossier)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS society_statutory_documents (
+      id SERIAL PRIMARY KEY,
+      society_id INTEGER NOT NULL,
+      doc_type VARCHAR(100) NOT NULL,
+      document_name TEXT NOT NULL,
+      document_url TEXT NOT NULL,
+      verification_status VARCHAR(50) DEFAULT 'PENDING' CHECK(verification_status IN ('PENDING', 'VERIFIED', 'FLAGGED')),
+      verified_by_officer TEXT,
+      verified_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (society_id) REFERENCES societies(id) ON DELETE CASCADE
+    );
+
+    -- =============================================
+    -- NCCT Training Applications & Records (Pages 1, 3, 4)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS ncct_trainings (
+      id SERIAL PRIMARY KEY,
+      training_code TEXT UNIQUE NOT NULL,
+      society_id INTEGER NOT NULL,
+      worker_id INTEGER,
+      worker_name TEXT,
+      trade VARCHAR(100) NOT NULL,
+      course_name TEXT NOT NULL,
+      institute_name TEXT DEFAULT 'NCCT Regional Institute of Cooperative Management',
+      training_type VARCHAR(50) DEFAULT 'TECHNICAL' CHECK(training_type IN ('TECHNICAL', 'ACCOUNTING_GOVERNANCE', 'SAFETY')),
+      status VARCHAR(50) DEFAULT 'APPLIED' CHECK(status IN ('APPLIED', 'ENROLLED', 'IN_TRAINING', 'COMPLETED', 'CERTIFIED')),
+      cost_per_worker REAL DEFAULT 2500.0,
+      subsidy_amount REAL DEFAULT 2000.0,
+      payable_by_society REAL DEFAULT 500.0,
+      certificate_no TEXT,
+      enrolled_date TEXT,
+      completion_date TEXT,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (society_id) REFERENCES societies(id) ON DELETE CASCADE,
+      FOREIGN KEY (worker_id) REFERENCES workers(id) ON DELETE SET NULL
+    );
+
+    -- =============================================
+    -- Society Treasury & Financial Accounting (Page 4: 10 KPIs)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS society_treasury_ledger (
+      id SERIAL PRIMARY KEY,
+      society_id INTEGER NOT NULL,
+      transaction_code TEXT UNIQUE NOT NULL,
+      transaction_type VARCHAR(50) NOT NULL CHECK(transaction_type IN (
+        '2_PERCENT_PLATFORM_FEE',
+        '5_PERCENT_PLATFORM_FEE',
+        '5_PERCENT_WELFARE_FUND',
+        'CANCELLATION_REVENUE',
+        'LOAN_DISBURSEMENT',
+        'LOAN_REPAYMENT',
+        'PROJECT_FUNDS_INFLOW',
+        'INSURANCE_PREMIUM_OUTFLOW',
+        'TREASURY_DEPOSIT'
+      )),
+      amount REAL NOT NULL,
+      worker_id INTEGER,
+      project_id INTEGER,
+      description TEXT NOT NULL,
+      balance_after REAL NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (society_id) REFERENCES societies(id) ON DELETE CASCADE
+    );
+
+    ALTER TABLE society_treasury_ledger DROP CONSTRAINT IF EXISTS society_treasury_ledger_transaction_type_check;
+    ALTER TABLE society_treasury_ledger ADD CONSTRAINT society_treasury_ledger_transaction_type_check CHECK(transaction_type IN (
+      '2_PERCENT_PLATFORM_FEE',
+      '5_PERCENT_PLATFORM_FEE',
+      '5_PERCENT_WELFARE_FUND',
+      'CANCELLATION_REVENUE',
+      'LOAN_DISBURSEMENT',
+      'LOAN_REPAYMENT',
+      'PROJECT_FUNDS_INFLOW',
+      'INSURANCE_PREMIUM_OUTFLOW',
+      'TREASURY_DEPOSIT'
+    ));
+
+    -- =============================================
+    -- Worker Welfare, ESIC Insurance & Micro-Loans (Page 4)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS society_worker_welfare (
+      id SERIAL PRIMARY KEY,
+      worker_id INTEGER NOT NULL UNIQUE,
+      society_id INTEGER NOT NULL,
+      health_insurance_policy_no TEXT,
+      health_insurance_provider TEXT DEFAULT 'ESIC / National Health Scheme',
+      health_insurance_status VARCHAR(50) DEFAULT 'ACTIVE' CHECK(health_insurance_status IN ('ACTIVE', 'IN_PROCESS', 'EXPIRED')),
+      accident_policy_no TEXT,
+      accident_coverage_amount REAL DEFAULT 500000.0,
+      accident_policy_status VARCHAR(50) DEFAULT 'ACTIVE',
+      loan_sanctioned_amount REAL DEFAULT 0.0,
+      loan_balance_due REAL DEFAULT 0.0,
+      next_loan_due_amount REAL DEFAULT 0.0,
+      next_loan_due_date TEXT,
+      mini_pf_accumulated REAL DEFAULT 0.0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (worker_id) REFERENCES workers(id) ON DELETE CASCADE,
+      FOREIGN KEY (society_id) REFERENCES societies(id) ON DELETE CASCADE
+    );
+
+    -- =============================================
+    -- Institutional Tenders & Bids (Pages 2 & 4)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS institutional_tenders (
+      id SERIAL PRIMARY KEY,
+      tender_code TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      issuing_authority TEXT NOT NULL,
+      category TEXT NOT NULL,
+      district TEXT NOT NULL,
+      estimated_value REAL NOT NULL,
+      requires_nlcf_affiliation INTEGER DEFAULT 1,
+      status VARCHAR(50) DEFAULT 'OPEN' CHECK(status IN ('OPEN', 'BID_SUBMITTED', 'AWARDED', 'IN_PROGRESS', 'COMPLETED')),
+      awarded_society_id INTEGER,
+      funds_received REAL DEFAULT 0.0,
+      due_remaining REAL DEFAULT 0.0,
+      allocated_workers_count INTEGER DEFAULT 0,
+      bid_submission_deadline TEXT,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (awarded_society_id) REFERENCES societies(id) ON DELETE SET NULL
+    );
+
+    -- Workers table extensions for NCCT & Federation affiliation
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS society_id INTEGER;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS is_ncct_certified INTEGER DEFAULT 0;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS ncct_certificate_no TEXT;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS is_nlcf_affiliated INTEGER DEFAULT 0;
+
+    -- =============================================
     -- Indexes
     -- =============================================
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -380,6 +568,11 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_appliance_customer ON appliance_lineage(customer_id);
     CREATE INDEX IF NOT EXISTS idx_disputes_status ON dispute_tickets(status);
     CREATE INDEX IF NOT EXISTS idx_sos_status ON sos_logs(status);
+    CREATE INDEX IF NOT EXISTS idx_societies_code ON societies(society_code);
+    CREATE INDEX IF NOT EXISTS idx_societies_status ON societies(status);
+    CREATE INDEX IF NOT EXISTS idx_treasury_society ON society_treasury_ledger(society_id);
+    CREATE INDEX IF NOT EXISTS idx_welfare_worker ON society_worker_welfare(worker_id);
+    CREATE INDEX IF NOT EXISTS idx_tenders_status ON institutional_tenders(status);
   `;
 
   await query(ddl);

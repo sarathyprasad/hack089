@@ -67,7 +67,7 @@ export default function ApplianceLineageModal({ isOpen, onClose, customerId }) {
             lineage.map((item) => (
               <div
                 key={item.id}
-                className="p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all bg-linear-to-br from-white to-blue-50/20"
+                className="p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all bg-gradient-to-br from-white to-blue-50/20"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -109,7 +109,7 @@ export default function ApplianceLineageModal({ isOpen, onClose, customerId }) {
 
         {/* Footer */}
         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <span>🏛️ Odisha Labour Cooperative Society Record</span>
+          <span>🏛️ Labour Cooperative Society Digital Record</span>
           <button onClick={onClose} className="btn btn-secondary btn-sm">Close</button>
         </div>
       </div>

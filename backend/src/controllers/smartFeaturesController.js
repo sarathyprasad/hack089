@@ -21,7 +21,7 @@ async function getDemandForecast(req, res) {
 
     const categoryStats = categoryStatsRes.rows;
 
-    // 2. Seasonal factors simulation (Odisha context: Monsoon, Summer, Festive)
+    // 2. Seasonal factors simulation (Regional context: Monsoon, Summer, Festive)
     const seasonalPredictions = [
       {
         season: 'Pre-Monsoon & Rainy Season',

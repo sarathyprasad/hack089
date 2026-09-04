@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
@@ -14,6 +14,14 @@ import About from './pages/About';
 import Help from './pages/Help';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RateCard from './pages/RateCard';
+import ServiceDetail from './pages/ServiceDetail';
+
+// Federation & Society Lifecycle Pages (Pages 1 - 4)
+import SocietyRegistration from './pages/SocietyRegistration';
+import SocietyTimeline from './pages/SocietyTimeline';
+import FederationPortal from './pages/FederationPortal';
+import InstitutionalTenders from './pages/InstitutionalTenders';
 
 // Customer Pages (Phase 5, 9, 10)
 import BookService from './pages/BookService';
@@ -27,9 +35,10 @@ import WorkerWelfare from './pages/WorkerWelfare';
 // Admin Pages (Phase 7, 8)
 import AdminDashboard from './pages/AdminDashboard';
 
-// Protected Route Guard Helper
+// Protected Route Guard Helper with Strict Single-Role Isolation
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -41,21 +50,22 @@ function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    const isFederationPath = location.pathname.includes('/federation') || location.pathname.includes('/admin');
+    const isWorkerPath = location.pathname.includes('/worker');
+    const targetRole = isFederationPath ? 'admin' : isWorkerPath ? 'worker' : 'customer';
+    return <Navigate to={`/login?role=${targetRole}`} replace state={{ from: location }} />;
   }
 
+  // Strict Role Isolation: If user's role is not authorized for this route,
+  // automatically route them directly to their own dedicated portal!
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return (
-      <div className="container py-16 text-center max-w-md mx-auto">
-        <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-          <h2 className="text-lg font-bold text-red-900 mb-2">Access Restricted</h2>
-          <p className="text-xs text-red-700 mb-4">
-            This module requires <strong>{allowedRoles.join(' / ')}</strong> authorization.
-          </p>
-          <a href="/" className="btn btn-primary btn-sm">Return to Home</a>
-        </div>
-      </div>
-    );
+    if (user.role === 'WORKER') {
+      return <Navigate to="/worker/dashboard" replace />;
+    }
+    if (user.role === 'COOPERATIVE_ADMIN') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    return <Navigate to="/customer/bookings" replace />;
   }
 
   return children;
@@ -64,25 +74,31 @@ function ProtectedRoute({ children, allowedRoles }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* ── 1. Public Marketing Routes (Wrapped in GovLayout) ── */}
+      {/* ── 1. Public Marketing & Governance Routes (Wrapped in GovLayout) ── */}
       <Route element={<GovLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/find-worker" element={<FindWorker />} />
         <Route path="/book-service" element={<BookService />} />
         <Route path="/about" element={<About />} />
         <Route path="/help" element={<Help />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* Society Statutory Formation Workflow & Timeline (Public) */}
+        <Route path="/society/register" element={<SocietyRegistration />} />
+        <Route path="/society/timeline" element={<SocietyTimeline />} />
+        <Route path="/rate-card" element={<RateCard />} />
       </Route>
 
       {/* ── 2. Authenticated Dashboard & Portal Routes (Wrapped in PortalLayout) ── */}
       <Route element={<PortalLayout />}>
-        {/* Customer Module */}
+        {/* Customer Module - Strictly for CUSTOMER only */}
         <Route
           path="/customer/bookings"
           element={
-            <ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COOPERATIVE_ADMIN']}>
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
               <CustomerBookings />
             </ProtectedRoute>
           }
@@ -90,17 +106,17 @@ function AppRoutes() {
         <Route
           path="/customer/bookings/:id"
           element={
-            <ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COOPERATIVE_ADMIN']}>
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
               <BookingDetail />
             </ProtectedRoute>
           }
         />
 
-        {/* Worker Module */}
+        {/* Worker Module - Strictly for WORKER only */}
         <Route
           path="/worker/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['WORKER', 'COOPERATIVE_ADMIN']}>
+            <ProtectedRoute allowedRoles={['WORKER']}>
               <WorkerDashboard />
             </ProtectedRoute>
           }
@@ -108,13 +124,29 @@ function AppRoutes() {
         <Route
           path="/worker/welfare"
           element={
-            <ProtectedRoute allowedRoles={['WORKER', 'COOPERATIVE_ADMIN']}>
+            <ProtectedRoute allowedRoles={['WORKER']}>
               <WorkerWelfare />
             </ProtectedRoute>
           }
         />
 
-        {/* Admin Module */}
+        {/* Federation / Society Admin & Treasurer Portal - Strictly for COOPERATIVE_ADMIN only */}
+        <Route
+          path="/federation/portal"
+          element={
+            <ProtectedRoute allowedRoles={['COOPERATIVE_ADMIN']}>
+              <FederationPortal />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/federation/tenders"
+          element={
+            <ProtectedRoute allowedRoles={['COOPERATIVE_ADMIN']}>
+              <InstitutionalTenders />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/dashboard"
           element={
@@ -127,7 +159,7 @@ function AppRoutes() {
 
       {/* 404 Fallback in GovLayout */}
       <Route element={<GovLayout />}>
-        <Route path="*" element={<PlaceholderPage title="Page Not Found / पृष्ठ नहीं मिला" desc="The requested government service URL does not exist." />} />
+        <Route path="*" element={<PlaceholderPage title="Page Not Found / पृष्ठ नहीं मिला" desc="The requested cooperative service URL does not exist." />} />
       </Route>
     </Routes>
   );
