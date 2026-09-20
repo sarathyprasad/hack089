@@ -9,6 +9,7 @@ import {
   PhoneCall, ShieldAlert, CheckSquare
 } from 'lucide-react';
 import { calculate9325Split } from '../data/rateCardData';
+import { getProcessStepsForService } from '../utils/serviceProcessData';
 
 // AC Service Pricing Matrix (Quantity tiers)
 const SERVICE_TIERS = [
@@ -101,7 +102,7 @@ const BRANDS = [
 const FAQS = [
   {
     q: 'Are spare parts covered under warranty?',
-    a: 'Yes. All replacement capacitors, sensors, copper joints, and PCB repairs sourced through Shram Setu carry a 30-day to 12-month manufacturer-backed ISI warranty. You receive a digital warranty certificate directly in your citizen portal.'
+    a: 'Yes. All replacement capacitors, sensors, copper joints, and PCB repairs sourced through Prithvi Fix carry a 30-day to 12-month manufacturer-backed ISI warranty. You receive a digital warranty certificate directly in your citizen portal.'
   },
   {
     q: 'What if the same cooling issue occurs again within 30 days?',
@@ -109,11 +110,11 @@ const FAQS = [
   },
   {
     q: 'How can I verify the repair quote shared by the professional?',
-    a: 'Every repair quote shared by our artisan is strictly pre-validated against the official Shram Setu Fixed Rate Card. You can cross-check part prices and capped labour directly on our public rate card page.'
+    a: 'Every repair quote shared by our artisan is strictly pre-validated against the official Prithvi Fix Fixed Rate Card. You can cross-check part prices and capped labour directly on our public rate card page.'
   },
   {
     q: 'What if I am charged extra or asked for tips?',
-    a: 'Shram Setu enforces a strict Zero Surge & Zero Unregulated Surcharge policy. Artisans receive 93% directly into their bank account plus 5% social security, so tipping is never expected. If any excess fee is demanded, our Federation grievance desk executes an immediate refund.'
+    a: 'Prithvi Fix enforces a strict Zero Surge & Zero Unregulated Surcharge policy. Artisans receive 93% directly into their bank account plus 5% social security, so tipping is never expected. If any excess fee is demanded, our Federation grievance desk executes an immediate refund.'
   },
   {
     q: 'Will the professional bring all the necessary tools for the service?',
@@ -135,6 +136,8 @@ export default function ServiceDetail() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const sopData = getProcessStepsForService(service);
 
   useEffect(() => {
     const serviceId = id || '1';
@@ -240,13 +243,13 @@ export default function ServiceDetail() {
 
                 {/* Cooperative Rating Marker */}
                 <div className="flex items-center gap-3 text-xs mb-6 pb-4 border-b border-slate-100">
-                  <div className="inline-flex items-center gap-1 bg-amber-400/20 text-amber-950 font-black px-2 py-0.5 rounded-md text-xs">
-                    <Star size={13} className="fill-amber-500 text-amber-500" />
+                  <div className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 font-semibold px-2 py-0.5 rounded-md text-xs border border-slate-200">
+                    <Star size={13} className="fill-amber-400 text-amber-400" />
                     <span>4.85</span>
                   </div>
                   <span className="text-slate-600 font-semibold">2.4k+ Verified Bookings</span>
                   <span className="text-slate-300">•</span>
-                  <span className="text-emerald-700 font-bold">100% ITI Certified Artisans</span>
+                  <span className="text-emerald-700 font-bold">100% Verified Skilled Artisans</span>
                 </div>
 
                 {/* Quantity / Unit Tier Selector */}
@@ -261,11 +264,10 @@ export default function ServiceDetail() {
                         <button
                           key={tier.id}
                           onClick={() => setSelectedTier(tier)}
-                          className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between ${
-                            isSelected
+                          className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between ${isSelected
                               ? 'border-blue-900 bg-blue-50/50 ring-2 ring-blue-900/10 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'
-                          }`}
+                            }`}
                         >
                           {tier.recommended && (
                             <span className="absolute -top-2.5 right-2 px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-black rounded uppercase tracking-wider shadow-2xs">
@@ -317,7 +319,7 @@ export default function ServiceDetail() {
                     </div>
                     <div className="bg-slate-800/60 p-2 rounded-lg">
                       <span className="text-[10px] text-slate-400 block">PF & ESIC Fund (5%)</span>
-                      <strong className="text-amber-300 font-mono text-sm">₹{currentSplit.welfareFund}</strong>
+                      <strong className="text-white font-mono text-sm">₹{currentSplit.welfareFund}</strong>
                     </div>
                   </div>
                 </div>
@@ -351,7 +353,7 @@ export default function ServiceDetail() {
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent lg:hidden" />
               <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-xs p-3 rounded-xl border border-slate-200 text-slate-900 shadow-md">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-950 text-amber-300 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
                     <Sparkles size={16} />
                   </div>
                   <div>
@@ -476,19 +478,19 @@ export default function ServiceDetail() {
           {showHowItWorksModal && (
             <div className="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                <div className="font-bold text-amber-300 mb-1">1. Digital Manifold Hookup</div>
+                <div className="font-semibold text-white mb-1">1. Digital Manifold Hookup</div>
                 <p className="text-slate-300 text-[11px]">
                   Technician connects a digital pressure gauge to the low-pressure service port on the outdoor condenser.
                 </p>
               </div>
               <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                <div className="font-bold text-amber-300 mb-1">2. Live PSI Logged</div>
+                <div className="font-semibold text-white mb-1">2. Live PSI Logged</div>
                 <p className="text-slate-300 text-[11px]">
                   Sahayak AI records the operating pressure (e.g. 120-135 PSI for R32). If levels are optimal, gas refill is strictly disallowed.
                 </p>
               </div>
               <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                <div className="font-bold text-amber-300 mb-1">3. Regulated Tariff Quote</div>
+                <div className="font-semibold text-white mb-1">3. Regulated Tariff Quote</div>
                 <p className="text-slate-300 text-[11px]">
                   If a leak is confirmed, quotation is pre-locked against our statutory rate card with 0% middleman markup.
                 </p>
@@ -504,15 +506,15 @@ export default function ServiceDetail() {
               Cooperative Standard Operating Procedure
             </span>
             <h2 className="text-2xl font-black text-slate-900">
-              Our 5-Step Deep Cleaning Process
+              Our 5-Step Certified Work Process
             </h2>
             <p className="text-xs text-slate-600 mt-1">
-              Every step executed with surgical precision using dedicated HVAC protective equipment.
+              {sopData.categoryTag} • Estimated Duration: {sopData.estDuration}
             </p>
           </div>
 
           <div className="space-y-6">
-            {PROCESS_STEPS.map((step) => (
+            {(sopData.steps || PROCESS_STEPS).map((step) => (
               <div
                 key={step.step}
                 className="grid grid-cols-1 md:grid-cols-12 gap-5 p-5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-slate-50/40 hover:bg-white transition shadow-2xs"
@@ -520,10 +522,19 @@ export default function ServiceDetail() {
                 {/* Photo Thumbnail */}
                 <div className="md:col-span-5 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 min-h-[180px] relative">
                   <img
-                    src={step.image}
+                    src={step.image || `/services/step${step.step}-preservice.jpg`}
                     alt={step.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 to-slate-900/40 flex items-center justify-center p-4">
+                    <div className="text-center text-white space-y-1">
+                      <div className="text-2xl font-black font-mono">STEP {step.step}</div>
+                      <div className="text-xs font-medium text-slate-200 uppercase tracking-wider">{step.title}</div>
+                    </div>
+                  </div>
                   <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
                     Step {step.step} of 5
                   </div>
@@ -722,7 +733,7 @@ export default function ServiceDetail() {
                 </div>
                 <div className="flex items-center gap-2.5 font-semibold">
                   <CheckCircle2 size={16} className="text-emerald-600" />
-                  <span>Certified under Skill India / ITI Trade Curriculums</span>
+                  <span>Certified under Skill India & Trade Standards</span>
                 </div>
                 <div className="flex items-center gap-2.5 font-semibold">
                   <CheckCircle2 size={16} className="text-emerald-600" />

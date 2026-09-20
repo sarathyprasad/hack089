@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ShieldCheck, Clock, FileText, Search, ChevronDown, ChevronUp,
   Zap, Flame, Fan, Wrench, Settings, Package, ArrowRight,
@@ -29,6 +30,7 @@ const SECTION_ICONS = {
 };
 
 export default function RateCard() {
+  const { lang, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTrade, setActiveTrade] = useState('ac');
   const [expandedSections, setExpandedSections] = useState({});
@@ -70,13 +72,13 @@ export default function RateCard() {
         <div className="rc-container">
           <div className="rc-hero-badge">
             <ShieldCheck size={14} />
-            <span>Regulated Cooperative Tariffs</span>
+            <span>{t('rcBadge', 'Regulated Cooperative Tariffs')}</span>
           </div>
           <h1 className="rc-hero-title">
-            Transparent Rate Card
+            {t('rcHeroTitle', 'Transparent Rate Card')}
           </h1>
           <p className="rc-hero-sub">
-            Fixed cooperative prices with the 93-2-5 model. No surge, no hidden fees.
+            {t('rcHeroSub', 'Fixed cooperative prices with the 93-2-5 model. No surge, no hidden fees.')}
           </p>
         </div>
       </section>
@@ -87,10 +89,10 @@ export default function RateCard() {
           <div className="rc-section-header">
             <span className="rc-label-badge">
               <ShieldCheck size={13} />
-              Shram Suraksha Cover
+              {t('rcShramSuraksha', 'Shram Suraksha Cover')}
             </span>
-            <h2 className="rc-section-title">End-to-End Service Protection</h2>
-            <p className="rc-section-sub">Every booking is backed by our cooperative safety net</p>
+            <h2 className="rc-section-title">{t('rcEndToEnd', 'End-to-End Service Protection')}</h2>
+            <p className="rc-section-sub">{t('rcBacking', 'Every booking is backed by our cooperative safety net')}</p>
           </div>
 
           <div className="rc-cover-grid">
@@ -206,7 +208,7 @@ export default function RateCard() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search parts, repairs, services..."
+                placeholder={t('rcSearchPlaceholder', 'Search parts, repairs, services...')}
                 className="rc-search-input"
               />
               {searchQuery && (
@@ -216,8 +218,8 @@ export default function RateCard() {
               )}
             </div>
             <div className="rc-search-controls">
-              <button className="rc-control-btn" onClick={expandAll}>Expand All</button>
-              <button className="rc-control-btn" onClick={collapseAll}>Collapse All</button>
+              <button className="rc-control-btn" onClick={expandAll}>{t('rcExpandAll', 'Expand All')}</button>
+              <button className="rc-control-btn" onClick={collapseAll}>{t('rcCollapseAll', 'Collapse All')}</button>
               {searchQuery && (
                 <span className="rc-result-count">
                   {filteredCount} of {totalItems} items

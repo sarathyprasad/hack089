@@ -12,6 +12,7 @@ import {
 
 import TaxInvoiceModal from '../components/TaxInvoiceModal';
 import LiveRouteMap from '../components/LiveRouteMap';
+import CivicLoader from '../components/CivicLoader';
 
 export default function CustomerBookings() {
   const { user } = useAuth();
@@ -128,7 +129,7 @@ export default function CustomerBookings() {
             title="Refresh list"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            <span>{t('btnRefresh') || 'Refresh'}</span>
+            <span>{t('btnRefresh', 'Refresh')}</span>
           </button>
 
           <Link
@@ -170,11 +171,10 @@ export default function CustomerBookings() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg font-bold transition whitespace-nowrap ${
-              activeTab === tab.id
+            className={`px-4 py-2 rounded-lg font-bold transition whitespace-nowrap ${activeTab === tab.id
                 ? 'bg-blue-950 text-white shadow-xs'
                 : 'text-gray-600 hover:bg-gray-100'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -183,10 +183,11 @@ export default function CustomerBookings() {
 
       {/* Bookings List */}
       {loading ? (
-        <div className="text-center py-16">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-          <p className="text-sm text-gray-500">Loading your service records...</p>
-        </div>
+        <CivicLoader
+          title="Retrieving Citizen Booking Records..."
+          subtitle="Connecting to cooperative escrow node & checking live status updates."
+          size="md"
+        />
       ) : filteredBookings.length === 0 ? (
         <div className="bg-white p-12 text-center rounded-2xl border border-gray-200 shadow-xs space-y-4">
           <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-900 flex items-center justify-center mx-auto">
@@ -220,9 +221,14 @@ export default function CustomerBookings() {
                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded border uppercase ${statusInfo.class}`}>
                       {statusInfo.label}
                     </span>
-                    {b.is_emergency && (
+                    {b.is_emergency ? (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-600 text-white uppercase animate-pulse">
                         ⚡ 24/7 Emergency
+                      </span>
+                    ) : null}
+                    {b.status === 'REQUESTED' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
+                        ⏱️ {b.is_emergency ? '10m Emergency Window' : '30m Acceptance Window'}
                       </span>
                     )}
                   </div>
@@ -247,7 +253,7 @@ export default function CustomerBookings() {
 
                   {/* Worker Detail */}
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('assignedArtisan') || 'Assigned Artisan'}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('assignedArtisan', 'Assigned Artisan')}</span>
                     {b.worker_name ? (
                       <div>
                         <div className="font-bold text-gray-900 flex items-center gap-1">
@@ -255,7 +261,7 @@ export default function CustomerBookings() {
                           <span>{b.worker_name}</span>
                         </div>
                         <div className="text-gray-500 text-[11px]">
-                          Coop: {b.cooperative_name || 'National Federation'}
+                          Coop: {b.cooperative_name || 'Labour Federation'}
                         </div>
                       </div>
                     ) : (
@@ -267,7 +273,7 @@ export default function CustomerBookings() {
 
                   {/* Pricing Breakdown */}
                   <div className="space-y-1 md:text-right">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('totalTariff') || 'Total Tariff'}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('totalTariff', 'Total Tariff')}</span>
                     <div className="text-lg font-extrabold text-blue-950 font-mono">
                       ₹{b.total_amount}
                     </div>
@@ -276,6 +282,16 @@ export default function CustomerBookings() {
                     </div>
                   </div>
                 </div>
+
+                {/* Cancellation Reason Notice */}
+                {b.cancellation_reason && (
+                  <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-900 flex items-start gap-2">
+                    <AlertTriangle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Cancellation Notice:</span> {b.cancellation_reason}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom Actions */}
                 <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
@@ -344,11 +360,23 @@ export default function CustomerBookings() {
                 name: routeTargetBooking.worker_name,
                 tier: routeTargetBooking.worker_tier || 'MASTER',
                 worker_code: routeTargetBooking.worker_code,
-                service_area: routeTargetBooking.location_city,
-                distanceKm: 3.2,
-                etaMinutes: 12,
+                service_area: routeTargetBooking.worker_service_area || routeTargetBooking.location_city,
+                distanceKm: routeTargetBooking.distance_km || routeTargetBooking.tracking?.distanceKm,
+                etaMinutes: routeTargetBooking.eta_minutes || routeTargetBooking.tracking?.etaMinutes,
+                workerCoords: routeTargetBooking.tracking?.workerCoords || (routeTargetBooking.worker_latitude ? {
+                  lat: Number(routeTargetBooking.worker_latitude),
+                  lng: Number(routeTargetBooking.worker_longitude)
+                } : null),
+                latitude: Number(routeTargetBooking.worker_latitude),
+                longitude: Number(routeTargetBooking.worker_longitude),
               }}
               customerAddress={`${routeTargetBooking.location_address}, ${routeTargetBooking.location_city}`}
+              customerCoords={
+                routeTargetBooking.tracking?.customerCoords || (routeTargetBooking.latitude ? {
+                  lat: Number(routeTargetBooking.latitude),
+                  lng: Number(routeTargetBooking.longitude)
+                } : null)
+              }
               title={`Live GPS Route: ${routeTargetBooking.booking_code} (${routeTargetBooking.service_name})`}
             />
 

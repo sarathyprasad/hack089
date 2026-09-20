@@ -66,7 +66,7 @@ async function getSosAlerts(req, res) {
 async function getLiveMap(req, res) {
   try {
     const workersRes = await query(`
-      SELECT w.id, w.worker_code, w.tier, w.availability, w.latitude, w.longitude, w.rating, w.sos_active,
+      SELECT w.id, w.worker_code, w.tier, w.availability, w.latitude, w.longitude, w.rating, w.sos_active, w.primary_trade,
              u.name, u.phone, u.district, u.city,
              c.name as cooperative_name
       FROM workers w
@@ -75,9 +75,13 @@ async function getLiveMap(req, res) {
       WHERE w.verification_status = 'VERIFIED' AND u.is_active = 1
     `);
 
+    const isAdmin = req.user && req.user.role === 'COOPERATIVE_ADMIN';
+
+    // Privacy-aware Active Bookings: Only Cooperative Admins see exact citizen street addresses
     const activeBookingsRes = await query(`
       SELECT b.id, b.booking_code, b.status, b.is_emergency, b.latitude, b.longitude,
-             b.location_district, b.location_city, b.location_address,
+             b.location_district, b.location_city,
+             ${isAdmin ? 'b.location_address,' : "'' as location_address,"}
              s.name as service_name, s.category as service_category
       FROM bookings b
       JOIN services s ON b.service_id = s.id
@@ -119,8 +123,14 @@ async function createDispute(req, res) {
 
     let workerId = null;
     if (bookingId) {
-      const bRes = await query('SELECT worker_id FROM bookings WHERE id = $1', [bookingId]);
-      if (bRes.rows[0]) workerId = bRes.rows[0].worker_id;
+      const bRes = await query('SELECT customer_id, worker_id FROM bookings WHERE id = $1', [bookingId]);
+      if (bRes.rows[0]) {
+        // Customer can only raise disputes for their own bookings
+        if (req.user.role !== 'COOPERATIVE_ADMIN' && bRes.rows[0].customer_id !== customerId) {
+          return res.status(403).json({ error: 'Forbidden', message: 'You can only lodge disputes for your own service bookings.' });
+        }
+        workerId = bRes.rows[0].worker_id;
+      }
     }
 
     const countRes = await query('SELECT COUNT(*) as c FROM dispute_tickets');
@@ -144,10 +154,14 @@ async function createDispute(req, res) {
 
 /**
  * GET /api/governance/disputes
+ * Role-Based Access Control: Customers see only their own tickets; workers see tickets involving their jobs; Admins see all.
  */
 async function getDisputes(req, res) {
   try {
-    const disputesRes = await query(`
+    const userRole = req.user ? req.user.role : null;
+    const userId = req.user ? req.user.id : null;
+
+    let sql = `
       SELECT d.*, u_cust.name as customer_name, u_cust.phone as customer_phone,
              u_work.name as worker_name,
              b.booking_code
@@ -156,8 +170,24 @@ async function getDisputes(req, res) {
       LEFT JOIN workers w ON d.worker_id = w.id
       LEFT JOIN users u_work ON w.user_id = u_work.id
       LEFT JOIN bookings b ON d.booking_id = b.id
-      ORDER BY d.id DESC
-    `);
+    `;
+    const params = [];
+
+    if (userRole === 'CUSTOMER') {
+      sql += ' WHERE d.customer_id = $1';
+      params.push(userId);
+    } else if (userRole === 'WORKER') {
+      const workerRes = await query('SELECT id FROM workers WHERE user_id = $1', [userId]);
+      const workerId = workerRes.rows[0]?.id;
+      if (!workerId) return res.json({ disputes: [] });
+      sql += ' WHERE d.worker_id = $1';
+      params.push(workerId);
+    } else if (userRole !== 'COOPERATIVE_ADMIN') {
+      return res.status(403).json({ error: 'Forbidden', message: 'Authentication required to view disputes.' });
+    }
+
+    sql += ' ORDER BY d.id DESC';
+    const disputesRes = await query(sql, params);
 
     res.json({ disputes: disputesRes.rows });
   } catch (err) {
@@ -194,11 +224,19 @@ async function resolveDispute(req, res) {
 
 /**
  * GET /api/governance/appliance-lineage/:customerId
- * Phase 6: Permanent Appliance Service Lineage History.
+ * Phase 6: Permanent Appliance Service Lineage History with IDOR Guard.
  */
 async function getApplianceLineage(req, res) {
   try {
-    const customerId = req.params.customerId || req.user.id;
+    const requestedId = req.params.customerId ? parseInt(req.params.customerId, 10) : req.user.id;
+
+    // IDOR Guard: Citizens can only inspect their own home appliance lineage
+    if (req.user.role !== 'COOPERATIVE_ADMIN' && req.user.id !== requestedId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access denied: You can only view appliance lineage records for your own registered residence.',
+      });
+    }
 
     const lineageRes = await query(`
       SELECT l.*, b.booking_code
@@ -206,7 +244,7 @@ async function getApplianceLineage(req, res) {
       LEFT JOIN bookings b ON l.booking_id = b.id
       WHERE l.customer_id = $1
       ORDER BY l.id DESC
-    `, [customerId]);
+    `, [requestedId]);
 
     res.json({ lineage: lineageRes.rows });
   } catch (err) {

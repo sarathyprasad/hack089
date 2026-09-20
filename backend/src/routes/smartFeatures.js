@@ -8,8 +8,10 @@ const {
 const { handleAIChat } = require('../controllers/aiChatController');
 const { authenticate, authorize } = require('../middleware/auth');
 
-// Public AI Chatbot Assistant for citizens, workers, and visitors
-router.post('/ai-chat', handleAIChat);
+const { aiChatLimiter } = require('../middleware/rateLimiter');
+
+// Public AI Chatbot Assistant for citizens, workers, and visitors (rate limited)
+router.post('/ai-chat', aiChatLimiter, handleAIChat);
 
 // Protected routes (require authenticated login)
 router.use(authenticate);

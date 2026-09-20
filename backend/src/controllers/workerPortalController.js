@@ -1,4 +1,5 @@
 const { query } = require('../db/connection');
+const { runLifecycleChecks } = require('../services/bookingLifecycle');
 
 /**
  * GET /api/worker-portal/dashboard
@@ -6,6 +7,9 @@ const { query } = require('../db/connection');
  */
 async function getWorkerDashboard(req, res) {
   try {
+    // Run automated lifecycle reconciliation (10m/30m acceptance timeout & next-day completion)
+    await runLifecycleChecks();
+
     const userId = req.user.id;
 
     // Find worker record
@@ -81,10 +85,20 @@ async function getWorkerDashboard(req, res) {
       FROM bookings b
       JOIN services s ON b.service_id = s.id
       JOIN users u ON b.customer_id = u.id
-      WHERE b.worker_id = $1 AND b.status IN ('ACCEPTED', 'IN_PROGRESS')
+      WHERE (b.worker_id = $1 OR b.paired_master_worker_id = $1) AND b.status IN ('ACCEPTED', 'IN_PROGRESS')
       ORDER BY b.id DESC
     `, [worker.id]);
     const activeJobs = activeRes.rows;
+
+    // Auto-heal worker availability: If artisan is actively assigned to live jobs, they must be BUSY
+    if (activeJobs.length > 0 && worker.availability === 'AVAILABLE') {
+      await query(`
+        UPDATE workers
+        SET availability = 'BUSY', updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [worker.id]);
+      worker.availability = 'BUSY';
+    }
 
     // Completed Jobs
     const completedRes = await query(`
@@ -161,6 +175,42 @@ async function updateAvailability(req, res) {
       return res.status(400).json({ error: 'Validation Error', message: 'Invalid availability status.' });
     }
 
+    // Business rule: Both Cooperative Verification and Mandatory ISI Toolkit are required to go AVAILABLE
+    if (availability === 'AVAILABLE') {
+      const workerCheck = await query(`
+        SELECT verification_status, toolkit_compliance 
+        FROM workers 
+        WHERE user_id = $1
+      `, [userId]);
+      const w = workerCheck.rows[0];
+      if (!w || w.verification_status !== 'VERIFIED' || w.toolkit_compliance !== 'VERIFIED_EQUIPPED') {
+        return res.status(403).json({
+          error: 'Compliance Prerequisite Unmet',
+          message: 'Both Cooperative Verification (VERIFIED) and Mandatory ISI Toolkit (VERIFIED_EQUIPPED) are strictly required before an artisan can go online and take jobs.'
+        });
+      }
+    }
+
+    // Business rule: Workers with active jobs (ACCEPTED or IN_PROGRESS) cannot be marked AVAILABLE or OFFLINE
+    if (availability === 'AVAILABLE' || availability === 'OFFLINE') {
+      const activeJobsCheck = await query(`
+        SELECT b.id, b.booking_code, b.status, s.name as service_name
+        FROM bookings b
+        JOIN workers w ON (b.worker_id = w.id OR b.paired_master_worker_id = w.id)
+        JOIN services s ON b.service_id = s.id
+        WHERE w.user_id = $1 AND b.status IN ('ACCEPTED', 'IN_PROGRESS')
+        LIMIT 1
+      `, [userId]);
+
+      if (activeJobsCheck.rows.length > 0) {
+        const job = activeJobsCheck.rows[0];
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: `Cannot change availability to ${availability} while you have an active work order (${job.booking_code} - ${job.service_name} is ${job.status}). Please complete or update your active jobs first.`
+        });
+      }
+    }
+
     await query(`
       UPDATE workers SET availability = $1, updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $2
@@ -183,10 +233,19 @@ async function handleJobAction(req, res) {
     const bookingId = req.params.id;
     const userId = req.user.id;
 
-    const workerRes = await query('SELECT id FROM workers WHERE user_id = $1', [userId]);
+    const workerRes = await query('SELECT id, verification_status, toolkit_compliance FROM workers WHERE user_id = $1', [userId]);
     const worker = workerRes.rows[0];
     if (!worker) {
       return res.status(404).json({ error: 'Not Found', message: 'Worker profile not found.' });
+    }
+
+    if (action === 'ACCEPT') {
+      if (worker.verification_status !== 'VERIFIED' || worker.toolkit_compliance !== 'VERIFIED_EQUIPPED') {
+        return res.status(403).json({
+          error: 'Compliance Prerequisite Unmet',
+          message: 'Both Cooperative Verification (VERIFIED) and Mandatory ISI Toolkit (VERIFIED_EQUIPPED) are strictly required before an artisan can accept work orders.'
+        });
+      }
     }
 
     const bookingRes = await query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
@@ -195,7 +254,68 @@ async function handleJobAction(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    // ACCEPT is a claim on an open broadcast, so it is guarded by the atomic
+    // conditional UPDATE below. DECLINE may target either a job matched to this
+    // artisan or an open broadcast they are being offered. START and COMPLETE
+    // mutate a live job that must already belong to them — without this check
+    // any logged-in worker could start or complete someone else's booking by id.
+    const isAssigned = booking.worker_id === worker.id;
+    const isOpenBroadcast = booking.worker_id === null && booking.status === 'REQUESTED';
+
+    if ((action === 'START' || action === 'COMPLETE') && !isAssigned) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'This job is not assigned to you.',
+      });
+    }
+
+    if (action === 'DECLINE') {
+      if (!isAssigned && !isOpenBroadcast) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'This job is not in your dispatch pool.',
+        });
+      }
+      if (['IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(booking.status)) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: `A job that is already ${booking.status} cannot be declined.`,
+        });
+      }
+    }
+
+    if (action === 'START' && booking.status !== 'ACCEPTED') {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Only an accepted job can be started.',
+      });
+    }
+
     if (action === 'ACCEPT') {
+      // Check 10-min (emergency) / 30-min (standard) acceptance timeout
+      const createdTime = new Date(booking.created_at).getTime();
+      const elapsedMinutes = (Date.now() - createdTime) / (1000 * 60);
+      const maxWindowMinutes = booking.is_emergency ? 10 : 30;
+
+      if (elapsedMinutes > maxWindowMinutes && (booking.status === 'REQUESTED' || booking.status === 'MATCHED')) {
+        await query(`
+          UPDATE bookings
+          SET status = 'CANCELLED',
+              cancelled_at = CURRENT_TIMESTAMP,
+              cancellation_reason = $1,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2
+        `, [
+          `Auto-cancelled: ${booking.is_emergency ? 'Emergency' : 'Standard'} acceptance window (${maxWindowMinutes} mins) expired without artisan acceptance.`,
+          bookingId
+        ]);
+
+        return res.status(410).json({
+          error: 'Order Expired',
+          message: `This service request has expired (${maxWindowMinutes}-minute acceptance window exceeded) and was automatically cancelled. Please refresh your dispatch pool.`
+        });
+      }
+
       // First-to-Accept atomic claim: only claim if booking is still REQUESTED & unassigned (or MATCHED to this worker)
       const claimRes = await query(`
         UPDATE bookings
@@ -207,7 +327,6 @@ async function handleJobAction(req, res) {
           )
         RETURNING *
       `, [worker.id, bookingId]);
-
       if (claimRes.rows.length === 0) {
         return res.status(409).json({
           error: 'Order Already Claimed',
@@ -370,7 +489,7 @@ async function getWorkerWelfare(req, res) {
       {
         benefit_type: 'Training',
         benefit_name: 'NSDC Advanced Trade Upskilling Workshop',
-        provider: 'National Skill Development Corp / ITI Network',
+        provider: 'National Skill Development Corp / Vocational Network',
         details: 'Certified 2-week advanced appliance & green energy skill training',
       },
       {
@@ -442,10 +561,238 @@ async function enrollWelfare(req, res) {
   }
 }
 
+/**
+ * GET /api/worker-portal/toolkits
+ * Get mandatory toolkit requirements, compliance status, catalog, and active orders/loans.
+ */
+async function getWorkerToolkits(req, res) {
+  try {
+    const userId = req.user.id;
+    const workerRes = await query(`
+      SELECT w.id, w.worker_code, w.primary_trade, w.tools_owned, w.toolkit_compliance, w.merit_points,
+             u.name, u.phone, u.district, u.city, u.address, c.name as cooperative_name
+      FROM workers w
+      JOIN users u ON w.user_id = u.id
+      JOIN cooperatives c ON w.cooperative_id = c.id
+      WHERE w.user_id = $1
+    `, [userId]);
+
+    const worker = workerRes.rows[0];
+    if (!worker) {
+      return res.status(404).json({ error: 'Not Found', message: 'Worker profile not found.' });
+    }
+
+    // Catalog of all trade toolkits
+    const catalogRes = await query(`SELECT * FROM mandatory_toolkits ORDER BY id ASC`);
+    const catalog = catalogRes.rows.map((t) => {
+      let parsedItems = [];
+      try {
+        parsedItems = typeof t.items_included === 'string' ? JSON.parse(t.items_included) : t.items_included;
+      } catch {
+        parsedItems = [];
+      }
+      return { ...t, items: parsedItems };
+    });
+
+    // Find the specific mandatory toolkit matching the worker's primary trade
+    let mandatoryToolkit = catalog.find((t) =>
+      worker.primary_trade && (
+        t.trade_category.toLowerCase() === worker.primary_trade.toLowerCase() ||
+        worker.primary_trade.toLowerCase().includes(t.trade_category.toLowerCase()) ||
+        t.trade_category.toLowerCase().includes(worker.primary_trade.toLowerCase())
+      )
+    ) || catalog[0] || null;
+
+    // Worker's existing owned tools parsed
+    const ownedToolsRaw = (worker.tools_owned || '').toLowerCase();
+
+    // Generate checklist of mandatory items with individual tool pricing
+    const totalKitItems = (mandatoryToolkit?.items?.length) || 5;
+    const baseIndividualPrice = Math.round((mandatoryToolkit?.subsidized_price || 4500) / totalKitItems);
+    const baseMarketPrice = Math.round((mandatoryToolkit?.market_price || 8000) / totalKitItems);
+
+    const checklist = (mandatoryToolkit ? mandatoryToolkit.items : []).map((item, idx) => {
+      const itemName = typeof item === 'string' ? item : item.item;
+      const isOwned = ownedToolsRaw.length > 0 && ownedToolsRaw.split(',').some((owned) => {
+        const cleanOwned = owned.trim();
+        return cleanOwned.length > 3 && (itemName.toLowerCase().includes(cleanOwned) || cleanOwned.includes(itemName.toLowerCase()));
+      });
+      const priceFactor = idx === 0 ? 1.35 : idx === 1 ? 1.15 : idx === 2 ? 1.25 : 0.85;
+      const individualSubsidized = Math.max(350, Math.round((baseIndividualPrice * priceFactor) / 50) * 50);
+      const individualMarket = Math.max(600, Math.round((baseMarketPrice * priceFactor) / 50) * 50);
+      return {
+        id: idx + 1,
+        item: itemName,
+        standard: item.standard || 'ISI Standard',
+        mandatory: item.mandatory !== false,
+        owned: isOwned || worker.toolkit_compliance === 'VERIFIED_EQUIPPED',
+        individual_price: individualSubsidized,
+        market_price: individualMarket,
+        monthly_emi: Math.round(individualSubsidized / 10),
+      };
+    });
+
+    // Worker's toolkit orders / loans
+    const ordersRes = await query(`
+      SELECT o.*, t.kit_name, t.trade_category, t.image_url, t.market_price, t.subsidized_price
+      FROM worker_toolkit_orders o
+      JOIN mandatory_toolkits t ON o.toolkit_id = t.id
+      WHERE o.worker_id = $1
+      ORDER BY o.id DESC
+    `, [worker.id]);
+
+    const orders = ordersRes.rows;
+    const activeLoan = orders.find((o) => o.status === 'ACTIVE_LOAN') || null;
+
+    res.json({
+      worker,
+      mandatoryToolkit,
+      checklist,
+      complianceStatus: worker.toolkit_compliance || (checklist.every((c) => c.owned) ? 'VERIFIED_EQUIPPED' : 'PENDING'),
+      catalog,
+      orders,
+      activeLoan,
+    });
+  } catch (err) {
+    console.error('Get worker toolkits error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to fetch worker toolkits.' });
+  }
+}
+
+/**
+ * POST /api/worker-portal/toolkits/order
+ * Purchase or finance a mandatory toolkit or individual tool directly through the platform.
+ */
+async function orderWorkerToolkit(req, res) {
+  try {
+    const { toolkit_id, payment_mode, delivery_address, individual_tool, individual_price } = req.body;
+    const userId = req.user.id;
+
+    const workerRes = await query('SELECT * FROM workers WHERE user_id = $1', [userId]);
+    const worker = workerRes.rows[0];
+    if (!worker) {
+      return res.status(404).json({ error: 'Not Found', message: 'Worker profile not found.' });
+    }
+
+    const toolkitRes = await query('SELECT * FROM mandatory_toolkits WHERE id = $1', [toolkit_id]);
+    const toolkit = toolkitRes.rows[0];
+    if (!toolkit) {
+      return res.status(404).json({ error: 'Not Found', message: 'Selected toolkit not found.' });
+    }
+
+    if (!['DIRECT_PAY', 'COOP_LOAN'].includes(payment_mode)) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Invalid payment mode. Must be DIRECT_PAY or COOP_LOAN.' });
+    }
+
+    const isIndividual = Boolean(individual_tool);
+    const orderCode = `TKT-ORD-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const totalAmount = isIndividual ? (Number(individual_price) || 850.0) : toolkit.subsidized_price;
+    const isLoan = payment_mode === 'COOP_LOAN';
+    const paidAmount = isLoan ? 0.0 : totalAmount;
+    const remainingAmount = isLoan ? totalAmount : 0.0;
+    const monthlyEmi = isLoan ? Math.max(50, Math.round(totalAmount / 10)) : 0.0;
+    const orderStatus = isLoan ? 'ACTIVE_LOAN' : 'DELIVERED';
+    const deliveryStatus = isLoan ? 'DISPATCHED' : 'DELIVERED';
+
+    const orderInsertRes = await query(`
+      INSERT INTO worker_toolkit_orders (
+        worker_id, toolkit_id, order_code, payment_mode, total_amount, paid_amount,
+        remaining_amount, monthly_emi, status, delivery_address, delivery_status, loan_deduction_per_job
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 50.0)
+      RETURNING *
+    `, [
+      worker.id,
+      toolkit.id,
+      orderCode,
+      payment_mode,
+      totalAmount,
+      paidAmount,
+      remainingAmount,
+      monthlyEmi,
+      orderStatus,
+      delivery_address || 'Cooperative Federation Center Hub',
+      deliveryStatus,
+    ]);
+
+    // Parse items to append to worker's tools_owned (de-duplicated)
+    let itemsToAppend = [];
+    if (isIndividual) {
+      itemsToAppend = [individual_tool.trim()];
+    } else {
+      try {
+        const parsed = typeof toolkit.items_included === 'string' ? JSON.parse(toolkit.items_included) : toolkit.items_included;
+        itemsToAppend = parsed.map((i) => (typeof i === 'string' ? i : i.item).trim());
+      } catch {
+        itemsToAppend = [toolkit.kit_name.trim()];
+      }
+    }
+
+    const toolsSet = new Set(
+      (worker.tools_owned || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    );
+    itemsToAppend.forEach((t) => toolsSet.add(t));
+    const newToolsOwned = Array.from(toolsSet).join(', ');
+
+    const pointsAward = isIndividual ? 0 : 50;
+
+    // Update worker profile
+    await query(`
+      UPDATE workers
+      SET tools_owned = $1,
+          toolkit_compliance = 'VERIFIED_EQUIPPED',
+          merit_points = merit_points + $2,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+    `, [newToolsOwned, pointsAward, worker.id]);
+
+    // If cooperative loan, record loan disbursement in society treasury ledger
+    if (isLoan) {
+      try {
+        const txnCode = `TXN-LOAN-${orderCode}`;
+        const loanDesc = isIndividual
+          ? `Artisan individual tool micro-loan for ${individual_tool} (${orderCode})`
+          : `Artisan toolkit micro-loan disbursed for ${toolkit.kit_name} (${orderCode})`;
+
+        await query(`
+          INSERT INTO society_treasury_ledger (
+            society_id, transaction_code, transaction_type, amount, worker_id, description, balance_after
+          ) VALUES (
+            1, $1, 'LOAN_DISBURSEMENT', $2, $3, $4, 500000.0
+          )
+        `, [txnCode, -totalAmount, worker.id, loanDesc]);
+      } catch (ledgerErr) {
+        console.warn('Treasury ledger log notice:', ledgerErr.message);
+      }
+    }
+
+    res.json({
+      message: isIndividual
+        ? (isLoan
+            ? `🎉 0% Interest Micro-Loan Approved for ${individual_tool}! Order ${orderCode} dispatched.`
+            : `🎉 Direct Purchase Confirmed for ${individual_tool}! Order ${orderCode} processed.`)
+        : (isLoan
+            ? `🎉 0% Interest Cooperative Toolkit Micro-Loan Approved! Order ${orderCode} dispatched.`
+            : `🎉 Toolkit Direct Purchase Confirmed! Order ${orderCode} processed.`),
+      order: orderInsertRes.rows[0],
+      meritPointsAwarded: pointsAward,
+      complianceStatus: 'VERIFIED_EQUIPPED',
+    });
+  } catch (err) {
+    console.error('Order toolkit error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to process toolkit order.' });
+  }
+}
+
 module.exports = {
   getWorkerDashboard,
   updateAvailability,
   handleJobAction,
   getWorkerWelfare,
   enrollWelfare,
+  getWorkerToolkits,
+  orderWorkerToolkit,
 };
+

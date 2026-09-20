@@ -7,6 +7,7 @@ import {
   AlertCircle, Sparkles, IndianRupee, ArrowLeft, ArrowRight,
   Clock, PlusCircle, Check
 } from 'lucide-react';
+import CivicLoader from '../components/CivicLoader';
 
 export default function WorkerWelfare() {
   const { user } = useAuth();
@@ -53,10 +54,11 @@ export default function WorkerWelfare() {
 
   if (loading) {
     return (
-      <div className="container py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-        <p className="text-xs text-gray-500">Loading worker social security ledger...</p>
-      </div>
+      <CivicLoader
+        variant="card"
+        title="Accessing Artisan Social Security Ledger..."
+        subtitle="Verifying cooperative health insurance, accident cover & pension funds"
+      />
     );
   }
 
@@ -76,8 +78,9 @@ export default function WorkerWelfare() {
 
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 text-white p-6 md:p-8 rounded-2xl shadow-md mb-8">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-bold uppercase tracking-wider mb-3">
-          <HeartPulse size={14} /> Cooperative Social Security System
+        <div className="civic-authority-chip mb-3">
+          <HeartPulse size={13} className="text-slate-300" />
+          <span>Cooperative Social Security System</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-bold">
           Worker Welfare & Social Protection Centre

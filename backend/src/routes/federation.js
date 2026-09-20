@@ -6,13 +6,19 @@ const {
   applyNcctTraining,
   getInstitutionalTenders,
   registerWorkerByFederation,
+  resolveDisputeTicket,
 } = require('../controllers/federationController');
 
-// Federation Admin & Treasurer consoles (Pages 3 & 4)
-router.get('/admin-dashboard', getAdminDashboardData);
-router.get('/treasurer-dashboard', getTreasurerDashboardData);
-router.post('/ncct/apply', applyNcctTraining);
+const { authenticate, authorize } = require('../middleware/auth');
+
+// Public Institutional Tenders catalog
 router.get('/tenders', getInstitutionalTenders);
-router.post('/workers/register', registerWorkerByFederation);
+
+// Federation Admin & Treasurer consoles (Protected: COOPERATIVE_ADMIN only)
+router.get('/admin-dashboard', authenticate, authorize('COOPERATIVE_ADMIN'), getAdminDashboardData);
+router.get('/treasurer-dashboard', authenticate, authorize('COOPERATIVE_ADMIN'), getTreasurerDashboardData);
+router.post('/ncct/apply', authenticate, authorize('COOPERATIVE_ADMIN'), applyNcctTraining);
+router.post('/workers/register', authenticate, authorize('COOPERATIVE_ADMIN'), registerWorkerByFederation);
+router.post('/disputes/:id/resolve', authenticate, authorize('COOPERATIVE_ADMIN'), resolveDisputeTicket);
 
 module.exports = router;

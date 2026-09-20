@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useAccessibility } from '../context/AccessibilityContext';
+import CivicLoader from '../components/CivicLoader';
 import {
   Briefcase, CheckCircle2, AlertTriangle, Star, ShieldCheck,
   Calendar, Clock, MapPin, Phone, Building2, Award, Zap,
   TrendingUp, IndianRupee, HeartPulse, RefreshCw, Check, X, Play,
-  Volume2, ShieldAlert, Camera, Plus, Wrench, Shield
+  Volume2, VolumeX, ShieldAlert, Camera, Plus, Wrench, Shield,
+  Package, CreditCard, Truck, Info, ShoppingBag, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 export default function WorkerDashboard() {
   const { user } = useAuth();
+  const { isSpeaking, speakText, stopSpeaking, voiceAlertsEnabled, toggleVoiceAlerts, activeSpeakingId } = useAccessibility();
   const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);
@@ -39,6 +43,17 @@ export default function WorkerDashboard() {
   // SOS State
   const [sosActive, setSosActive] = useState(false);
   const [sosLoading, setSosLoading] = useState(false);
+
+  // Toolkit & In-Platform Buy State
+  const [toolkitData, setToolkitData] = useState(null);
+  const [toolkitLoading, setToolkitLoading] = useState(false);
+  const [buyModalToolkit, setBuyModalToolkit] = useState(null);
+  const [buyModalIndividualTool, setBuyModalIndividualTool] = useState(null);
+  const [isEquipmentMinimized, setIsEquipmentMinimized] = useState(true);
+  const [paymentMode, setPaymentMode] = useState('COOP_LOAN'); // 'COOP_LOAN' or 'DIRECT_PAY'
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(null);
 
   // Real-Time First-to-Accept Broadcast Dispatch Pool States
   const [dismissedJobIds, setDismissedJobIds] = useState([]);
@@ -72,12 +87,81 @@ export default function WorkerDashboard() {
       return;
     }
     fetchDashboard(false);
+    fetchToolkits();
     // Silent auto-poll every 3 seconds for real-time dispatch pool updates
     const pollInterval = setInterval(() => {
       fetchDashboard(true);
     }, 3000);
     return () => clearInterval(pollInterval);
   }, [user]);
+
+  const fetchToolkits = async () => {
+    setToolkitLoading(true);
+    try {
+      const data = await api.getWorkerToolkits();
+      setToolkitData(data);
+      if (data.worker?.address && !deliveryAddress) {
+        setDeliveryAddress(`${data.worker.address}, ${data.worker.city || data.worker.district || 'Bhubaneswar'}`);
+      }
+    } catch (err) {
+      console.error('Failed to load toolkits:', err);
+    } finally {
+      setToolkitLoading(false);
+    }
+  };
+
+  const handleOpenBuyModal = (kit) => {
+    setBuyModalIndividualTool(null);
+    setBuyModalToolkit(kit);
+    setOrderSuccess(null);
+    setPaymentMode('COOP_LOAN');
+    if (dashboardData?.worker?.address && !deliveryAddress) {
+      setDeliveryAddress(`${dashboardData.worker.address}, ${dashboardData.worker.city || dashboardData.worker.district || 'Bhubaneswar'}`);
+    }
+  };
+
+  const handleOpenBuyIndividualModal = (tool) => {
+    setBuyModalIndividualTool(tool);
+    setBuyModalToolkit(toolkitData?.mandatoryToolkit || {
+      id: 1,
+      kit_name: tool.item,
+      trade_category: dashboardData?.worker?.primary_trade || 'Trade',
+      subsidized_price: tool.individual_price,
+      market_price: tool.market_price,
+      monthly_emi: tool.monthly_emi,
+      image_url: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=600&auto=format&fit=crop&q=60',
+    });
+    setOrderSuccess(null);
+    setPaymentMode('COOP_LOAN');
+    if (dashboardData?.worker?.address && !deliveryAddress) {
+      setDeliveryAddress(`${dashboardData.worker.address}, ${dashboardData.worker.city || dashboardData.worker.district || 'Bhubaneswar'}`);
+    }
+  };
+
+  const handleOrderToolkitSubmit = async (e) => {
+    e.preventDefault();
+    if (!buyModalToolkit) return;
+    setOrderSubmitting(true);
+    try {
+      const payload = {
+        toolkit_id: buyModalToolkit.id,
+        payment_mode: paymentMode,
+        delivery_address: deliveryAddress || 'District Labour Cooperative Federation Hub',
+      };
+      if (buyModalIndividualTool) {
+        payload.individual_tool = buyModalIndividualTool.item;
+        payload.individual_price = buyModalIndividualTool.individual_price;
+      }
+      const res = await api.orderWorkerToolkit(payload);
+      setOrderSuccess(res);
+      fetchDashboard(true);
+      fetchToolkits();
+    } catch (err) {
+      alert(err.message || 'Failed to process toolkit order.');
+    } finally {
+      setOrderSubmitting(false);
+    }
+  };
 
   const { worker, skills, certifications, stats, incomingJobs, activeJobs, completedJobs, reviews } = dashboardData || {};
 
@@ -87,48 +171,43 @@ export default function WorkerDashboard() {
   // Active Broadcast Job for popup: First unhandled incoming request in the pool
   const broadcastJob = availableIncomingJobs[0] || null;
 
-  // Audio / Speech alert for new incoming job (Hook declared at top level)
+  // Opt-in Voice Alert for new incoming job: ONLY triggers if worker turned on Voice Alerts
   useEffect(() => {
-    if (broadcastJob && broadcastJob.id !== lastAlertedJobId) {
+    if (voiceAlertsEnabled && broadcastJob && broadcastJob.id !== lastAlertedJobId) {
       setLastAlertedJobId(broadcastJob.id);
-      try {
-        if ('speechSynthesis' in window && !window.speechSynthesis.speaking) {
-          const utterance = new SpeechSynthesisUtterance(
-            `New ${broadcastJob.is_emergency ? 'emergency' : ''} broadcast order in ${broadcastJob.location_city}. ${broadcastJob.service_name}.`
-          );
-          utterance.rate = 1.0;
-          window.speechSynthesis.speak(utterance);
-        }
-      } catch (e) {
-        console.debug('Speech synthesis note:', e);
-      }
+      const text = `New ${broadcastJob.is_emergency ? 'emergency' : ''} broadcast order in ${broadcastJob.location_city}. ${broadcastJob.service_name}.`;
+      speakText(text, { id: `broadcast-${broadcastJob.id}` });
     }
-  }, [broadcastJob?.id]);
+  }, [voiceAlertsEnabled, broadcastJob?.id, lastAlertedJobId, speakText]);
 
   const handleAvailabilityChange = async (newStatus) => {
+    const liveJobs = (activeJobs || []).filter((j) => j.status === 'IN_PROGRESS' || j.status === 'ACCEPTED');
+    if (liveJobs.length > 0 && newStatus !== 'BUSY') {
+      alert('Cannot change availability while you have active jobs in progress or accepted. Complete your active jobs first.');
+      return;
+    }
     setAvailabilityUpdating(true);
     try {
       await api.updateWorkerAvailability(newStatus);
       fetchDashboard();
     } catch (err) {
       console.error('Failed to update availability:', err);
-      alert('Could not update availability status.');
+      const msg = err.response?.data?.message || err.message || 'Could not update availability status.';
+      alert(msg);
     } finally {
       setAvailabilityUpdating(false);
     }
   };
 
-  // Voice Job Alert using Web Speech API (Phase 3)
+  // Voice Job Alert using centralized Accessibility Context with instant toggle
   const handleVoiceAlert = (job) => {
-    if (!('speechSynthesis' in window)) {
-      alert('Web speech not supported in this browser.');
+    const jobKey = `job-${job.id}`;
+    if (isSpeaking && activeSpeakingId === jobKey) {
+      stopSpeaking();
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(
-      `New work order. Service: ${job.service_name}. Location: ${job.location_address}, ${job.location_city}. Scheduled for ${job.scheduled_date} at ${job.scheduled_time}. Tariff: ${job.total_amount} rupees.`
-    );
-    utterance.rate = 0.95;
-    window.speechSynthesis.speak(utterance);
+    const text = `Work order. Service: ${job.service_name}. Location: ${job.location_address || job.location_city}. Scheduled for ${job.scheduled_date || 'today'}. Tariff: ${job.amount || job.total_amount || 0} rupees.`;
+    speakText(text, { id: jobKey });
   };
 
   // Trigger One-Tap SOS Emergency Beacon (Phase 4)
@@ -276,9 +355,12 @@ export default function WorkerDashboard() {
 
   if (loading && !dashboardData) {
     return (
-      <div className="container py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-        <p className="text-xs text-gray-500">Loading worker profile and security dispatch queue...</p>
+      <div className="container py-12 max-w-7xl mx-auto">
+        <CivicLoader
+          title="Loading Artisan Duty Terminal..."
+          subtitle="Syncing cooperative work order pool, direct 93% wage balance, and field telemetry."
+          size="lg"
+        />
       </div>
     );
   }
@@ -305,7 +387,7 @@ export default function WorkerDashboard() {
               to="/login?role=worker"
               className="px-4 py-2 bg-white border border-gray-300 text-gray-800 rounded-xl text-xs font-bold hover:bg-gray-50 transition"
             >
-              Sign In as Demo Artisan
+              Sign In as Artisan
             </Link>
           </div>
         </div>
@@ -381,7 +463,7 @@ export default function WorkerDashboard() {
             <div className="p-3 bg-amber-100/80 rounded-xl border border-amber-400 text-amber-950">
               <div className="font-bold flex items-center gap-1.5 text-[11px]">
                 <Clock size={14} className="text-amber-700" />
-                <span>2. ITI & KYC Audit</span>
+                <span>2. Trade Skill & KYC Audit</span>
               </div>
               <p className="text-[10px] text-amber-800 mt-1">Under verification by Federation SPIO</p>
             </div>
@@ -422,6 +504,44 @@ export default function WorkerDashboard() {
         </div>
       )}
 
+      {/* Dual Compliance Prerequisite Banner: Both required to work */}
+      {worker && (worker?.verification_status !== 'VERIFIED' || (toolkitData?.complianceStatus || worker?.toolkit_compliance) !== 'VERIFIED_EQUIPPED') && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold text-lg">
+              ⚠️
+            </div>
+            <div>
+              <h4 className="font-bold text-amber-950 text-xs sm:text-sm">
+                Prerequisites to Work: Both Verification & Mandatory ISI Toolkit Required
+              </h4>
+              <p className="text-[11px] text-amber-900 mt-0.5">
+                Under cooperative guidelines, artisans can only go online and take work orders once both requirements are completed:
+                <strong className="ml-1">
+                  {worker?.verification_status === 'VERIFIED' ? '✓ Cooperative Verified' : '⏳ Verification Pending'}
+                </strong>
+                <span className="mx-1">•</span>
+                <strong>
+                  {(toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED' ? '✓ Mandatory Toolkit Verified' : '⚠️ Mandatory Toolkit Required'}
+                </strong>
+              </p>
+            </div>
+          </div>
+          {(toolkitData?.complianceStatus || worker?.toolkit_compliance) !== 'VERIFIED_EQUIPPED' && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('TOOLKIT');
+                fetchToolkits();
+              }}
+              className="btn btn-primary btn-sm text-xs font-bold shrink-0 self-start sm:self-center"
+            >
+              Equip Mandatory Toolkit →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Header & Worker ID Profile Banner */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-gray-100">
@@ -453,6 +573,26 @@ export default function WorkerDashboard() {
                   {worker?.verification_status === 'VERIFIED' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
                   {worker?.verification_status}
                 </span>
+
+                {/* Mandatory Toolkit Compliance Badge */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('TOOLKIT');
+                    fetchToolkits();
+                  }}
+                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition shadow-xs ${
+                    (toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200'
+                      : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200 animate-pulse'
+                  }`}
+                  title="Click to inspect Mandatory Trade Toolkit compliance & platform procurement store"
+                >
+                  <Wrench size={11} className={(toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED' ? 'text-emerald-700' : 'text-amber-700'} />
+                  {(toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+                    ? '✓ Mandatory ISI Toolkit Verified'
+                    : '⚠️ Mandatory Toolkit Required'}
+                </button>
               </div>
 
               <div className="text-xs text-gray-600 mt-1 flex items-center gap-3 flex-wrap">
@@ -485,18 +625,53 @@ export default function WorkerDashboard() {
               {sosActive ? '🚨 SOS ACTIVE' : '1-Tap SOS Beacon'}
             </button>
 
-            {/* Availability Toggle (Disabled if not VERIFIED) */}
+            {/* Voice Job Announcements Opt-in Switch */}
+            <button
+              type="button"
+              onClick={toggleVoiceAlerts}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                voiceAlertsEnabled
+                  ? 'bg-amber-400 text-blue-950 border-amber-500 shadow-sm'
+                  : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-200'
+              }`}
+              title={voiceAlertsEnabled ? "Voice Job Announcements: ON (Click to Mute)" : "Voice Job Announcements: OFF (Click to Enable)"}
+            >
+              {voiceAlertsEnabled ? <Volume2 size={14} className="text-blue-950" /> : <VolumeX size={14} className="text-gray-500" />}
+              <span className="hidden sm:inline">Voice Alerts:</span>
+              <span>{voiceAlertsEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Availability Toggle (Disabled if not both VERIFIED & TOOLKIT EQUIPPED, or actively on a job) */}
             <div className="flex items-center p-1 bg-gray-100 rounded-xl border border-gray-200">
               {['AVAILABLE', 'BUSY', 'OFFLINE'].map((status) => {
-                const isActive = worker?.availability === status;
-                const isDisabled = worker?.verification_status !== 'VERIFIED' || availabilityUpdating;
+                const liveJobs = (activeJobs || []).filter((j) => j.status === 'IN_PROGRESS' || j.status === 'ACCEPTED');
+                const hasLiveJob = liveJobs.length > 0;
+                const effectiveStatus = hasLiveJob ? 'BUSY' : (worker?.availability || 'AVAILABLE');
+                const isActive = effectiveStatus === status;
+                const isBlockedByJob = hasLiveJob && (status === 'AVAILABLE' || status === 'OFFLINE');
+                const isToolkitEquipped = (toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED';
+                const isVerified = worker?.verification_status === 'VERIFIED';
+                const canWork = isVerified && isToolkitEquipped;
+                const isBlockedByCompliance = (status === 'AVAILABLE') && !canWork;
+                const isDisabled = isBlockedByCompliance || !isVerified || availabilityUpdating || isBlockedByJob;
+                const tooltip = !isVerified && !isToolkitEquipped
+                  ? 'Duty console locked: Both Cooperative Verification and Mandatory ISI Toolkit required'
+                  : !isVerified
+                  ? 'Duty console locked until cooperative admin verification'
+                  : !isToolkitEquipped && status === 'AVAILABLE'
+                  ? 'Duty console locked: Mandatory ISI Toolkit required before taking jobs'
+                  : isBlockedByJob
+                  ? `Artisan is currently on an active work order (${liveJobs[0]?.booking_code || 'Job in progress'}). Complete order first.`
+                  : status === 'BUSY' && hasLiveJob
+                  ? 'Artisan is currently busy on an active job'
+                  : '';
                 return (
                   <button
                     key={status}
                     type="button"
                     disabled={isDisabled}
                     onClick={() => handleAvailabilityChange(status)}
-                    title={worker?.verification_status !== 'VERIFIED' ? 'Duty console locked until cooperative admin verification' : ''}
+                    title={tooltip}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                       isActive
                         ? status === 'AVAILABLE'
@@ -553,17 +728,21 @@ export default function WorkerDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 gap-6 text-xs font-bold">
+      <div className="flex border-b border-gray-200 gap-6 text-xs font-bold overflow-x-auto">
         {[
           { key: 'ACTIVE', label: `Active Tasks (${activeJobs?.length || 0})` },
           { key: 'INCOMING', label: `Dispatch Inbox (${availableIncomingJobs.length})` },
+          { key: 'TOOLKIT', label: `🧰 Mandatory Tool Kit` },
           { key: 'COMPLETED', label: `Completed Orders (${completedJobs?.length || 0})` },
           { key: 'REVIEWS', label: `Feedback & Reviews (${reviews?.length || 0})` },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`pb-3 border-b-2 transition ${
+            onClick={() => {
+              setActiveTab(tab.key);
+              if (tab.key === 'TOOLKIT') fetchToolkits();
+            }}
+            className={`pb-3 border-b-2 transition whitespace-nowrap ${
               activeTab === tab.key
                 ? 'border-blue-950 text-blue-950'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -714,10 +893,17 @@ export default function WorkerDashboard() {
             availableIncomingJobs.map((job) => (
               <div key={job.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-xs font-bold text-blue-900">{job.booking_code}</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900">
                       NEW DISPATCH
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      job.is_emergency
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                    }`}>
+                      ⏱️ {job.is_emergency ? '10m Emergency Window' : '30m Acceptance Window'}
                     </span>
                   </div>
                   <h3 className="font-bold text-sm text-gray-900 mt-1">{job.service_name}</h3>
@@ -783,6 +969,306 @@ export default function WorkerDashboard() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MANDATORY TOOLKITS & COOPERATIVE STORE TAB
+         ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'TOOLKIT' && (
+        <div className="space-y-6">
+          {/* Status Hero Card */}
+          <div className={`p-6 rounded-2xl border shadow-sm ${
+            (toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+              ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-emerald-300'
+              : 'bg-gradient-to-r from-amber-50 via-orange-50 to-white border-amber-300'
+          }`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                    (toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+                      ? 'bg-emerald-600 text-white border-emerald-700'
+                      : 'bg-amber-600 text-white border-amber-700'
+                  }`}>
+                    {(toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+                      ? '✓ Verified Equipped Artisan'
+                      : '⚠️ Mandatory Toolkit Required'}
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    Trade: <strong>{worker?.primary_trade || 'General Trade'}</strong>
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900">
+                  {(toolkitData?.complianceStatus || worker?.toolkit_compliance) === 'VERIFIED_EQUIPPED'
+                    ? 'All Mandatory Trade Tools Compliant & Certified'
+                    : 'Mandatory ISI Tool Kit Required for Master Dispatch'}
+                </h2>
+                <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                  Under Federation Quality Norms, artisans must possess verified ISI-grade calibrated tools.
+                  You can purchase your certified trade toolkit directly through the platform using <strong>Cooperative Bulk Subsidies (up to 45% off)</strong> or via a <strong>0% Interest Micro-Loan</strong> deductible in small ₹50/job increments.
+                </p>
+              </div>
+
+              <div className="shrink-0 flex flex-col sm:flex-row gap-2">
+                {toolkitData?.mandatoryToolkit && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenBuyModal(toolkitData.mandatoryToolkit)}
+                    className="btn btn-primary btn-sm font-bold flex items-center justify-center gap-2 bg-blue-950 hover:bg-blue-900 text-white shadow-md py-2.5 px-4"
+                  >
+                    <ShoppingBag size={15} />
+                    <span>Buy / Finance Through Platform</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Owned Tools Summary pill with Minimize / Expand and De-duplication */}
+            {worker?.tools_owned && (
+              <div className="mt-4 pt-4 border-t border-slate-200/80 text-xs">
+                {(() => {
+                  const uniqueOwnedTools = Array.from(
+                    new Set(
+                      worker.tools_owned
+                        .split(',')
+                        .map((t) => t.trim())
+                        .filter(Boolean)
+                    )
+                  );
+
+                  const displayedTools = isEquipmentMinimized
+                    ? uniqueOwnedTools.slice(0, 3)
+                    : uniqueOwnedTools;
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-slate-800 text-[11px] uppercase tracking-wider">
+                            Registered Equipment on Record
+                          </strong>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold">
+                            {uniqueOwnedTools.length} {uniqueOwnedTools.length === 1 ? 'Item' : 'Items'}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsEquipmentMinimized(!isEquipmentMinimized)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-900 hover:text-blue-950 bg-white hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition shadow-2xs cursor-pointer"
+                        >
+                          <span>{isEquipmentMinimized ? `Show All (${uniqueOwnedTools.length})` : 'Minimize List'}</span>
+                          {isEquipmentMinimized ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {displayedTools.map((t, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 bg-white rounded-md border border-slate-200 text-slate-700 text-[11px] inline-flex items-center gap-1.5 shadow-2xs font-medium"
+                          >
+                            <Check size={12} className="text-emerald-600 shrink-0" />
+                            <span>{t}</span>
+                          </span>
+                        ))}
+
+                        {isEquipmentMinimized && uniqueOwnedTools.length > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => setIsEquipmentMinimized(false)}
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-950 rounded-md border border-blue-200 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                          >
+                            <span>+{uniqueOwnedTools.length - 3} more registered tools</span>
+                            <ChevronDown size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Active Toolkit Micro-Loan Card (if active) */}
+          {toolkitData?.activeLoan && (
+            <div className="bg-white p-5 rounded-2xl border-2 border-blue-900 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={18} className="text-blue-900" />
+                  <div>
+                    <h3 className="font-bold text-sm text-blue-950">Active Cooperative Toolkit Micro-Loan</h3>
+                    <span className="font-mono text-xs text-slate-500">Ref: {toolkitData.activeLoan.order_code}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                    0% Interest • LCF Micro-Finance
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Kit Purchased</span>
+                  <div className="font-bold text-slate-900 mt-0.5">{toolkitData.activeLoan.kit_name}</div>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Total Financed</span>
+                  <div className="font-mono font-bold text-blue-950 mt-0.5">₹{toolkitData.activeLoan.total_amount}</div>
+                </div>
+                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] text-emerald-800 font-bold uppercase block">Paid Repaid</span>
+                  <div className="font-mono font-bold text-emerald-800 mt-0.5">₹{toolkitData.activeLoan.paid_amount}</div>
+                </div>
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                  <span className="text-[10px] text-amber-900 font-bold uppercase block">Balance Due</span>
+                  <div className="font-mono font-bold text-amber-950 mt-0.5">₹{toolkitData.activeLoan.remaining_amount}</div>
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>Repayment Progress</span>
+                  <span className="font-bold font-mono">
+                    {Math.round((toolkitData.activeLoan.paid_amount / toolkitData.activeLoan.total_amount) * 100)}% Repaid
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, Math.round((toolkitData.activeLoan.paid_amount / toolkitData.activeLoan.total_amount) * 100))}%`
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 pt-1 flex items-center gap-1">
+                  <Info size={12} className="text-blue-900 shrink-0" />
+                  <span>Repayments are auto-deducted at ₹{toolkitData.activeLoan.loan_deduction_per_job || 50} per completed work order from your 93% escrow wallet payout.</span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Mandatory Trade Toolkit Breakdown */}
+          {toolkitData?.mandatoryToolkit && (
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+                <div className="flex items-start gap-3">
+                  <img
+                    src={toolkitData.mandatoryToolkit.image_url}
+                    alt={toolkitData.mandatoryToolkit.kit_name}
+                    className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0 shadow-xs"
+                  />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                      Primary Trade Toolkit • {toolkitData.mandatoryToolkit.trade_category}
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 mt-1">
+                      {toolkitData.mandatoryToolkit.kit_name}
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {toolkitData.mandatoryToolkit.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-left sm:text-right shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div className="text-xs text-slate-400 line-through">Market: ₹{toolkitData.mandatoryToolkit.market_price}</div>
+                  <div className="text-lg font-black font-mono text-emerald-700">
+                    ₹{toolkitData.mandatoryToolkit.subsidized_price}
+                  </div>
+                  <div className="text-[10px] font-bold text-blue-900">
+                    or ₹{toolkitData.mandatoryToolkit.monthly_emi}/mo @ 0% Loan
+                  </div>
+                </div>
+              </div>
+
+              {/* Itemized Inspection Checklist */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-blue-900" />
+                  <span>Mandatory Tool Specification Checklist</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                  {(toolkitData.checklist || []).map((tool, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-xl border flex flex-col justify-between gap-2.5 transition ${
+                        tool.owned
+                          ? 'bg-emerald-50/50 border-emerald-200 text-emerald-950'
+                          : 'bg-slate-50 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <div className="font-bold flex items-center gap-1.5">
+                            <span>{tool.item}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-500 font-mono block">
+                            Standard: {tool.standard}
+                          </span>
+                        </div>
+
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                          tool.owned
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-amber-100 text-amber-900 border border-amber-300'
+                        }`}>
+                          {tool.owned ? '✓ Equipped' : 'Missing'}
+                        </span>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-mono font-bold text-emerald-700">₹{tool.individual_price}</span>
+                          <span className="text-[10px] text-slate-400 line-through">₹{tool.market_price}</span>
+                          <span className="text-[10px] text-blue-900 font-semibold">
+                            (or ₹{tool.monthly_emi}/mo @ 0% Loan)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBuyIndividualModal(tool)}
+                          className="text-[10px] font-bold text-blue-900 hover:text-blue-950 bg-white hover:bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer transition shadow-2xs ml-auto"
+                        >
+                          <ShoppingBag size={11} />
+                          <span>{tool.owned ? 'Buy Spare' : 'Buy Tool Individually'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Standards Banner & Direct Procurement Action */}
+              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200 text-[11px] text-blue-950 flex items-center gap-2">
+                <Award size={16} className="text-blue-900 shrink-0" />
+                <span>
+                  <strong>BIS/ISI Compliance Standards:</strong> {toolkitData.mandatoryToolkit.isi_standards}. Procuring this kit grants <strong>+50 Merit Points</strong>.
+                </span>
+              </div>
+
+              {/* Direct In-Platform Buy/Finance Action */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-100">
+                <div className="text-xs text-slate-600">
+                  <span>Available via <strong>Cooperative Bulk Subsidy</strong> (₹{toolkitData.mandatoryToolkit.subsidized_price}) or <strong>0% Interest Micro-Loan</strong> (₹{toolkitData.mandatoryToolkit.monthly_emi}/mo or ₹50/gig deduction).</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenBuyModal(toolkitData.mandatoryToolkit)}
+                  className="btn btn-primary btn-sm font-bold flex items-center justify-center gap-2 bg-blue-950 hover:bg-blue-900 text-white shadow-md py-2 px-5 whitespace-nowrap cursor-pointer"
+                >
+                  <ShoppingBag size={14} />
+                  <span>Buy / Finance Full Mandatory Kit</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -976,6 +1462,268 @@ export default function WorkerDashboard() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
+          BUY TOOLKIT / INDIVIDUAL TOOL MODAL
+         ───────────────────────────────────────────────────────────── */}
+      {buyModalToolkit && (() => {
+        const isIndividual = Boolean(buyModalIndividualTool);
+        const currentName = isIndividual ? buyModalIndividualTool.item : buyModalToolkit.kit_name;
+        const currentCategory = isIndividual ? (dashboardData?.worker?.primary_trade || 'Trade Tool') : buyModalToolkit.trade_category;
+        const currentPrice = isIndividual ? buyModalIndividualTool.individual_price : buyModalToolkit.subsidized_price;
+        const currentMarketPrice = isIndividual ? buyModalIndividualTool.market_price : buyModalToolkit.market_price;
+        const currentMonthlyEmi = isIndividual ? buyModalIndividualTool.monthly_emi : buyModalToolkit.monthly_emi;
+        const currentMeritPoints = isIndividual ? 0 : 50;
+
+        return (
+          <div
+            onClick={(e) => { if (e.target === e.currentTarget && !orderSubmitting) setBuyModalToolkit(null); }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+          >
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5 max-h-[92vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 border-b pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-blue-950 text-amber-400 flex items-center justify-center font-bold shrink-0">
+                    {isIndividual ? <Wrench size={20} /> : <ShoppingBag size={20} />}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900">
+                      {isIndividual ? 'Procure Certified Individual Tool' : 'Procure Toolkit Through Platform'}
+                    </h3>
+                    <span className="text-xs text-slate-500">
+                      {isIndividual
+                        ? 'Single Trade Tool Procurement • Subsidized / 0% Micro-Loan'
+                        : 'Labour Cooperatives Federation Mandatory Tooling Procurement'}
+                    </span>
+                  </div>
+                </div>
+
+                {!orderSubmitting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBuyModalToolkit(null);
+                      setBuyModalIndividualTool(null);
+                    }}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+
+              {orderSuccess ? (
+                <div className="space-y-4 py-4 text-center animate-in zoom-in-95 duration-200">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-3xl font-bold shadow-inner">
+                    ✓
+                  </div>
+                  <h4 className="text-lg font-black text-slate-900">
+                    {orderSuccess.message}
+                  </h4>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2 text-left max-w-sm mx-auto">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Order Reference:</span>
+                      <span className="font-mono font-bold text-blue-950">{orderSuccess.order?.order_code}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Equipment Item:</span>
+                      <span className="font-bold text-slate-900 text-right truncate max-w-[200px]">
+                        {orderSuccess.order?.individual_tool || currentName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Payment Scheme:</span>
+                      <span className="font-bold text-slate-800">
+                        {orderSuccess.order?.payment_mode === 'COOP_LOAN' ? '0% Cooperative Micro-Loan' : 'Direct Full Payment'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Accreditation Status:</span>
+                      <span className="font-bold text-emerald-700">✓ VERIFIED EQUIPPED</span>
+                    </div>
+                    {!isIndividual && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Merit Points Added:</span>
+                        <span className="font-bold text-indigo-700">+50 Points</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBuyModalToolkit(null);
+                      setBuyModalIndividualTool(null);
+                      setOrderSuccess(null);
+                    }}
+                    className="btn btn-primary btn-sm font-bold w-full py-2.5 mt-2 cursor-pointer"
+                  >
+                    Done & Return to Dashboard
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleOrderToolkitSubmit} className="space-y-4 text-xs">
+                  {/* Product Summary */}
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-3">
+                    {isIndividual ? (
+                      <div className="w-16 h-16 rounded-xl bg-blue-950 text-amber-400 flex items-center justify-center font-bold shrink-0 shadow-xs">
+                        <Wrench size={24} />
+                      </div>
+                    ) : (
+                      <img
+                        src={buyModalToolkit.image_url}
+                        alt={buyModalToolkit.kit_name}
+                        className="w-16 h-16 rounded-xl object-cover border shrink-0"
+                      />
+                    )}
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-blue-900 uppercase">
+                        {currentCategory} {isIndividual ? '• Single Instrument' : 'Category'}
+                      </span>
+                      <h4 className="font-bold text-sm text-slate-900 leading-tight">{currentName}</h4>
+                      {isIndividual && buyModalIndividualTool.standard && (
+                        <span className="text-[10px] text-slate-500 font-mono block">
+                          Standard: {buyModalIndividualTool.standard}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="text-slate-400 line-through text-[11px]">₹{currentMarketPrice}</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm">₹{currentPrice}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Destination */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Doorstep / Federation Delivery Address
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      placeholder="Enter full street address or Federation Hub center"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:ring-2 focus:ring-blue-900"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                      Dispatches from State Cooperative Logistics Center within 24-48 hours.
+                    </span>
+                  </div>
+
+                  {/* Payment Option Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Select Financing / Payment Option
+                    </label>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {/* Option 1: 0% Interest Micro-Loan */}
+                      <div
+                        onClick={() => setPaymentMode('COOP_LOAN')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                          paymentMode === 'COOP_LOAN'
+                            ? 'border-blue-900 bg-blue-50/70 text-blue-950'
+                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="font-extrabold text-xs">0% Interest Micro-Loan</span>
+                            <span className="px-1.5 py-0.5 bg-amber-400 text-blue-950 font-bold text-[9px] rounded">
+                              RECOMMENDED
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                            <strong>₹0 down payment today.</strong> Financed via Federation Welfare Fund. Auto-deducts ₹50 per completed gig or ₹{currentMonthlyEmi}/month.
+                          </p>
+                        </div>
+                        <div className="mt-2 font-mono font-bold text-xs text-blue-950">
+                          Pay Today: ₹0
+                        </div>
+                      </div>
+
+                      {/* Option 2: Direct Full Payment */}
+                      <div
+                        onClick={() => setPaymentMode('DIRECT_PAY')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                          paymentMode === 'DIRECT_PAY'
+                            ? 'border-blue-900 bg-blue-50/70 text-blue-950'
+                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <div>
+                          <span className="font-extrabold text-xs">Direct Wholesale Purchase</span>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                            Instant one-time payment via UPI / Debit Card at full subsidized cooperative bulk rate.
+                          </p>
+                        </div>
+                        <div className="mt-2 font-mono font-bold text-xs text-emerald-700">
+                          Pay Today: ₹{currentPrice}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Breakdown */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs">
+                    <div className="flex justify-between text-slate-500">
+                      <span>Retail Market Value:</span>
+                      <span className="font-mono line-through">₹{currentMarketPrice}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-700 font-semibold">
+                      <span>Cooperative Bulk Subsidy:</span>
+                      <span className="font-mono">-₹{currentMarketPrice - currentPrice}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-200 pt-1 font-bold text-slate-900">
+                      <span>Total {isIndividual ? 'Item' : 'Toolkit'} Cost:</span>
+                      <span className="font-mono text-blue-950">₹{currentPrice}</span>
+                    </div>
+                    {!isIndividual && (
+                      <div className="flex justify-between text-indigo-700 font-bold pt-0.5">
+                        <span>Accreditation Reward:</span>
+                        <span>+50 Merit Points</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      type="button"
+                      disabled={orderSubmitting}
+                      onClick={() => {
+                        setBuyModalToolkit(null);
+                        setBuyModalIndividualTool(null);
+                      }}
+                      className="btn btn-secondary btn-sm cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={orderSubmitting}
+                      className="btn btn-primary btn-sm font-bold flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-5 cursor-pointer"
+                    >
+                      {orderSubmitting ? (
+                        <span className="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Check size={14} />
+                      )}
+                      <span>
+                        {paymentMode === 'COOP_LOAN'
+                          ? (isIndividual ? 'Confirm 0% Tool Loan & Dispatch' : 'Confirm 0% Micro-Loan & Dispatch')
+                          : (isIndividual ? 'Complete Tool Purchase' : 'Complete Direct Purchase')}
+                      </span>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─────────────────────────────────────────────────────────────
           REAL-TIME BROADCAST INCOMING JOB POPUP (FIRST-TO-ACCEPT)
          ───────────────────────────────────────────────────────────── */}
       {broadcastJob && (
@@ -1021,12 +1769,20 @@ export default function WorkerDashboard() {
               </button>
             </div>
 
-            {/* Broadcast Policy Banner */}
-            <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 flex items-center gap-2">
-              <Zap size={16} className="text-amber-600 shrink-0" />
-              <span>
-                <strong>First-to-Accept Rule:</strong> This order is broadcasted to nearby verified artisans. The first artisan to click Accept receives the order immediately!
-              </span>
+            {/* Broadcast Policy Banner with Acceptance Window */}
+            <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1.5">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Zap size={15} className="text-amber-600 shrink-0" />
+                  <span>First-to-Accept Rule</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-200/80 text-amber-900 border border-amber-300">
+                  ⏱️ {broadcastJob.is_emergency ? '10-Min Emergency Limit' : '30-Min Standard Limit'}
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-900">
+                The first qualified artisan to accept claims the booking. If unaccepted within the window, the order auto-cancels automatically.
+              </p>
             </div>
 
             {/* Order Details Grid */}
@@ -1074,10 +1830,22 @@ export default function WorkerDashboard() {
               <button
                 type="button"
                 onClick={() => handleVoiceAlert(broadcastJob)}
-                className="btn btn-secondary btn-sm text-xs flex items-center justify-center gap-1 w-full sm:w-auto"
-                title="Listen in regional voice"
+                className={`btn btn-secondary btn-sm text-xs flex items-center justify-center gap-1.5 w-full sm:w-auto ${
+                  isSpeaking && activeSpeakingId === `job-${broadcastJob.id}` ? 'bg-amber-400 text-slate-950 border-amber-500 font-bold' : ''
+                }`}
+                title="Listen or Stop audio announcement"
               >
-                <Volume2 size={15} /> Listen
+                {isSpeaking && activeSpeakingId === `job-${broadcastJob.id}` ? (
+                  <>
+                    <VolumeX size={15} className="text-red-700" />
+                    <span>Stop Voice</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 size={15} />
+                    <span>Listen</span>
+                  </>
+                )}
               </button>
 
               <button

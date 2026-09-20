@@ -1,4 +1,6 @@
+const bcrypt = require('bcryptjs');
 const { query } = require('../db/connection');
+const { generateToken } = require('../utils/jwt');
 
 /**
  * Generate random formatted tracking ID
@@ -30,6 +32,8 @@ async function registerSociety(req, res) {
       bank_ifsc,
       founding_members = [],
       documents = [],
+      admin_name,
+      password = 'demo123',
     } = req.body;
 
     // 1. Validation: Name & Email
@@ -62,16 +66,49 @@ async function registerSociety(req, res) {
       });
     }
 
+    // Flowchart Step: Create a new Account (Email Id, Password)
+    const applicantName = admin_name || founding_members[0]?.full_name || 'Society Founder';
+    const hashedPassword = await bcrypt.hash(password || 'demo123', 10);
+
+    let userRecord = null;
+    const userExists = await query('SELECT id, name, email, phone, role, admin_type, designation FROM users WHERE email = $1', [registered_email]);
+    if (userExists.rows.length === 0) {
+      const userRes = await query(
+        `INSERT INTO users (name, email, phone, password, role, admin_type, designation, district, city, address, pincode, is_active)
+         VALUES ($1, $2, $3, $4, 'COOPERATIVE_ADMIN', 'SOCIETY_ADMIN', $5, $6, $7, $8, $9, 1)
+         RETURNING id, name, email, phone, role, admin_type, designation`,
+        [
+          applicantName,
+          registered_email,
+          registered_phone || '9876543000',
+          hashedPassword,
+          `President / Secretary, ${name}`,
+          district,
+          city || district,
+          address || `${district} Main Road`,
+          pincode || '751001',
+        ]
+      );
+      userRecord = userRes.rows[0];
+    } else {
+      userRecord = userExists.rows[0];
+    }
+
     const trackingId = generateTrackingId();
     const societyCode = `SOC-${district.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+
+    // Lookup federation for this district
+    const coopRes = await query('SELECT id FROM cooperatives WHERE LOWER(district) = LOWER($1) LIMIT 1', [district]);
+    const federationId = coopRes.rows[0]?.id || null;
 
     // Insert Society
     const societyResult = await query(
       `INSERT INTO societies (
         society_code, name, status, registered_email, registered_phone,
         district, city, address, pincode, objectives, initial_capital_balance,
-        bank_account_no, cooperative_bank_name, bank_ifsc, timeline_stage, tracking_id
-      ) VALUES ($1, $2, 'SUBMITTED', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 7, $14)
+        bank_account_no, cooperative_bank_name, bank_ifsc, timeline_stage, tracking_id,
+        created_by_user_id, federation_id
+      ) VALUES ($1, $2, 'SUBMITTED', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 7, $14, $15, $16)
       RETURNING *`,
       [
         societyCode,
@@ -88,10 +125,15 @@ async function registerSociety(req, res) {
         cooperative_bank_name || 'District Central Cooperative Bank',
         bank_ifsc || 'DCCB0001001',
         trackingId,
+        userRecord.id,
+        federationId,
       ]
     );
 
     const createdSociety = societyResult.rows[0];
+
+    // Link user to the newly registered society
+    await query('UPDATE users SET society_id = $1 WHERE id = $2', [createdSociety.id, userRecord.id]);
 
     // Insert 10+ Founding Members
     for (const member of founding_members) {
@@ -139,15 +181,19 @@ async function registerSociety(req, res) {
       [createdSociety.id, `TXN-INIT-${createdSociety.id}`, capital]
     );
 
+    const token = generateToken(userRecord);
+
     return res.status(201).json({
       success: true,
-      message: 'Society formation application submitted successfully. Unique Tracking ID generated.',
+      message: 'Society formation application submitted successfully. Applicant account created and unique tracking ID generated.',
       data: {
         society: createdSociety,
         tracking_id: trackingId,
         members_count: founding_members.length,
         timeline_stage: 7,
         next_step: 'Verification of documents and meeting with District Registrar of Cooperatives.',
+        user: userRecord,
+        token,
       },
     });
   } catch (err) {
@@ -193,29 +239,155 @@ async function getSocietyByTrackingId(req, res) {
  */
 async function getSocietiesList(req, res) {
   try {
-    const { district, status, nlcf } = req.query;
-    let sql = 'SELECT * FROM societies WHERE 1=1';
+    let { district, status, nlcf, federation_id } = req.query;
+    if (req.user?.admin_type === 'DCO_REGISTRAR' && req.user?.district) {
+      district = req.user.district;
+    }
+    let sql = `
+      SELECT s.*,
+             c.name as federation_name,
+             c.registration_number as federation_reg_no,
+             (SELECT COUNT(*) FROM society_founding_members WHERE society_id = s.id) as founding_members_count,
+             (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id) as total_docs_count,
+             (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id AND verification_status = 'VERIFIED') as verified_docs_count
+      FROM societies s
+      LEFT JOIN cooperatives c ON s.federation_id = c.id
+      WHERE 1=1
+    `;
     const params = [];
 
-    if (district) {
+    if (district && district !== 'ALL') {
       params.push(district);
-      sql += ` AND district = $${params.length}`;
+      sql += ` AND s.district = $${params.length}`;
     }
-    if (status) {
+    if (status && status !== 'ALL') {
       params.push(status);
-      sql += ` AND status = $${params.length}`;
+      sql += ` AND s.status = $${params.length}`;
+    }
+    if (federation_id) {
+      params.push(parseInt(federation_id, 10));
+      sql += ` AND s.federation_id = $${params.length}`;
     }
     if (nlcf !== undefined) {
       params.push(parseInt(nlcf, 10));
-      sql += ` AND is_nlcf_affiliated = $${params.length}`;
+      sql += ` AND s.is_nlcf_affiliated = $${params.length}`;
     }
 
-    sql += ' ORDER BY id ASC';
+    sql += ' ORDER BY s.id ASC';
     const result = await query(sql, params);
     return res.json({ success: true, societies: result.rows });
   } catch (err) {
     console.error('Get Societies Error:', err);
     return res.status(500).json({ error: 'Failed to retrieve societies.' });
+  }
+}
+
+/**
+ * GET /api/societies/federation-overview
+ * Returns cooperative federations grouped by district, with their societies and worker statistics
+ */
+async function getFederationsOverview(req, res) {
+  try {
+    let { district } = req.query;
+    if (req.user?.admin_type === 'DCO_REGISTRAR' && req.user?.district) {
+      district = req.user.district;
+    }
+    let sql = 'SELECT * FROM cooperatives WHERE 1=1';
+    const params = [];
+    if (district && district !== 'ALL') {
+      params.push(district);
+      sql += ` AND district = $${params.length}`;
+    }
+    sql += ' ORDER BY id ASC';
+
+    const fedResult = await query(sql, params);
+
+    const federations = await Promise.all(
+      fedResult.rows.map(async (fed) => {
+        // Societies linked to this federation or district
+        const socRes = await query(
+          `SELECT s.*,
+                  u.name as applicant_name, u.phone as applicant_phone, u.email as applicant_email,
+                  (SELECT COUNT(*) FROM society_founding_members WHERE society_id = s.id) as founding_members_count,
+                  (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id AND verification_status = 'VERIFIED') as verified_docs_count,
+                  (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id) as total_docs_count
+           FROM societies s
+           LEFT JOIN users u ON s.created_by_user_id = u.id
+           WHERE s.federation_id = $1 OR (s.federation_id IS NULL AND s.district = $2)
+           ORDER BY s.id ASC`,
+          [fed.id, fed.district]
+        );
+
+        // Fetch founding members & docs for full inspection in UI
+        const societiesWithDetails = await Promise.all(
+          socRes.rows.map(async (soc) => {
+            const [membersRes, docsRes] = await Promise.all([
+              query('SELECT * FROM society_founding_members WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+              query('SELECT * FROM society_statutory_documents WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+            ]);
+            return {
+              ...soc,
+              founding_members: membersRes.rows || [],
+              statutory_documents: docsRes.rows || [],
+            };
+          })
+        );
+
+        // Workers in this cooperative/federation
+        const workersCountRes = await query(
+          'SELECT COUNT(*) as count FROM workers WHERE cooperative_id = $1',
+          [fed.id]
+        );
+
+        // DCO in charge of this district
+        const dcoRes = await query(
+          `SELECT id, name, email, phone, designation, district
+           FROM users
+           WHERE role = 'COOPERATIVE_ADMIN' AND admin_type = 'DCO_REGISTRAR' AND district = $1
+           LIMIT 1`,
+          [fed.district]
+        );
+
+        const societies = societiesWithDetails;
+        const totalSocieties = societies.length;
+        const activeSocieties = societies.filter((s) => s.status === 'ACTIVE').length;
+        const pendingSocieties = societies.filter((s) => s.status === 'DCO_REVIEW' || s.status === 'SUBMITTED').length;
+        const totalWorkers = parseInt(workersCountRes.rows[0]?.count || 0, 10);
+
+        return {
+          ...fed,
+          dco: dcoRes.rows[0] || null,
+          societies,
+          stats: {
+            totalSocieties,
+            activeSocieties,
+            pendingSocieties,
+            totalWorkers,
+          },
+        };
+      })
+    );
+
+    const totalFederations = federations.length;
+    const totalSocietiesAll = federations.reduce((acc, f) => acc + f.stats.totalSocieties, 0);
+    const activeSocietiesAll = federations.reduce((acc, f) => acc + f.stats.activeSocieties, 0);
+    const pendingSocietiesAll = federations.reduce((acc, f) => acc + f.stats.pendingSocieties, 0);
+    const totalWorkersAll = federations.reduce((acc, f) => acc + f.stats.totalWorkers, 0);
+
+    return res.json({
+      success: true,
+      federations,
+      summary: {
+        totalFederations,
+        totalSocieties: totalSocietiesAll,
+        activeSocieties: activeSocietiesAll,
+        pendingSocieties: pendingSocietiesAll,
+        totalWorkers: totalWorkersAll,
+      },
+    });
+  } catch (err) {
+    console.error('Get Federations Overview Error:', err);
+    return res.status(500).json({ error: 'Failed to retrieve federations overview.' });
   }
 }
 
@@ -243,7 +415,7 @@ async function updateSocietyTimelineStage(req, res) {
       updates.push(`is_nlcf_affiliated = $${params.length}`);
       if (is_nlcf_affiliated) {
         updates.push("audit_frequency = 'HALF_YEARLY'");
-        updates.push("nlcf_certificate_no = 'NLCF-CERT-2026-" + Math.floor(1000 + Math.random() * 9000) + "'");
+        updates.push("nlcf_certificate_no = 'LCF-CERT-2026-" + Math.floor(1000 + Math.random() * 9000) + "'");
         updates.push("nlcf_affiliation_date = CURRENT_DATE::text");
       }
     }
@@ -276,9 +448,387 @@ async function updateSocietyTimelineStage(req, res) {
   }
 }
 
+/**
+ * GET /api/societies/pending/dco
+ * List pending society registrations for the logged-in DCO / Registrar
+ */
+async function getPendingSocietiesForDco(req, res) {
+  try {
+    const userDistrict = req.user.district;
+    const isStatewide = req.user.admin_type === 'FEDERATION_HEAD';
+
+    let sql = `
+      SELECT s.*, 
+             u.name as applicant_name, u.phone as applicant_phone, u.email as applicant_email,
+             (SELECT COUNT(*) FROM society_founding_members WHERE society_id = s.id) as founding_members_count,
+             (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id AND verification_status = 'VERIFIED') as verified_docs_count,
+             (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id) as total_docs_count
+      FROM societies s
+      LEFT JOIN users u ON s.created_by_user_id = u.id
+      WHERE s.status IN ('SUBMITTED', 'DCO_REVIEW')
+    `;
+    const params = [];
+
+    if (!isStatewide && userDistrict) {
+      params.push(userDistrict);
+      sql += ` AND s.district = $${params.length}`;
+    }
+
+    sql += ' ORDER BY s.id DESC';
+    const result = await query(sql, params);
+
+    // Eagerly attach 10 founding members and 6 statutory documents for comprehensive audit
+    const societiesWithDetails = await Promise.all(
+      result.rows.map(async (soc) => {
+        const [membersRes, docsRes] = await Promise.all([
+          query('SELECT * FROM society_founding_members WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+          query('SELECT * FROM society_statutory_documents WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+        ]);
+        return {
+          ...soc,
+          founding_members: membersRes.rows || [],
+          statutory_documents: docsRes.rows || [],
+        };
+      })
+    );
+
+    // Also fetch approved / registered societies in this district (or statewide) for directory & certificate view
+    let approvedSql = `
+      SELECT s.*,
+             u.name as applicant_name, u.phone as applicant_phone, u.email as applicant_email,
+             (SELECT COUNT(*) FROM society_founding_members WHERE society_id = s.id) as founding_members_count,
+             (SELECT COUNT(*) FROM society_statutory_documents WHERE society_id = s.id) as total_docs_count
+      FROM societies s
+      LEFT JOIN users u ON s.created_by_user_id = u.id
+      WHERE s.status = 'ACTIVE'
+    `;
+    const approvedParams = [];
+    if (!isStatewide && userDistrict) {
+      approvedParams.push(userDistrict);
+      approvedSql += ` AND s.district = $${approvedParams.length}`;
+    }
+    approvedSql += ' ORDER BY s.id DESC';
+    const approvedResult = await query(approvedSql, approvedParams);
+
+    const approvedSocietiesWithDetails = await Promise.all(
+      approvedResult.rows.map(async (soc) => {
+        const [membersRes, docsRes] = await Promise.all([
+          query('SELECT * FROM society_founding_members WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+          query('SELECT * FROM society_statutory_documents WHERE society_id = $1 ORDER BY id ASC', [soc.id]),
+        ]);
+        return {
+          ...soc,
+          founding_members: membersRes.rows || [],
+          statutory_documents: docsRes.rows || [],
+        };
+      })
+    );
+
+    // Fetch regulatory inquiries for this district
+    let inqSql = 'SELECT * FROM society_regulatory_inquiries WHERE 1=1';
+    const inqParams = [];
+    if (!isStatewide && userDistrict) {
+      inqParams.push(userDistrict);
+      inqSql += ` AND district = $${inqParams.length}`;
+    }
+    inqSql += ' ORDER BY id DESC';
+    const inqResult = await query(inqSql, inqParams);
+
+    // Calculate DCO stats
+    const totalCapitalAudited = [...societiesWithDetails, ...approvedSocietiesWithDetails].reduce(
+      (acc, s) => acc + (parseFloat(s.initial_capital_balance) || 10000),
+      0
+    );
+
+    const totalReserveFundAudited = [...societiesWithDetails, ...approvedSocietiesWithDetails].reduce(
+      (acc, s) => acc + (parseFloat(s.reserve_fund_balance) || 0),
+      0
+    );
+
+    const totalMembersAudited = [...societiesWithDetails, ...approvedSocietiesWithDetails].reduce(
+      (acc, s) => acc + (parseInt(s.founding_members_count, 10) || 10),
+      0
+    );
+
+    return res.json({
+      success: true,
+      societies: societiesWithDetails,
+      approvedSocieties: approvedSocietiesWithDetails,
+      regulatoryInquiries: inqResult.rows || [],
+      stats: {
+        pendingCount: societiesWithDetails.length,
+        approvedCount: approvedSocietiesWithDetails.length,
+        totalMembersAudited,
+        totalCapitalAudited,
+        totalReserveFundAudited,
+      },
+      dcoDistrict: userDistrict,
+      isStatewide,
+    });
+  } catch (err) {
+    console.error('Get Pending DCO Societies Error:', err);
+    return res.status(500).json({ error: 'Failed to retrieve pending societies.' });
+  }
+}
+
+/**
+ * POST /api/societies/:id/dco-review
+ * DCO Registrar conducts review and approves / certifies society
+ */
+async function dcoReviewSociety(req, res) {
+  try {
+    const { id } = req.params;
+    const { action, review_notes } = req.body; // action: 'APPROVE' | 'REQUEST_CLARIFICATION' | 'REJECT'
+
+    const socRes = await query('SELECT * FROM societies WHERE id = $1', [id]);
+    if (socRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Society not found.' });
+    }
+
+    const society = socRes.rows[0];
+    const isStatewide = req.user.admin_type === 'FEDERATION_HEAD';
+    const userDistrict = req.user.district;
+
+    // Statutory Jurisdiction Guard: DCO can only approve/review societies in their own district
+    if (!isStatewide && userDistrict && society.district !== userDistrict) {
+      return res.status(403).json({
+        error: 'Jurisdiction Restriction',
+        message: `You are the DCO for ${userDistrict} and can only review societies within your statutory district jurisdiction. This society belongs to ${society.district}.`,
+      });
+    }
+
+    const officerName = req.user.name || 'District Cooperative Officer & Registrar';
+    const dcoOffice = `${society.district} District Cooperative Office`;
+
+    if (action === 'APPROVE') {
+      const regYear = new Date().getFullYear();
+      const regRand = Math.floor(1000 + Math.random() * 9000);
+      const registrationNumber = `REG-OD-${regYear}-${regRand}`;
+
+      // Update Society to ACTIVE, Stage 9, dco_linked = 1, approved
+      const updated = await query(
+        `UPDATE societies SET
+          status = 'ACTIVE',
+          timeline_stage = 9,
+          registration_number = $1,
+          dco_linked = 1,
+          dco_officer_name = $2,
+          dco_office_name = $3,
+          updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4
+         RETURNING *`,
+        [registrationNumber, officerName, dcoOffice, id]
+      );
+
+      // Synchronize Federation/Society row in cooperatives table (Federation and Society are the same entity)
+      const dcoOrderNo = `DCO/${society.district.toUpperCase().slice(0, 3)}/REG-${regYear}/${regRand}`;
+      if (society.federation_id) {
+        await query(
+          `UPDATE cooperatives SET
+            status = 'ACTIVE',
+            dco_approval_status = 'APPROVED',
+            dco_approved_at = CURRENT_TIMESTAMP,
+            dco_order_number = $1,
+            dco_officer_name = $2,
+            dco_office_name = $3,
+            updated_at = CURRENT_TIMESTAMP
+           WHERE id = $4`,
+          [dcoOrderNo, officerName, dcoOffice, society.federation_id]
+        );
+      }
+
+      // Verify all statutory documents
+      await query(
+        `UPDATE society_statutory_documents 
+         SET verification_status = 'VERIFIED', verified_by_officer = $1, verified_at = CURRENT_TIMESTAMP 
+         WHERE society_id = $2`,
+        [officerName, id]
+      );
+
+      return res.json({
+        success: true,
+        message: `Society "${society.name}" verified and legally certified by District Registrar! Registration Number: ${registrationNumber}. Society is now Eligible on Sevasetu.`,
+        data: updated.rows[0],
+      });
+    } else if (action === 'NLCF_AFFILIATE') {
+      const regYear = new Date().getFullYear();
+      const certRand = Math.floor(1000 + Math.random() * 9000);
+      const certCode = `LCF-CERT-${regYear}-${certRand}`;
+
+      const updated = await query(
+        `UPDATE societies SET
+          is_nlcf_affiliated = 1,
+          nlcf_certificate_no = $1,
+          nlcf_affiliation_date = CURRENT_TIMESTAMP,
+          ministry_recognized = 1,
+          updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+         RETURNING *`,
+        [certCode, id]
+      );
+
+      return res.json({
+        success: true,
+        message: `Society "${society.name}" formally affiliated with National Labour Cooperative Federation! State Certificate: ${certCode}.`,
+        data: updated.rows[0],
+      });
+    } else if (action === 'REQUEST_CLARIFICATION') {
+      const updated = await query(
+        `UPDATE societies SET
+          status = 'DCO_REVIEW',
+          timeline_stage = 7,
+          dco_officer_name = $1,
+          dco_office_name = $2,
+          updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3
+         RETURNING *`,
+        [officerName, dcoOffice, id]
+      );
+
+      return res.json({
+        success: true,
+        message: 'Clarification requested from applicant. Case placed under DCO Review.',
+        data: updated.rows[0],
+      });
+    } else {
+      const updated = await query(
+        `UPDATE societies SET
+          status = 'REJECTED',
+          dco_officer_name = $1,
+          updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+         RETURNING *`,
+        [officerName, id]
+      );
+
+      return res.json({
+        success: true,
+        message: 'Application rejected by District Registrar.',
+        data: updated.rows[0],
+      });
+    }
+  } catch (err) {
+    console.error('DCO Review Society Error:', err);
+    return res.status(500).json({ error: 'Failed to process DCO review.' });
+  }
+}
+
+/**
+ * PATCH /api/societies/:id/audit
+ * DCO updates society statutory audit classification and reserve fund status
+ */
+async function updateSocietyAudit(req, res) {
+  try {
+    const { id } = req.params;
+    const { audit_grade, annual_return_status, reserve_fund_balance } = req.body;
+    const userDistrict = req.user.district;
+
+    const socRes = await query('SELECT * FROM societies WHERE id = $1', [id]);
+    if (socRes.rows.length === 0) return res.status(404).json({ error: 'Society not found.' });
+
+    if (req.user.admin_type === 'DCO_REGISTRAR' && socRes.rows[0].district !== userDistrict) {
+      return res.status(403).json({ error: 'Unauthorized: Society is outside your district jurisdiction.' });
+    }
+
+    const updated = await query(
+      `UPDATE societies SET
+        audit_grade = COALESCE($1, audit_grade),
+        annual_return_status = COALESCE($2, annual_return_status),
+        reserve_fund_balance = COALESCE($3, reserve_fund_balance),
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4 RETURNING *`,
+      [audit_grade, annual_return_status, reserve_fund_balance, id]
+    );
+
+    return res.json({
+      success: true,
+      message: `Audit compliance updated for ${socRes.rows[0].name}.`,
+      data: updated.rows[0],
+    });
+  } catch (err) {
+    console.error('Update Society Audit Error:', err);
+    return res.status(500).json({ error: 'Failed to update audit compliance.' });
+  }
+}
+
+/**
+ * PATCH /api/societies/:id/governance
+ * DCO updates society AGM date, committee term, and election status
+ */
+async function updateSocietyGovernance(req, res) {
+  try {
+    const { id } = req.params;
+    const { last_agm_date, committee_term_end } = req.body;
+    const userDistrict = req.user.district;
+
+    const socRes = await query('SELECT * FROM societies WHERE id = $1', [id]);
+    if (socRes.rows.length === 0) return res.status(404).json({ error: 'Society not found.' });
+
+    if (req.user.admin_type === 'DCO_REGISTRAR' && socRes.rows[0].district !== userDistrict) {
+      return res.status(403).json({ error: 'Unauthorized: Society is outside your district jurisdiction.' });
+    }
+
+    const updated = await query(
+      `UPDATE societies SET
+        last_agm_date = COALESCE($1, last_agm_date),
+        committee_term_end = COALESCE($2, committee_term_end),
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3 RETURNING *`,
+      [last_agm_date, committee_term_end, id]
+    );
+
+    return res.json({
+      success: true,
+      message: `Governance mandate updated for ${socRes.rows[0].name}.`,
+      data: updated.rows[0],
+    });
+  } catch (err) {
+    console.error('Update Society Governance Error:', err);
+    return res.status(500).json({ error: 'Failed to update governance mandate.' });
+  }
+}
+
+/**
+ * POST /api/societies/inquiries
+ * DCO issues statutory inquiry notice or hearing summons under Sec 65/68
+ */
+async function createOrUpdateInquiry(req, res) {
+  try {
+    const { society_id, section, title, complainant, respondent, status, next_hearing_date, dco_remarks } = req.body;
+    const district = req.user.district || 'Khordha';
+    const caseRand = Math.floor(100 + Math.random() * 900);
+    const secCode = section === 'SECTION_65' ? 'SEC65' : section === 'SECTION_67' ? 'SEC67' : 'SEC68';
+    const case_number = `${secCode}-${district.slice(0, 3).toUpperCase()}-2026-${caseRand}`;
+
+    const inserted = await query(
+      `INSERT INTO society_regulatory_inquiries 
+       (society_id, district, case_number, section, title, complainant, respondent, status, next_hearing_date, dco_remarks)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [society_id, district, case_number, section || 'SECTION_68', title, complainant, respondent, status || 'HEARING_SCHEDULED', next_hearing_date || null, dco_remarks]
+    );
+
+    return res.json({
+      success: true,
+      message: `Statutory proceeding recorded: ${case_number}`,
+      data: inserted.rows[0],
+    });
+  } catch (err) {
+    console.error('Create Regulatory Inquiry Error:', err);
+    return res.status(500).json({ error: 'Failed to record statutory proceeding.' });
+  }
+}
+
 module.exports = {
   registerSociety,
   getSocietyByTrackingId,
   getSocietiesList,
+  getFederationsOverview,
   updateSocietyTimelineStage,
+  getPendingSocietiesForDco,
+  dcoReviewSociety,
+  updateSocietyAudit,
+  updateSocietyGovernance,
+  createOrUpdateInquiry,
 };
+

@@ -1,23 +1,26 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Building2, Users, ShieldCheck, HeartPulse, Scale, CheckCircle2,
   ArrowRight, FileText, Award, Landmark
 } from 'lucide-react';
 
 export default function About() {
+  const { lang, t } = useLanguage();
+
   return (
     <div className="container py-10 max-w-5xl mx-auto">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-12">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-bold uppercase tracking-wider mb-3">
-          <Landmark size={14} /> Cooperative Institutional Framework
+          <Landmark size={14} /> {t('aboutBadge', 'Cooperative Institutional Framework')}
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-          About Shram Setu
+          {t('aboutTitle', 'About Prithvi Fix')}
         </h1>
         <p className="text-base text-gray-600 mt-3 leading-relaxed">
-          A cooperative-owned digital gig services platform connecting certified, federation-backed skilled workers with households and institutions.
+          {t('aboutSub', 'A cooperative-owned digital gig services platform connecting certified, federation-backed skilled workers with households and institutions.')}
         </p>
       </div>
 
@@ -29,7 +32,7 @@ export default function About() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">The Cooperative Difference</h2>
           <p className="text-sm text-gray-600 leading-relaxed mb-4">
-            Unlike commercial gig intermediaries that extract high commissions without providing long-term security, Shram Setu is built on the cooperative ethos: <strong>workers are member-owners</strong>.
+            Unlike commercial gig intermediaries that extract high commissions without providing long-term security, Prithvi Fix is built on the cooperative ethos: <strong>workers are member-owners</strong>.
           </p>
           <ul className="space-y-2 text-xs text-gray-700">
             <li className="flex items-center gap-2">
@@ -53,7 +56,7 @@ export default function About() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Worker Social Security & Welfare</h2>
           <p className="text-sm text-gray-600 leading-relaxed mb-4">
-            Every gig completed on Shram Setu contributes directly to social security, accident coverage, continuous trade certification, and health support.
+            Every gig completed on Prithvi Fix contributes directly to social security, accident coverage, continuous trade certification, and health support.
           </p>
           <ul className="space-y-2 text-xs text-gray-700">
             <li className="flex items-center gap-2">
@@ -62,7 +65,7 @@ export default function About() {
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle2 size={14} className="text-green-700 shrink-0" />
-              Skill upgrading with NSDC and National ITI partner institutions
+              Skill upgrading with NSDC and National Vocational partner institutions
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle2 size={14} className="text-green-700 shrink-0" />
@@ -146,7 +149,7 @@ export default function About() {
       <div className="text-center bg-amber-50 p-8 rounded-xl border border-amber-200">
         <h3 className="text-lg font-bold text-gray-900 mb-2">Be Part of the Movement</h3>
         <p className="text-xs text-gray-600 max-w-md mx-auto mb-4">
-          Whether you need a trustworthy service provider or wish to join as a skilled worker member, Shram Setu is your platform.
+          Whether you need a trustworthy service provider or wish to join as a skilled worker member, Prithvi Fix is your platform.
         </p>
         <div className="flex justify-center gap-3">
           <Link to="/book-service" className="btn btn-primary btn-sm">

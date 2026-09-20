@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
-  UserPlus, UserCheck, Briefcase, Mail, Lock, Phone, MapPin, Building2,
+  User, UserPlus, UserCheck, Briefcase, Mail, Lock, Phone, MapPin, Building2,
   AlertCircle, ShieldCheck, Award, Wrench, FileText, CheckCircle2,
   ChevronRight, ChevronLeft, Landmark, CreditCard, Sparkles, Check, Clock
 } from 'lucide-react';
@@ -38,6 +39,7 @@ const SKILL_SUGGESTIONS = {
 };
 
 export default function Register() {
+  const { lang, t } = useLanguage();
   const { register, error } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -90,10 +92,10 @@ export default function Register() {
     bio: 'Certified artisan with extensive hands-on experience in residential and commercial installations.',
 
     // Step 3: Certifications
-    certificationType: 'ITI_NCVT',
+    certificationType: 'SKILL_NCVT',
     certificationName: 'National Trade Certificate (NTC) — Electrician',
-    issuingOrganization: 'National ITI Bhubaneswar / NCVT',
-    certificateNumber: 'ITI-OD-2022-8821',
+    issuingOrganization: 'State Skill Development Council / NCVT',
+    certificateNumber: 'SKILL-OD-2022-8821',
     issueDate: '2022-07-15',
     hasUploadedCert: true,
 
@@ -156,7 +158,7 @@ export default function Register() {
   // Step 3 Validation
   const validateStep3 = () => {
     if (!formData.certificateNumber.trim()) return 'Please provide your Trade Certificate or Registration Number.';
-    if (!formData.issuingOrganization.trim()) return 'Please provide the name of the issuing ITI / Institute.';
+    if (!formData.issuingOrganization.trim()) return 'Please provide the name of the issuing Institute / Board.';
     return null;
   };
 
@@ -300,139 +302,234 @@ export default function Register() {
   };
 
   return (
-    <div className="container py-10 max-w-3xl mx-auto px-4">
-      {/* Top Seal Header */}
-      <div className="text-center mb-8">
-        <img
-          src="/logo.png"
-          alt="Shram Setu Brand Logo"
-          className="w-20 h-20 mx-auto mb-3 object-contain rounded-2xl shadow-md border border-slate-200 bg-white p-1.5"
-        />
-        <div className="text-[11px] font-bold text-blue-900 uppercase tracking-wider mb-1">
-          National Labour Cooperatives Federation • Autonomous Apex Body
+    <div className="py-3 sm:py-5 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* ── Top Sleek Civic Header (Minimized Margins & Wide View) ── */}
+      <div className="mb-4 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/80 mb-2 shadow-2xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <img
+            src="/logo.png"
+            alt="National Cooperative Seal"
+            className="w-4 h-4 object-contain"
+          />
+          <span className="text-[11px] font-black tracking-wider text-blue-950 uppercase">
+            Labour Cooperatives Federation • Autonomous Apex Body
+          </span>
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-blue-950">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
           Official Cooperative Portal Registration
         </h1>
-        <p className="text-xs md:text-sm text-slate-500 mt-1 max-w-lg mx-auto">
-          Enroll under the Multi-State Cooperative Societies Act, 2002 for verified citizen services or artisan accreditation.
+        <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl mx-auto leading-relaxed">
+          Enroll under the Multi-State Cooperative Societies Act, 2002 for statutory benefits, verified citizen services, and artisan accreditation.
         </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-2.5 text-[11px] font-bold text-slate-500">
+          <span className="inline-flex items-center gap-1 bg-slate-100/80 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+            <ShieldCheck size={13} className="text-blue-900" /> 100% Statutory Protection
+          </span>
+          <span className="inline-flex items-center gap-1 bg-slate-100/80 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+            <Sparkles size={13} className="text-amber-600" /> Zero Surge Pricing
+          </span>
+          <span className="inline-flex items-center gap-1 bg-slate-100/80 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+            <Award size={13} className="text-emerald-600" /> Direct 93% Instant Payout
+          </span>
+          <span className="inline-flex items-center gap-1 bg-slate-100/80 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+            <Phone size={13} className="text-indigo-600" /> Toll-Free: 1800-345-7788
+          </span>
+        </div>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        {/* Role Switcher (Hidden when on success step) */}
-        {wizardStep !== 5 && (
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+      {/* ── Category Selection Cards (Wide 3-Card Grid) ── */}
+      {wizardStep !== 5 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
               Select Registration Category:
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('CUSTOMER');
-                  setWizardStep(1);
-                  setLocalError('');
-                }}
-                className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
-                  role === 'CUSTOMER'
-                    ? 'border-blue-900 bg-blue-50 text-blue-950 ring-2 ring-blue-900/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  role === 'CUSTOMER' ? 'bg-blue-900 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <UserCheck size={18} />
-                </div>
-                <div>
-                  <div className="font-bold text-xs">Citizen / Customer</div>
-                  <div className="text-[11px] text-slate-500">Book verified cooperative services</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('WORKER');
-                  setWizardStep(1);
-                  setLocalError('');
-                }}
-                className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
-                  role === 'WORKER'
-                    ? 'border-emerald-700 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-700/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  role === 'WORKER' ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <Briefcase size={18} />
-                </div>
-                <div>
-                  <div className="font-bold text-xs">Skilled Worker / Artisan</div>
-                  <div className="text-[11px] text-slate-500">Accreditation & direct dispatch</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('FEDERATION');
-                  setWizardStep(1);
-                  setLocalError('');
-                }}
-                className={`p-3.5 rounded-xl border-2 text-left transition flex items-center gap-3 ${
-                  role === 'FEDERATION'
-                    ? 'border-amber-600 bg-amber-50 text-amber-950 ring-2 ring-amber-600/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  role === 'FEDERATION' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <Building2 size={18} />
-                </div>
-                <div>
-                  <div className="font-bold text-xs">Cooperative Society / Federation</div>
-                  <div className="text-[11px] text-slate-500">Formation charter & NLCF tenders</div>
-                </div>
-              </button>
-            </div>
+            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+              Instant statutory verification & cooperative onboarding
+            </span>
           </div>
-        )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            {/* Card 1: Citizen / Customer */}
+            <button
+              type="button"
+              onClick={() => {
+                setRole('CUSTOMER');
+                setWizardStep(1);
+                setLocalError('');
+              }}
+              className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+                role === 'CUSTOMER'
+                  ? 'border-blue-900 bg-blue-50/70 text-blue-950 shadow-md ring-2 ring-blue-900/15'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/70 text-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2.5">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  role === 'CUSTOMER' ? 'bg-blue-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  <UserCheck size={20} />
+                </div>
+                {role === 'CUSTOMER' ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-900 text-white shadow-2xs">
+                    <Check size={11} strokeWidth={3} /> Active
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-400">Select →</span>
+                )}
+              </div>
+              <div>
+                <div className="font-extrabold text-sm sm:text-base text-slate-900">{t('tabCitizen', 'Citizen')} / Customer</div>
+                <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">Book verified cooperative services at standard rates</div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex flex-wrap gap-1 text-[10px] font-bold text-slate-500">
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">Zero Surge</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">10-Day Warranty</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">Direct Support</span>
+              </div>
+            </button>
 
+            {/* Card 2: Skilled Worker / Artisan */}
+            <button
+              type="button"
+              onClick={() => {
+                setRole('WORKER');
+                setWizardStep(1);
+                setLocalError('');
+              }}
+              className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+                role === 'WORKER'
+                  ? 'border-emerald-700 bg-emerald-50/70 text-emerald-950 shadow-md ring-2 ring-emerald-700/15'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/70 text-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2.5">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  role === 'WORKER' ? 'bg-emerald-800 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  <Briefcase size={20} />
+                </div>
+                {role === 'WORKER' ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-800 text-white shadow-2xs">
+                    <Check size={11} strokeWidth={3} /> Active
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-400">Select →</span>
+                )}
+              </div>
+              <div>
+                <div className="font-extrabold text-sm sm:text-base text-slate-900">{t('tabArtisan', 'Artisan')} / Skilled Worker</div>
+                <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">Accreditation, live dispatches, 93% daily pay & welfare</div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex flex-wrap gap-1 text-[10px] font-bold text-slate-500">
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">93% Instant Pay</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">₹5L Cover</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">Govt ID Badge</span>
+              </div>
+            </button>
+
+            {/* Card 3: Society / Federation */}
+            <button
+              type="button"
+              onClick={() => {
+                setRole('FEDERATION');
+                setWizardStep(1);
+                setLocalError('');
+              }}
+              className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+                role === 'FEDERATION'
+                  ? 'border-amber-600 bg-amber-50/70 text-amber-950 shadow-md ring-2 ring-amber-600/15'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/70 text-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2.5">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  role === 'FEDERATION' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  <Building2 size={20} />
+                </div>
+                {role === 'FEDERATION' ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-600 text-white shadow-2xs">
+                    <Check size={11} strokeWidth={3} /> Active
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-400">Select →</span>
+                )}
+              </div>
+              <div>
+                <div className="font-extrabold text-sm sm:text-base text-slate-900">{t('tabAdmin', 'Admin')} / Cooperative Society</div>
+                <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">Formation charter, tenders & apex governance console</div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex flex-wrap gap-1 text-[10px] font-bold text-slate-500">
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">LCF Tenders</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">Charter Wizard</span>
+                <span className="bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60">Dual Desk</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main Form Canvas ── */}
+      <div className="bg-white p-5 sm:p-7 md:p-8 rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-950/5 space-y-5">
         {/* ── WORKER MULTI-STEP WIZARD PROGRESS BAR ── */}
         {role === 'WORKER' && wizardStep !== 5 && (
-          <div className="pt-2 pb-4 border-b border-slate-100">
+          <div className="pt-1 pb-4 border-b border-slate-100">
             <div className="flex items-center justify-between text-xs font-bold mb-2">
-              <span className="text-emerald-900 font-mono">
+              <span className="text-emerald-900 font-mono text-xs sm:text-sm flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
                 Step {wizardStep} of 4: {
                   wizardStep === 1 ? 'Personal & Identity' :
                   wizardStep === 2 ? 'Trade Skills & Tools' :
-                  wizardStep === 3 ? 'Certifications & NCVT' : 'KYC & Bank Details'
+                  wizardStep === 3 ? 'Certifications & Skill Credentials' : 'KYC & Bank Details'
                 }
               </span>
-              <span className="text-slate-400 text-[11px]">{wizardStep * 25}% Completed</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs">
+                {wizardStep * 25}% Completed
+              </span>
             </div>
             <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full bg-emerald-600 transition-all duration-300 rounded-full"
+                className="h-full bg-linear-to-r from-emerald-600 to-teal-500 transition-all duration-400 rounded-full"
                 style={{ width: `${wizardStep * 25}%` }}
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-1 mt-3 text-center text-[10px] font-semibold text-slate-500">
-              <span className={wizardStep >= 1 ? 'text-emerald-800 font-bold' : ''}>1. Identity</span>
-              <span className={wizardStep >= 2 ? 'text-emerald-800 font-bold' : ''}>2. Skills & Tools</span>
-              <span className={wizardStep >= 3 ? 'text-emerald-800 font-bold' : ''}>3. Certificate</span>
-              <span className={wizardStep >= 4 ? 'text-emerald-800 font-bold' : ''}>4. KYC & Bank</span>
+            <div className="grid grid-cols-4 gap-2 mt-3 text-center text-xs font-semibold">
+              {[
+                { num: 1, label: 'Identity & Contact' },
+                { num: 2, label: 'Skills & Tools' },
+                { num: 3, label: 'Certifications' },
+                { num: 4, label: 'KYC & Bank' }
+              ].map(s => (
+                <div
+                  key={s.num}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl transition ${
+                    wizardStep === s.num
+                      ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-200 shadow-2xs'
+                      : wizardStep > s.num
+                      ? 'text-emerald-700 font-bold'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                    wizardStep > s.num
+                      ? 'bg-emerald-600 text-white'
+                      : wizardStep === s.num
+                      ? 'bg-emerald-800 text-white'
+                      : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    {wizardStep > s.num ? '✓' : s.num}
+                  </span>
+                  <span className="hidden sm:inline">{s.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {(localError || error) && (
-          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2 shadow-2xs">
             <AlertCircle size={16} className="shrink-0 text-red-600" />
             <span>{localError || error}</span>
           </div>
@@ -495,7 +592,7 @@ export default function Register() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-900 font-semibold">
                   <Clock size={14} className="text-amber-600" />
-                  <span>2. ITI Trade Certificate & Aadhaar Audit: In Progress</span>
+                  <span>2. Trade Skill Certificate & Aadhaar Audit: In Progress</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                   <span className="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block text-center text-[9px]">3</span>
@@ -524,178 +621,213 @@ export default function Register() {
            ───────────────────────────────────────────────────────────── */}
         {(role === 'CUSTOMER' || role === 'WORKER') && wizardStep === 1 && (
           <div className="space-y-4">
-            <div className="pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-sm text-slate-900">
-                {role === 'WORKER' ? 'Step 1: Personal & Identity Information' : 'Citizen Account Details'}
-              </h3>
-              <p className="text-xs text-slate-500">
-                {role === 'WORKER'
-                  ? 'Legal name and residential details required for cooperative police & federation records.'
-                  : 'Enter your details to create your citizen account and book services.'}
-              </p>
+            <div className="pb-2 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                  {role === 'WORKER' ? 'Step 1: Personal & Identity Information' : 'Citizen Account Details'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {role === 'WORKER'
+                    ? 'Legal name and residential details required for cooperative police & federation records.'
+                    : 'Enter your details to create your verified citizen account and book cooperative services.'}
+                </p>
+              </div>
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+                <ShieldCheck size={14} className="text-emerald-600" />
+                <span>SSL Encrypted</span>
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Row 1: Name, Email, Phone in 3-Column Wide Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Full Legal Name *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Full Legal Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="name"
-                  placeholder="e.g. Ramesh Kumar"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <User size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="name"
+                    placeholder="e.g. Ramesh Kumar"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Email Address *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Email Address <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="email"
-                  required
-                  name="email"
-                  placeholder="e.g. ramesh@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Mobile / WhatsApp Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  name="phone"
-                  placeholder="e.g. 9876543210"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <Mail size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    required
+                    name="email"
+                    placeholder="e.g. ramesh@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  District (District Cooperative Federation) *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Mobile / WhatsApp Number <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="district"
-                  value={formData.district}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                >
-                  <option value="Khordha">Khordha (Bhubaneswar Metro Federation)</option>
-                  <option value="Cuttack">Cuttack District Cooperative Society</option>
-                  <option value="Puri">Puri Coastal Labour Cooperative</option>
-                  <option value="Ganjam">Ganjam (Berhampur Labour Society)</option>
-                  <option value="Sambalpur">Sambalpur Regional Directorate</option>
-                </select>
+                <div className="relative flex items-center">
+                  <Phone size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="tel"
+                    required
+                    name="phone"
+                    placeholder="e.g. 9876543210"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Row 2: District, City, Pincode in 3-Column Wide Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  City / Local Town *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  District (Cooperative Federation) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="city"
-                  placeholder="e.g. Saheed Nagar, Bhubaneswar"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <select
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                  >
+                    <option value="Khordha">Khordha (Bhubaneswar Metro Federation)</option>
+                    <option value="Cuttack">Cuttack District Cooperative Society</option>
+                    <option value="Puri">Puri Coastal Labour Cooperative</option>
+                    <option value="Ganjam">Ganjam (Berhampur Labour Society)</option>
+                    <option value="Sambalpur">Sambalpur Regional Directorate</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Pincode *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  City / Local Town <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="pincode"
-                  placeholder="e.g. 751007"
-                  value={formData.pincode}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
+                <div className="relative flex items-center">
+                  <Building2 size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="city"
+                    placeholder="e.g. Saheed Nagar, Bhubaneswar"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Pincode <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <MapPin size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="pincode"
+                    placeholder="e.g. 751007"
+                    value={formData.pincode}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all font-mono placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Row 3: Address (Full Width) */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Full Residential Address *
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Full Residential Address <span className="text-red-500">*</span>
               </label>
-              <textarea
-                rows={2}
-                name="address"
-                placeholder="Plot / House No, Street, Landmark"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-              />
+              <div className="relative flex items-start">
+                <MapPin size={16} className="absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+                <textarea
+                  rows={2}
+                  name="address"
+                  placeholder="Plot / Flat No, Building Name, Street / Landmark Area"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                />
+              </div>
             </div>
 
+            {/* Row 4: Password Pair in 2-Column Wide Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Create Password *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Create Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  name="password"
-                  placeholder="Minimum 6 characters"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <Lock size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    required
+                    name="password"
+                    placeholder="Minimum 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Confirm Password *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  name="confirmPassword"
-                  placeholder="Re-type password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <ShieldCheck size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    required
+                    name="confirmPassword"
+                    placeholder="Re-type password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="pt-3">
+            <div className="pt-2">
               {role === 'WORKER' ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full btn btn-primary py-3 text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
                 >
                   <span>Proceed to Step 2: Trade Skills & Tools</span>
-                  <ChevronRight size={15} />
+                  <ChevronRight size={17} />
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleSubmit}
-                  className="w-full btn btn-primary py-3 text-xs font-bold"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold text-white bg-linear-to-r from-blue-900 to-slate-900 hover:from-blue-950 hover:to-black flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? 'Creating Citizen Account...' : 'Register as Citizen →'}
                 </button>
@@ -708,50 +840,50 @@ export default function Register() {
             CASE B2: COOPERATIVE SOCIETY / FEDERATION REGISTRATION
            ───────────────────────────────────────────────────────────── */}
         {role === 'FEDERATION' && (
-          <div className="space-y-6">
-            <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-300 text-xs text-amber-950 flex items-start gap-3">
+          <div className="space-y-5">
+            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300/80 text-xs text-amber-950 flex items-start gap-3">
               <Building2 size={22} className="shrink-0 text-amber-700 mt-0.5" />
               <div>
-                <strong className="font-bold text-amber-900 block text-xs">
+                <strong className="font-bold text-amber-900 block text-xs sm:text-sm">
                   Cooperative Society & Federation Portal Registration
                 </strong>
-                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                  Societies & Federations affiliate with State & National federations (like <strong>NLCF</strong>) for coordination, subsidized NCCT training, and access to large institutional public contracts.
+                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                  Societies & Federations affiliate with State & regional federations (like <strong>LCF</strong>) for operational coordination, subsidized NCCT training, and access to large institutional public contracts.
                 </p>
               </div>
             </div>
 
-            {/* 2 Pathways */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="p-4 rounded-xl border-2 border-blue-900 bg-blue-50/40 space-y-2 flex flex-col justify-between">
+            {/* 2 Pathways Wide Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-5 rounded-2xl border-2 border-blue-900 bg-blue-50/40 space-y-3 flex flex-col justify-between shadow-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-900 bg-blue-100 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-900 bg-blue-100 px-2.5 py-1 rounded-full">
                     New Unregistered Societies
                   </span>
-                  <h4 className="font-bold text-gray-900 text-xs mt-1.5">
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base mt-2">
                     9-Step Legal Formation Charter Wizard
                   </h4>
-                  <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Full statutory dossier with 10 founding members roster, model bylaws, ₹10k bank deposit check, affidavit, and Registrar tracking.
                   </p>
                 </div>
                 <Link
                   to="/society/register"
-                  className="btn btn-primary btn-sm text-xs font-bold w-full justify-center flex items-center gap-1.5 mt-2 shadow-xs"
+                  className="py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-white bg-blue-900 hover:bg-blue-950 flex items-center justify-center gap-2 shadow-xs transition"
                 >
-                  Launch 9-Step Formation Wizard <ChevronRight size={14} />
+                  Launch 9-Step Formation Wizard <ChevronRight size={15} />
                 </Link>
               </div>
 
-              <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70 space-y-2 flex flex-col justify-between">
+              <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 flex flex-col justify-between shadow-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
                     Formed Societies / Federations
                   </span>
-                  <h4 className="font-bold text-gray-900 text-xs mt-1.5">
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base mt-2">
                     Quick Federation Leadership Account
                   </h4>
-                  <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     Complete the form below to create your official federation administrator credentials and access the dual-console desk immediately.
                   </p>
                 </div>
@@ -761,7 +893,7 @@ export default function Register() {
                     const el = document.getElementById('federation-quick-form');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="btn btn-secondary btn-sm text-xs font-bold w-full justify-center"
+                  className="py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 flex items-center justify-center gap-2 shadow-2xs transition cursor-pointer"
                 >
                   Fill Quick Registration Below ↓
                 </button>
@@ -774,162 +906,201 @@ export default function Register() {
                 Federation / Society Details & Leadership Account
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Society / Federation Full Legal Name *
+              {/* Row 1: Society Name, District */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Society / Federation Full Legal Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    name="societyName"
-                    placeholder="e.g. Kalinga Shramik Seva Sahakari Federation"
-                    value={formData.societyName}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
+                  <div className="relative flex items-center">
+                    <Building2 size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      name="societyName"
+                      placeholder="e.g. Kalinga Shramik Seva Sahakari Federation"
+                      value={formData.societyName}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Federation Admin / President Name *
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    District Jurisdiction <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    name="name"
-                    placeholder="e.g. Arun Pattnaik"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Official Registered Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    name="email"
-                    placeholder="e.g. kalinga.federation@coop.gov.in"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Office Phone / WhatsApp *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    name="phone"
-                    placeholder="e.g. 0674-2548800"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Operational District *
-                  </label>
-                  <select
-                    name="district"
-                    value={formData.district}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                  >
-                    <option value="Khordha">Khordha (Bhubaneswar Metro Federation)</option>
-                    <option value="Cuttack">Cuttack District Cooperative Society</option>
-                    <option value="Puri">Puri Coastal Labour Cooperative</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Initial Capital Deposited (₹ Min 10,000) *
-                  </label>
-                  <input
-                    type="number"
-                    min="10000"
-                    name="initialCapitalBalance"
-                    value={formData.initialCapitalBalance}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Cooperative Bank Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="cooperativeBankName"
-                    value={formData.cooperativeBankName}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Create Admin Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    name="password"
-                    placeholder="Minimum 6 characters"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Confirm Admin Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    name="confirmPassword"
-                    placeholder="Re-type password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                  />
+                  <div className="relative flex items-center">
+                    <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <select
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                    >
+                      <option value="Khordha">Khordha District</option>
+                      <option value="Cuttack">Cuttack District</option>
+                      <option value="Puri">Puri District</option>
+                      <option value="Ganjam">Ganjam District</option>
+                      <option value="Sambalpur">Sambalpur District</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* NLCF Affiliation Checkbox */}
-              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center gap-2.5">
+              {/* Row 2: Capital, Bank */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Cooperative Bank Account / Partner Bank
+                  </label>
+                  <div className="relative flex items-center">
+                    <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      name="cooperativeBankName"
+                      placeholder="e.g. District Central Cooperative Bank (DCCB)"
+                      value={formData.cooperativeBankName}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Initial Share Capital Fund (₹)
+                  </label>
+                  <div className="relative flex items-center">
+                    <CreditCard size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="number"
+                      name="initialCapitalBalance"
+                      value={formData.initialCapitalBalance}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Admin Leader Name, Email, Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Federation Admin / Secretary Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <User size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      name="name"
+                      placeholder="e.g. Bijoy Mohanty"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Official Email <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Mail size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      name="email"
+                      placeholder="e.g. federation@coop.gov.in"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Official Mobile / Contact <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Phone size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="tel"
+                      required
+                      name="phone"
+                      placeholder="e.g. 9876543210"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Password Pair */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Create Admin Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Lock size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="password"
+                      required
+                      name="password"
+                      placeholder="Minimum 6 characters"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Confirm Admin Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <ShieldCheck size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="password"
+                      required
+                      name="confirmPassword"
+                      placeholder="Re-type password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* LCF Affiliation Checkbox */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300 flex items-center gap-3">
                 <input
                   type="checkbox"
                   id="is-nlcf-reg"
                   name="isNlcfAffiliated"
                   checked={formData.isNlcfAffiliated}
                   onChange={handleChange}
-                  className="h-4 w-4 text-amber-600 rounded"
+                  className="h-4 w-4 text-amber-600 rounded cursor-pointer shrink-0"
                 />
-                <label htmlFor="is-nlcf-reg" className="text-xs font-bold text-amber-950 cursor-pointer">
-                  🌟 Affiliate with National Labour Cooperatives Federation (NLCF) — Unlocks "Trusted Federation" badge & institutional tender contracts.
+                <label htmlFor="is-nlcf-reg" className="text-xs sm:text-sm font-bold text-amber-950 cursor-pointer">
+                  🌟 Affiliate with Labour Cooperatives Federation (LCF) — Unlocks "Trusted Federation" badge & institutional tender contracts.
                 </label>
               </div>
 
-              <div className="pt-3">
+              <div className="pt-2">
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleSubmit}
-                  className="w-full btn btn-primary py-3 text-xs font-bold bg-amber-600 hover:bg-amber-500 border-amber-600 text-white shadow-xs"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold bg-linear-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? 'Registering Society / Federation...' : 'Register Society / Federation & Enter Portal →'}
                 </button>
@@ -944,45 +1115,97 @@ export default function Register() {
         {role === 'WORKER' && wizardStep === 2 && (
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-sm text-slate-900">
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
                 Step 2: Trade Skills, Specializations & Tools Owned
               </h3>
-              <p className="text-xs text-slate-500">
-                Select your primary trade category and sub-skills for smart dispatch matching.
+              <p className="text-xs text-slate-500 mt-0.5">
+                Select your primary trade category and sub-skills for smart cooperative dispatch matching.
               </p>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Primary Trade Category *
-              </label>
-              <select
-                name="primaryTrade"
-                value={formData.primaryTrade}
-                onChange={(e) => {
-                  const newTrade = e.target.value;
-                  const suggestions = SKILL_SUGGESTIONS[newTrade] || [];
-                  setFormData((prev) => ({
-                    ...prev,
-                    primaryTrade: newTrade,
-                    subSkills: suggestions.slice(0, 2),
-                  }));
-                }}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white font-semibold text-slate-800"
-              >
-                {TRADES.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.icon} {t.name}
-                  </option>
-                ))}
-              </select>
+            {/* Row 1: Primary Trade, Experience, Availability in 3-Column Wide Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Primary Trade Category <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <Briefcase size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <select
+                    name="primaryTrade"
+                    value={formData.primaryTrade}
+                    onChange={(e) => {
+                      const newTrade = e.target.value;
+                      const suggestions = SKILL_SUGGESTIONS[newTrade] || [];
+                      setFormData((prev) => ({
+                        ...prev,
+                        primaryTrade: newTrade,
+                        subSkills: suggestions.slice(0, 2),
+                      }));
+                    }}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                  >
+                    {TRADES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.icon} {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Years of Trade Experience <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <Award size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <select
+                    name="experienceYears"
+                    value={formData.experienceYears}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                  >
+                    <option value={1}>1 Year (Apprentice)</option>
+                    <option value={2}>2 Years (Junior Artisan)</option>
+                    <option value={3}>3 to 5 Years (Skilled Artisan)</option>
+                    <option value={6}>6 to 10 Years (Senior Artisan)</option>
+                    <option value={12}>10+ Years (Master Artisan)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Working Availability <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <Clock size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <select
+                    name="dailyAvailability"
+                    value={formData.dailyAvailability}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                  >
+                    <option value="FULL_TIME">Full-Time (8:00 AM - 8:00 PM)</option>
+                    <option value="MORNING_SHIFT">Morning Shift (8:00 AM - 2:00 PM)</option>
+                    <option value="EVENING_SHIFT">Evening Shift (2:00 PM - 9:00 PM)</option>
+                    <option value="EMERGENCY_24X7">24x7 Emergency Rapid Response Squad</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Sub-Skill Badges Toggle */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Sub-Specializations & Practical Skills * (Click to select)
-              </label>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  Sub-Specializations & Practical Skills <span className="text-red-500">*</span>
+                </label>
+                <span className="text-xs text-slate-400 font-medium">
+                  {formData.subSkills.length} selected
+                </span>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {(SKILL_SUGGESTIONS[formData.primaryTrade] || []).map((skill) => {
                   const isSelected = formData.subSkills.includes(skill);
@@ -991,10 +1214,10 @@ export default function Register() {
                       key={skill}
                       type="button"
                       onClick={() => toggleSubSkill(skill)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
                           ? 'bg-emerald-800 text-white border-emerald-800 shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-50'
                       }`}
                     >
                       <span>{isSelected ? '✓' : '+'}</span>
@@ -1005,87 +1228,56 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Row 2: Tools Owned, Bio Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Years of Trade Experience *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Primary Tools & Safety Gear Owned <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="experienceYears"
-                  value={formData.experienceYears}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                >
-                  <option value={1}>1 Year (Apprentice)</option>
-                  <option value={2}>2 Years (Junior Artisan)</option>
-                  <option value={3}>3 to 5 Years (Skilled Artisan)</option>
-                  <option value={6}>6 to 10 Years (Senior Artisan)</option>
-                  <option value={12}>10+ Years (Master Artisan)</option>
-                </select>
+                <div className="relative flex items-center">
+                  <Wrench size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="toolsOwned"
+                    required
+                    placeholder="e.g. Digital Multimeter, Heavy Hammer Drill, Pipe Wrench, Safety Helmet & Gloves"
+                    value={formData.toolsOwned}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Working Availability *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Brief Professional Bio / Background Summary
                 </label>
-                <select
-                  name="dailyAvailability"
-                  value={formData.dailyAvailability}
+                <textarea
+                  rows={2}
+                  name="bio"
+                  placeholder="Describe your trade background, major residential or commercial projects..."
+                  value={formData.bio}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                >
-                  <option value="FULL_TIME">Full-Time (8:00 AM - 8:00 PM)</option>
-                  <option value="MORNING_SHIFT">Morning Shift (8:00 AM - 2:00 PM)</option>
-                  <option value="EVENING_SHIFT">Evening Shift (2:00 PM - 9:00 PM)</option>
-                  <option value="EMERGENCY_24X7">24x7 Emergency Rapid Response Squad</option>
-                </select>
+                  className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Primary Tools & Safety Gear Owned *
-              </label>
-              <input
-                type="text"
-                name="toolsOwned"
-                required
-                placeholder="e.g. Digital Multimeter, Heavy Hammer Drill, Pipe Wrench, Safety Helmet & Gloves"
-                value={formData.toolsOwned}
-                onChange={handleChange}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Brief Professional Bio / Background Summary
-              </label>
-              <textarea
-                rows={2}
-                name="bio"
-                placeholder="Describe your trade background, major projects, or specialties..."
-                value={formData.bio}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-              />
-            </div>
-
-            <div className="pt-3 flex items-center justify-between gap-3">
+            <div className="pt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handlePrevStep}
-                className="btn btn-secondary py-2.5 text-xs font-bold flex items-center gap-1"
+                className="py-3 px-5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition cursor-pointer"
               >
-                <ChevronLeft size={15} /> Back
+                <ChevronLeft size={16} /> Back
               </button>
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="btn btn-primary py-2.5 text-xs font-bold flex items-center gap-1"
+                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
               >
-                <span>Step 3: Certifications & NCVT →</span>
-                <ChevronRight size={15} />
+                <span>Step 3: Certifications & Skill Credentials →</span>
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -1097,83 +1289,77 @@ export default function Register() {
         {role === 'WORKER' && wizardStep === 3 && (
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-sm text-slate-900">
-                Step 3: Trade Certifications & NCVT / ITI Credentials
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                Step 3: Trade Certifications & Skill Credentials
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Cooperative federation rules require state or national trade accreditation records.
               </p>
             </div>
 
+            {/* Row 1: Certification Category */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Certification Category *
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Certification Category <span className="text-red-500">*</span>
               </label>
-              <select
-                name="certificationType"
-                value={formData.certificationType}
-                onChange={handleChange}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-              >
-                <option value="ITI_NCVT">ITI National Trade Certificate (NCVT / SCVT)</option>
-                <option value="NSDC_SKILL_INDIA">NSDC Skill India Pradhan Mantri Kaushal Card</option>
-                <option value="STATE_TRADE_GUILD">National Labour Welfare Board Trade License</option>
-                <option value="RPL_PRIOR_LEARNING">Recognition of Prior Learning (RPL) Level 4 Certificate</option>
-                <option value="DIPLOMA_POLYTECHNIC">State Polytechnic Technical Diploma</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Certificate / Course Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  name="certificationName"
-                  placeholder="e.g. National Trade Certificate — Electrician"
-                  value={formData.certificationName}
+              <div className="relative flex items-center">
+                <Award size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                <select
+                  name="certificationType"
+                  value={formData.certificationType}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Certificate / Roll / Registration No. *
-                </label>
-                <input
-                  type="text"
-                  required
-                  name="certificateNumber"
-                  placeholder="e.g. ITI-OD-2022-8821"
-                  value={formData.certificateNumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                >
+                  <option value="SKILL_NCVT">National Trade Certificate (NCVT / SCVT)</option>
+                  <option value="NSDC_SKILL_INDIA">NSDC Skill India Pradhan Mantri Kaushal Card</option>
+                  <option value="STATE_TRADE_GUILD">National Labour Welfare Board Trade License</option>
+                  <option value="RPL_PRIOR_LEARNING">Recognition of Prior Learning (RPL) Level 4 Certificate</option>
+                  <option value="DIPLOMA_POLYTECHNIC">State Polytechnic Technical Diploma</option>
+                </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Issuing Institute / Training Center *
+            {/* Row 2: Title, Number, Organization, Date in Wide Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="lg:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Certificate / Course Title <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="issuingOrganization"
-                  placeholder="e.g. National ITI Bhubaneswar / NCVT"
-                  value={formData.issuingOrganization}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <FileText size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="certificationName"
+                    placeholder="e.g. National Trade Certificate — Electrician"
+                    value={formData.certificationName}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Issue Date / Passing Year *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Certificate / Roll No. <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <CreditCard size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="certificateNumber"
+                    placeholder="e.g. SKILL-OD-2022-8821"
+                    value={formData.certificateNumber}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Issue Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -1181,40 +1367,60 @@ export default function Register() {
                   name="issueDate"
                   value={formData.issueDate}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
+                  className="w-full px-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Issuing Institute / Training Center <span className="text-red-500">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <Building2 size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  required
+                  name="issuingOrganization"
+                  placeholder="e.g. State Skill Council / NCVT Board"
+                  value={formData.issuingOrganization}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
                 />
               </div>
             </div>
 
             {/* Document Upload Simulation */}
-            <div className="p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-xs flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText size={20} className="text-blue-900" />
+            <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-xs flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center shrink-0">
+                  <FileText size={20} />
+                </div>
                 <div>
-                  <div className="font-bold text-slate-800">Trade Certificate Scan Copy (Simulated Upload)</div>
-                  <div className="text-[11px] text-slate-500">PDF / JPG format up to 5 MB</div>
+                  <div className="font-bold text-slate-800 text-xs sm:text-sm">Trade Certificate Scan Copy (Simulated Upload)</div>
+                  <div className="text-slate-500 text-[11px]">PDF / JPG format up to 5 MB • Verified by Apex Council</div>
                 </div>
               </div>
-              <span className="gov-seal-verified">
+              <span className="gov-seal-verified shrink-0">
                 ✓ Document Attached
               </span>
             </div>
 
-            <div className="pt-3 flex items-center justify-between gap-3">
+            <div className="pt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handlePrevStep}
-                className="btn btn-secondary py-2.5 text-xs font-bold flex items-center gap-1"
+                className="py-3 px-5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition cursor-pointer"
               >
-                <ChevronLeft size={15} /> Back
+                <ChevronLeft size={16} /> Back
               </button>
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="btn btn-primary py-2.5 text-xs font-bold flex items-center gap-1"
+                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
               >
                 <span>Step 4: Statutory KYC & Bank →</span>
-                <ChevronRight size={15} />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -1226,164 +1432,192 @@ export default function Register() {
         {role === 'WORKER' && wizardStep === 4 && (
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-sm text-slate-900">
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
                 Step 4: Statutory KYC & Bank Account Details
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Required for direct 93% instant pay settlement, PF & ESIC accident coverage, and police verification.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Aadhaar Card Number (12 Digits) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  name="aadhaarNumber"
-                  placeholder="e.g. 5678 1234 9012"
-                  value={formData.aadhaarNumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  PAN Card Number (10 Characters) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  name="panNumber"
-                  placeholder="e.g. ABCDE1234F"
-                  value={formData.panNumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono uppercase"
-                />
-              </div>
-            </div>
-
+            {/* Row 1: Aadhaar, PAN, Ration Card in 3-Column Wide Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Bank Name *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Aadhaar Card Number (12 Digits) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="bankName"
-                  placeholder="e.g. State Bank of India"
-                  value={formData.bankName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <ShieldCheck size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="aadhaarNumber"
+                    placeholder="e.g. 5678 1234 9012"
+                    value={formData.aadhaarNumber}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Bank Account No. *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  PAN Card Number (10 Characters) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  name="bankAccount"
-                  placeholder="Account Number"
-                  value={formData.bankAccount}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
+                <div className="relative flex items-center">
+                  <CreditCard size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="panNumber"
+                    placeholder="e.g. ABCDE1234F"
+                    value={formData.panNumber}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono uppercase text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Confirm Account No. *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Shramik / Ration Card No. (Optional)
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="confirmBankAccount"
-                  placeholder="Re-type Account No."
-                  value={formData.confirmBankAccount}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
+                <div className="relative flex items-center">
+                  <FileText size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="rationCard"
+                    placeholder="e.g. OD-BPL-2024-8871"
+                    value={formData.rationCard}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Row 2: Bank Details in 4-Column Wide Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Bank Branch IFSC Code *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Bank Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="bankIfsc"
-                  placeholder="e.g. SBIN0001234"
-                  value={formData.bankIfsc}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono uppercase"
-                />
+                <div className="relative flex items-center">
+                  <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="bankName"
+                    placeholder="e.g. State Bank of India"
+                    value={formData.bankName}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Shramik / BPL / Ration Card No. (Optional)
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Bank Account No. <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="rationCard"
-                  placeholder="e.g. OD-BPL-2024-8871"
-                  value={formData.rationCard}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                />
+                <div className="relative flex items-center">
+                  <CreditCard size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    required
+                    name="bankAccount"
+                    placeholder="Account Number"
+                    value={formData.bankAccount}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Confirm Account No. <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <CreditCard size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="confirmBankAccount"
+                    placeholder="Re-type Account No."
+                    value={formData.confirmBankAccount}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Bank IFSC Code <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="bankIfsc"
+                    placeholder="e.g. SBIN0001234"
+                    value={formData.bankIfsc}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold font-mono uppercase text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Row 3: Emergency Contacts in 3-Column Wide Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Emergency Contact Name *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Emergency Contact Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  name="emergencyContactName"
-                  placeholder="e.g. Minati Kumar"
-                  value={formData.emergencyContactName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <User size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    name="emergencyContactName"
+                    placeholder="e.g. Minati Kumar"
+                    value={formData.emergencyContactName}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Emergency Mobile *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Emergency Mobile <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="tel"
-                  required
-                  name="emergencyContactPhone"
-                  placeholder="e.g. 9876500000"
-                  value={formData.emergencyContactPhone}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                />
+                <div className="relative flex items-center">
+                  <Phone size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="tel"
+                    required
+                    name="emergencyContactPhone"
+                    placeholder="e.g. 9876500000"
+                    value={formData.emergencyContactPhone}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal outline-none shadow-2xs"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Relationship *
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Relationship <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="emergencyContactRelation"
                   value={formData.emergencyContactRelation}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs bg-white"
+                  className="w-full px-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
                 >
                   <option value="Spouse">Spouse</option>
                   <option value="Parent">Parent</option>
@@ -1394,35 +1628,35 @@ export default function Register() {
             </div>
 
             {/* Legal Undertaking Checkbox */}
-            <div className="p-3.5 bg-amber-50/70 border border-amber-300 rounded-xl text-xs space-y-2">
-              <label className="flex items-start gap-2.5 cursor-pointer">
+            <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-2xl text-xs space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   required
                   name="acceptedUndertaking"
                   checked={formData.acceptedUndertaking}
                   onChange={handleChange}
-                  className="mt-0.5 w-4 h-4 rounded text-blue-900 focus:ring-blue-900"
+                  className="mt-0.5 w-4 h-4 rounded text-blue-900 focus:ring-blue-900 cursor-pointer shrink-0"
                 />
-                <span className="text-amber-950 leading-relaxed font-medium">
+                <span className="text-amber-950 leading-relaxed font-medium text-xs sm:text-sm">
                   <strong>Statutory Declaration:</strong> I hereby declare under the <em>Multi-State Cooperative Societies Act, 2002</em> that all trade skills, certificates, and KYC credentials submitted are authentic. I understand my application is subject to physical & police verification by District Cooperative Federation Officers before live dispatch activation.
                 </span>
               </label>
             </div>
 
-            <div className="pt-3 flex items-center justify-between gap-3">
+            <div className="pt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handlePrevStep}
-                className="btn btn-secondary py-2.5 text-xs font-bold flex items-center gap-1"
+                className="py-3 px-5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition cursor-pointer"
               >
-                <ChevronLeft size={15} /> Back
+                <ChevronLeft size={16} /> Back
               </button>
               <button
                 type="button"
                 disabled={loading}
                 onClick={handleSubmit}
-                className="btn btn-saffron py-2.5 text-xs font-bold flex items-center gap-2"
+                className="py-3.5 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
               >
                 {loading ? 'Submitting Application...' : 'Submit Accreditation Application →'}
               </button>
@@ -1432,7 +1666,7 @@ export default function Register() {
 
         {/* Existing Member Link */}
         {wizardStep !== 5 && (
-          <div className="mt-4 text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
+          <div className="mt-5 text-center text-xs sm:text-sm text-slate-500 border-t border-slate-100 pt-4">
             Already registered on the platform?{' '}
             <Link to="/login" className="font-bold text-blue-900 hover:underline">
               Sign In via SSO Portal →

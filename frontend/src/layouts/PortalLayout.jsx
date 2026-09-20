@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Building2, User, LogOut, LayoutDashboard, Briefcase,
   ShieldCheck, HeartPulse, MapPin, PhoneCall, AlertTriangle,
   Menu, X, Volume2, VolumeX, Sun, Moon, ArrowRight, ShieldAlert,
   HelpCircle, ChevronRight, Home, Wrench, Search, PlusCircle,
-  FileText, CheckCircle2, UserCheck, Bell, ExternalLink
+  FileText, CheckCircle2, UserCheck, Bell, ExternalLink,
+  FileCheck, Scale, Landmark, Users, IndianRupee, Compass, Layers, GraduationCap, DollarSign,
+  Globe, ChevronDown, Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,7 +16,7 @@ import { useAccessibility } from '../context/AccessibilityContext';
 export default function PortalLayout() {
   const { user, logout, isCustomer, isWorker, isAdmin } = useAuth();
   const { lang, setLang, t } = useLanguage();
-  const { fontSize, setFontSize, highContrast, toggleHighContrast, isSpeaking, speakText, stopSpeaking } = useAccessibility();
+  const { fontSize, setFontSize, isDarkMode, toggleDarkMode, highContrast, toggleHighContrast, isSpeaking, speakText, stopSpeaking } = useAccessibility();
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('portal_sidebar_open');
@@ -24,8 +26,30 @@ export default function PortalLayout() {
     return true;
   });
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const langDropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Cancel any running speech synthesis on route change
+  useEffect(() => {
+    stopSpeaking();
+  }, [location.pathname, stopSpeaking]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangDropdownOpen(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => {
@@ -48,7 +72,7 @@ export default function PortalLayout() {
         adminSub: 'Cooperative Governance & GIS Oversight',
         adminBadge: 'Cooperative Authority',
         workerTitle: 'Worker Member Terminal',
-        workerSub: 'Artisan Duty & Dispatch Workspace',
+        workerSub: 'Artisan Duty & Dispatch',
         workerBadge: 'Verified Artisan',
         citizenTitle: 'Citizen Service Portal',
         citizenSub: 'Personal Bookings & Tax Invoices',
@@ -168,17 +192,50 @@ export default function PortalLayout() {
     const dict = i18n[lang] || i18n.EN;
 
     if (isAdmin) {
-      return {
-        title: dict.adminTitle,
-        sub: dict.adminSub,
-        badge: dict.adminBadge,
-        badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
-        dict,
-        navItems: [
-          { to: '/admin/dashboard', label: dict.navGisMap, icon: LayoutDashboard, end: true },
-          { to: '/find-worker', label: dict.navFindWorker, icon: Search },
+      const isDco = user?.admin_type === 'DCO_REGISTRAR';
+      const isApex = user?.admin_type === 'FEDERATION_HEAD';
+
+      if (isDco) {
+        const dcoNav = [
+          { to: '/admin/dashboard?tab=dco_approval', label: 'Statutory Scrutiny', icon: FileCheck },
+          { to: '/admin/dashboard?tab=dco_registry', label: 'District Society Registry', icon: Landmark },
+          { to: '/admin/dashboard?tab=dco_audit', label: 'Audit & Solvency (Sec 62)', icon: Scale },
+          { to: '/admin/dashboard?tab=dco_elections', label: 'Elections & AGM (Sec 28)', icon: Users },
+          { to: '/admin/dashboard?tab=dco_inquiries', label: 'Inquiries & Orders (Sec 68)', icon: ShieldAlert },
+          { to: '/admin/dashboard?tab=dco_tribunal', label: 'Dispute Tribunal (Sec 70)', icon: FileText },
+          { to: '/admin/dashboard?tab=dco_welfare', label: 'Welfare Escrow Treasury', icon: IndianRupee },
           { to: '/help', label: dict.navHelpdesk, icon: HelpCircle },
-        ],
+        ];
+        return {
+          title: 'District Cooperative Registrar',
+          sub: `${user?.district || 'District'} Regulatory Authority (OCS Act 1962)`,
+          badge: 'District Registrar (DCO)',
+          badgeClass: 'bg-slate-800 text-slate-200 border-slate-700',
+          dict,
+          navItems: dcoNav,
+        };
+      }
+
+      // Labour Cooperative Federation (Apex & Society Admin)
+      const fedNav = [
+        { to: '/federation/portal?tab=apex', label: 'Apex Federation Desk', icon: Building2 },
+        { to: '/federation/tenders', label: 'Institutional Tenders & Bids', icon: Briefcase },
+        { to: '/federation/portal?tab=mobility', label: 'Inter-Society Mobility', icon: Compass },
+        { to: '/federation/portal?tab=tools', label: 'Tool & Machinery Bank', icon: Wrench },
+        { to: '/federation/portal?tab=procurement', label: 'Bulk Material Procurement', icon: Layers },
+        { to: '/federation/portal?tab=ncct', label: 'NCCT Skills Academy', icon: GraduationCap },
+        { to: '/federation/portal?tab=treasurer', label: 'Treasurer & Dividends', icon: DollarSign },
+        { to: '/federation/portal?tab=insurance', label: 'Group Insurance & Relief', icon: ShieldCheck },
+        { to: '/find-worker', label: dict.navFindWorker, icon: Search },
+        { to: '/help', label: dict.navHelpdesk, icon: HelpCircle },
+      ];
+      return {
+        title: isApex ? 'State Apex Federation Head' : 'Labour Cooperative Federation',
+        sub: isApex ? 'Apex Inter-District Coordination & Tenders' : 'Primary Society & Federation Operations',
+        badge: isApex ? 'Apex Federation' : 'Society Federation',
+        badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
+        dict,
+        navItems: fedNav,
       };
     }
     if (isWorker) {
@@ -214,6 +271,24 @@ export default function PortalLayout() {
   const roleConfig = getRoleConfig();
   const dict = roleConfig.dict;
 
+  const LANGUAGES = [
+    { code: 'EN', label: 'English', native: 'English' },
+    { code: 'HI', label: 'Hindi', native: 'हिंदी' },
+    { code: 'OR', label: 'Odia', native: 'ଓଡ଼ିଆ' },
+    { code: 'BN', label: 'Bengali', native: 'বাংলা' },
+    { code: 'TE', label: 'Telugu', native: 'తెలుగు' },
+  ];
+
+  const getFormattedRole = () => {
+    if (user?.admin_type === 'DCO_REGISTRAR') return 'District Registrar (DCO)';
+    if (user?.admin_type === 'FEDERATION_HEAD') return 'Apex Federation Head';
+    if (user?.role === 'COOPERATIVE_ADMIN') return 'District Registrar';
+    if (user?.role === 'FEDERATION_ADMIN') return 'Federation Director';
+    if (user?.role === 'WORKER') return 'Registered Artisan';
+    if (user?.role === 'CUSTOMER' || user?.role === 'CITIZEN') return 'Citizen Member';
+    return roleConfig.badge || 'Verified Member';
+  };
+
   const handleVoiceListen = () => {
     if (isSpeaking) {
       stopSpeaking();
@@ -236,32 +311,37 @@ export default function PortalLayout() {
 
       {/* ── Dedicated Logged-In Top Bar ── */}
       <header className="portal-topbar">
-        {/* Left: 3-Line Hamburger Menu Button & Role Title */}
-        <div className="flex items-center gap-2.5">
+        {/* Left: Hamburger Menu & Brand Context */}
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={toggleSidebar}
-            className="p-2 rounded-lg text-white bg-white/10 hover:bg-white/20 transition flex items-center justify-center cursor-pointer shadow-xs"
-            title={sidebarOpen ? "Close sidebar (3-line menu)" : "Open sidebar (3-line menu)"}
+            className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-150 flex items-center justify-center cursor-pointer border border-transparent hover:border-slate-700/60"
+            title={sidebarOpen ? "Collapse navigation sidebar" : "Expand navigation sidebar"}
             aria-label="Toggle Navigation Sidebar"
           >
-            {sidebarOpen ? <X size={20} className="text-amber-300" /> : <Menu size={20} className="text-white" />}
+            {sidebarOpen ? <X size={18} className="text-slate-200" /> : <Menu size={18} className="text-slate-200" />}
           </button>
 
-          <Link to="/" className="flex items-center gap-2.5 text-white" title={t('brandName')}>
-            <img
-              src="/logo.png"
-              alt="Shram Setu Logo"
-              className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 shadow-sm shrink-0"
-            />
-            <div>
-              <div className="text-sm font-extrabold tracking-tight flex items-center gap-2">
-                <span>{roleConfig.title}</span>
-                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.2 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
-                  {roleConfig.sub}
+          <Link to="/" className="flex items-center gap-3 text-white group" title={t('brandName')}>
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/95 backdrop-blur-xs p-1 shadow-xs border border-white/20 shrink-0 flex items-center justify-center transition-transform group-hover:scale-105">
+              <img
+                src="/logo-emblem.png"
+                alt="Prithvi Fix Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-none group-hover:text-blue-200 transition-colors">
+                  {roleConfig.title}
+                </span>
+                <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-300 bg-slate-800/90 border border-slate-700/60 shadow-2xs leading-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <span className="truncate max-w-[280px]">{roleConfig.sub}</span>
                 </span>
               </div>
-              <div className="text-[10px] text-blue-200">
+              <div className="text-[11px] text-slate-400 font-normal mt-1 leading-none">
                 {t('brandName')} • {t('brandSubtitle')}
               </div>
             </div>
@@ -269,79 +349,131 @@ export default function PortalLayout() {
         </div>
 
         {/* Right: Accessibility Controls & User Profile */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Quick Voice Reader */}
           <button
             onClick={handleVoiceListen}
-            className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
               isSpeaking
-                ? 'bg-amber-400 text-blue-950 font-bold animate-pulse'
-                : 'bg-white/10 text-white hover:bg-white/20'
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/30 animate-pulse'
+                : 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border-transparent hover:border-slate-700/60'
             }`}
-            title={t('listenVoice')}
+            title={isSpeaking ? "Stop Voice Playback" : t('listenVoice')}
+            aria-label={isSpeaking ? "Stop Voice Playback" : "Listen to Page"}
           >
-            {isSpeaking ? <VolumeX size={14} className="text-red-700" /> : <Volume2 size={14} />}
-            <span>{isSpeaking ? t('stopVoice') : t('listenVoice')}</span>
+            {isSpeaking ? (
+              <>
+                <VolumeX size={14} className="text-rose-400" />
+                <span className="hidden sm:inline text-[11px] font-semibold">{t('stopVoice')}</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={14} className="text-slate-300" />
+                <span className="hidden sm:inline text-[11px]">{t('listenVoice')}</span>
+              </>
+            )}
           </button>
 
-          {/* Indic Language Switcher */}
-          <div className="hidden lg:flex items-center gap-1 bg-black/20 p-0.5 rounded text-[11px] font-bold">
+          {/* Theme Switcher */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-1.5 sm:p-2 rounded-lg text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-transparent hover:border-slate-700/60 transition flex items-center justify-center cursor-pointer"
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Dark Mode"
+          >
+            {isDarkMode ? <Sun size={15} className="text-amber-300" /> : <Moon size={15} className="text-slate-300" />}
+          </button>
+
+          {/* Minimalist Language Switcher Popover */}
+          <div className="relative" ref={langDropdownRef}>
             <button
-              onClick={() => setLang('EN')}
-              className={`px-1.5 py-0.5 rounded transition ${lang === 'EN' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-300 hover:text-white'}`}
+              type="button"
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition border border-transparent hover:border-slate-700/60 cursor-pointer"
+              aria-label="Select Language"
+              aria-expanded={langDropdownOpen}
             >
-              English
+              <Globe size={14} className="text-slate-400" />
+              <span className="font-semibold text-xs">
+                {LANGUAGES.find(l => l.code === lang)?.native || 'English'}
+              </span>
+              <ChevronDown
+                size={12}
+                className={`text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`}
+              />
             </button>
-            <button
-              onClick={() => setLang('HI')}
-              className={`px-1.5 py-0.5 rounded transition ${lang === 'HI' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-300 hover:text-white'}`}
-            >
-              हिंदी
-            </button>
-            <button
-              onClick={() => setLang('OR')}
-              className={`px-1.5 py-0.5 rounded transition ${lang === 'OR' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-300 hover:text-white'}`}
-            >
-              ଓଡ଼ିଆ
-            </button>
-            <button
-              onClick={() => setLang('BN')}
-              className={`px-1.5 py-0.5 rounded transition ${lang === 'BN' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-300 hover:text-white'}`}
-            >
-              বাংলা
-            </button>
-            <button
-              onClick={() => setLang('TE')}
-              className={`px-1.5 py-0.5 rounded transition ${lang === 'TE' ? 'bg-amber-400 text-blue-950 font-extrabold' : 'text-gray-300 hover:text-white'}`}
-            >
-              తెలుగు
-            </button>
+
+            {langDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-700/80 py-1.5 z-50 animate-in fade-in zoom-in-95">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                  Select Language
+                </div>
+                <div className="py-1">
+                  {LANGUAGES.map((item) => {
+                    const isSelected = lang === item.code;
+                    return (
+                      <button
+                        key={item.code}
+                        onClick={() => {
+                          setLang(item.code);
+                          setLangDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium transition text-left cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-600/20 text-blue-300 font-semibold'
+                            : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-400 font-mono w-5">{item.code}</span>
+                          <span>{item.native}</span>
+                        </div>
+                        {isSelected && <Check size={13} className="text-blue-400" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Hairline Divider */}
+          <div className="h-5 w-px bg-slate-700/60 mx-1 hidden sm:block" />
+
           {/* User Profile Pill */}
-          <div className="relative">
+          <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition text-left"
+              className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-white/10 text-white transition-all text-left border border-transparent hover:border-slate-700/60 cursor-pointer"
               aria-expanded={userDropdownOpen}
+              aria-haspopup="true"
             >
-              <div className="w-7 h-7 rounded-full bg-amber-400 text-blue-950 flex items-center justify-center text-xs font-black shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-xs border border-blue-400/30">
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
-              <div className="hidden sm:block leading-tight pr-1">
-                <div className="text-xs font-bold text-white max-w-[120px] truncate">{user?.name}</div>
-                <div className="text-[10px] text-amber-300 font-semibold">{user?.role}</div>
+              <div className="hidden sm:block leading-tight pr-0.5">
+                <div className="text-xs font-semibold text-slate-100 max-w-[130px] truncate">
+                  {user?.name || 'Authorized User'}
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium truncate max-w-[130px]">
+                  {getFormattedRole()}
+                </div>
               </div>
+              <ChevronDown
+                size={13}
+                className={`text-slate-400 transition-transform duration-200 hidden sm:block ${userDropdownOpen ? 'rotate-180' : ''}`}
+              />
             </button>
 
             {/* User Dropdown Menu */}
             {userDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 text-gray-800">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="text-xs font-bold text-gray-900">{user?.name}</div>
-                  <div className="text-[11px] text-gray-500 truncate">{user?.email}</div>
-                  <div className="mt-1 inline-block text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-blue-50 text-blue-900 border border-blue-200">
-                    {user?.role}
+              <div className="absolute right-0 mt-2 w-64 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-700/80 py-2 z-50 text-slate-200 animate-in fade-in zoom-in-95">
+                <div className="px-4 py-2.5 border-b border-slate-800">
+                  <div className="text-xs font-bold text-white">{user?.name}</div>
+                  <div className="text-[11px] text-slate-400 truncate">{user?.email || 'officer@cooperation.odisha.gov.in'}</div>
+                  <div className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    <span>{getFormattedRole()}</span>
                   </div>
                 </div>
 
@@ -349,26 +481,26 @@ export default function PortalLayout() {
                   <Link
                     to="/"
                     onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                   >
-                    <ExternalLink size={14} className="text-gray-500" />
+                    <ExternalLink size={14} className="text-slate-400" />
                     <span>{dict.viewPublicSite}</span>
                   </Link>
 
                   <Link
                     to="/help"
                     onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                   >
-                    <HelpCircle size={14} className="text-gray-500" />
+                    <HelpCircle size={14} className="text-slate-400" />
                     <span>{dict.navHelpdesk}</span>
                   </Link>
                 </div>
 
-                <div className="pt-1 border-t border-gray-100">
+                <div className="pt-1 border-t border-slate-800">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-50 text-left"
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-left transition-colors cursor-pointer"
                   >
                     <LogOut size={14} />
                     <span>{t('signOutBtn')}</span>
@@ -397,35 +529,40 @@ export default function PortalLayout() {
           aria-label="Portal Navigation"
         >
           <div>
-            {/* User Quick Info in Sidebar with Close button */}
-            <div className="p-3 mb-4 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-9 h-9 rounded-full bg-blue-950 text-amber-300 flex items-center justify-center text-sm font-bold shrink-0">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div className="leading-tight overflow-hidden">
-                  <div className="text-xs font-bold text-gray-900 truncate">{user?.name}</div>
-                  <div className="text-[10px] text-gray-500 truncate">{user?.email}</div>
-                  <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase mt-0.5 ${roleConfig.badgeClass}`}>
-                    {roleConfig.badge}
-                  </span>
-                </div>
-              </div>
+            {/* Minimalist Sidebar Section Header */}
+            <div className="px-3 pb-3 mb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                {roleConfig.badge || 'Navigation'}
+              </span>
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition shrink-0"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition md:hidden"
                 title="Close sidebar"
                 aria-label="Close sidebar"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
             {/* Navigation Links */}
-            <nav className="space-y-1">
+            <nav className="space-y-0.5">
               {roleConfig.navItems.map((item) => {
                 const Icon = item.icon;
+                const isCurrent = (() => {
+                  const [currentPath, currentSearch] = [location.pathname, location.search];
+                  const [targetPath, targetSearch] = item.to.split('?');
+                  if (currentPath !== targetPath) return false;
+                  if (!targetSearch) {
+                    return !currentSearch || currentSearch === '?tab=apex';
+                  }
+                  const currentParams = new URLSearchParams(currentSearch);
+                  const targetParams = new URLSearchParams(targetSearch);
+                  const currentTab = currentParams.get('tab') || 'apex';
+                  const targetTab = targetParams.get('tab');
+                  return currentTab === targetTab;
+                })();
+
                 return (
                   <NavLink
                     key={item.to}
@@ -434,10 +571,10 @@ export default function PortalLayout() {
                     onClick={() => {
                       if (window.innerWidth < 768) setSidebarOpen(false);
                     }}
-                    className={({ isActive }) => `portal-nav-link ${isActive ? 'active' : ''}`}
+                    className={`portal-nav-link ${isCurrent ? 'active' : ''}`}
                   >
-                    <Icon size={18} className="portal-nav-icon shrink-0" />
-                    <span>{item.label}</span>
+                    <Icon size={16} className="portal-nav-icon shrink-0" />
+                    <span className="truncate">{item.label}</span>
                   </NavLink>
                 );
               })}
@@ -445,22 +582,22 @@ export default function PortalLayout() {
           </div>
 
           {/* Sidebar Footer: Helpline */}
-          <div className="pt-4 border-t border-gray-200 space-y-3">
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
-              <div className="font-bold flex items-center gap-1.5 mb-1">
-                <PhoneCall size={14} className="text-amber-700" />
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/70 dark:border-slate-700/60 text-xs">
+              <div className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-0.5 text-[11px]">
+                <PhoneCall size={12} className="text-blue-600" />
                 <span>{dict.helplineTitle}</span>
               </div>
-              <div className="text-[11px] text-amber-800">
-                {t('tollFreeLabel')}: <strong className="font-mono">1800-345-7788</strong>
+              <div className="text-[11px] text-slate-500 font-mono">
+                1800-345-7788
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 p-2 rounded-lg text-xs font-bold text-gray-600 hover:text-red-700 hover:bg-gray-100 transition"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50/60 transition cursor-pointer"
             >
-              <LogOut size={14} />
+              <LogOut size={13} />
               <span>{t('signOutBtn')}</span>
             </button>
           </div>
@@ -473,7 +610,7 @@ export default function PortalLayout() {
       </div>
 
       {/* ── Secure Minimal Portal Footer ── */}
-      <footer className="py-3 px-6 bg-white border-t border-gray-200 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <footer className="py-3 px-6 bg-white dark:bg-[#0A0F24] border-t border-gray-200 dark:border-[#1E294B] text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
           <span>{dict.sessionStatus}</span>
@@ -482,6 +619,30 @@ export default function PortalLayout() {
           {t('tollFreeLabel')}: <strong>1800-345-7788</strong> | Emergency: <strong>112</strong>
         </div>
       </footer>
+
+      {/* Global Floating Voice Assistant Bar with 1-Tap Stop */}
+      {isSpeaking && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 backdrop-blur-md"
+        >
+          <span className="flex h-2.5 w-2.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <Volume2 size={16} className="text-emerald-400 animate-pulse" />
+          <span className="text-xs font-medium text-slate-200">Voice Assistant Playing</span>
+          <button
+            onClick={stopSpeaking}
+            className="ml-1 px-3 py-1 text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            title="Immediately Stop Voice Playback"
+          >
+            <VolumeX size={13} />
+            <span>Stop</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

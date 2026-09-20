@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import {
   HelpCircle, PhoneCall, ShieldAlert, MessageSquare, ChevronDown,
   ChevronUp, CheckCircle2, AlertCircle, FileText, Send
@@ -6,8 +7,8 @@ import {
 
 const FAQS = [
   {
-    q: 'How does Shram Setu verify worker credentials?',
-    a: 'Every worker registered on Shram Setu is affiliated with a licensed District Labour Cooperative. Accredited ITI certificates, NSDC skill cards, and state trade licenses are physically and digitally verified by the Cooperative Administration before activation.',
+    q: 'How does Prithvi Fix verify worker credentials?',
+    a: 'Every worker registered on Prithvi Fix is affiliated with a licensed District Labour Cooperative. Accredited trade certificates, NSDC skill cards, and state trade licenses are physically and digitally verified by the Cooperative Administration before activation.',
   },
   {
     q: 'What is the pricing model? Are there hidden fees?',
@@ -28,6 +29,7 @@ const FAQS = [
 ];
 
 export default function Help() {
+  const { lang, t } = useLanguage();
   const [openFaq, setOpenFaq] = useState(0);
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,13 +49,13 @@ export default function Help() {
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-bold uppercase tracking-wider mb-3">
-          <HelpCircle size={14} /> Public Support & Grievance Redressal
+          <HelpCircle size={14} /> {t('helpBadge', 'Public Support & Grievance Redressal')}
         </div>
         <h1 className="text-3xl font-bold text-gray-900">
-          Help & Grievance Support Centre
+          {t('helpTitle', 'Help & Grievance Support Centre')}
         </h1>
         <p className="text-sm text-gray-600 mt-2">
-          Find answers, contact district cooperative helplines, or submit a resolution ticket.
+          {t('helpSub', 'Find answers, contact district cooperative helplines, or submit a resolution ticket.')}
         </p>
       </div>
 

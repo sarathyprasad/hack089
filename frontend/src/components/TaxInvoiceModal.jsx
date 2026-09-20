@@ -75,7 +75,7 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
           {/* Header Banner */}
           <div className="border-b-2 border-blue-900 pb-5 flex items-start justify-between">
             <div className="flex items-start gap-3.5">
-              <img src="/logo.png" alt="Shram Setu" className="w-14 h-14 object-contain rounded-xl border border-gray-200 p-1 bg-white shrink-0 shadow-xs" />
+              <img src="/logo.png" alt="Prithvi Fix" className="w-14 h-14 object-contain rounded-xl border border-gray-200 p-1 bg-white shrink-0 shadow-xs" />
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-900 uppercase tracking-wider">
                   <Landmark size={12} /> Labour Cooperative Society Form IV
@@ -227,7 +227,7 @@ export default function TaxInvoiceModal({ isOpen = true, invoice, booking, onClo
               </div>
               <div className="space-y-0.5 text-[10px] text-gray-500">
                 <div className="font-bold text-gray-700">Digital Verification Seal</div>
-                <div>Scan with Shram Setu Citizen App to verify authenticity.</div>
+                <div>Scan with Prithvi Fix Citizen App to verify authenticity.</div>
                 <div className="text-green-700 font-semibold flex items-center gap-1">
                   <ShieldCheck size={12} /> Verified by Labour Federation Officer
                 </div>

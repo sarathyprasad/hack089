@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import CivicLoader from '../components/CivicLoader';
 import {
   Search, ShieldCheck, Star, MapPin, Award, CheckCircle2,
   Briefcase, Building2, User, X, Calendar, Phone, Check, AlertCircle,
-  Mic, MicOff, Zap, PhoneCall, ChevronRight
+  Mic, MicOff, Zap, PhoneCall, ChevronRight, Wrench
 } from 'lucide-react';
 
 export default function FindWorker() {
@@ -231,10 +232,11 @@ export default function FindWorker() {
 
       {/* Workers Grid */}
       {loading ? (
-        <div className="text-center py-16">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-          <p className="text-sm text-gray-600">{t('loadingWorkers')}</p>
-        </div>
+        <CivicLoader
+          variant="card"
+          title="Searching Verified Guild Artisans..."
+          subtitle="Querying verified police clearance, skill credentials & live dispatch availability"
+        />
       ) : workers.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
           <p className="text-gray-600 font-medium">{t('noWorkersFound')}</p>
@@ -286,7 +288,7 @@ export default function FindWorker() {
 
                 {/* Name & Cooperative */}
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-blue-950 text-amber-300 flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                  <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
                     {worker.name.charAt(0)}
                   </div>
                   <div>
@@ -337,16 +339,23 @@ export default function FindWorker() {
                   </div>
 
                   {/* Federation Affiliation Badge (Page 3) */}
-                  <div className="pt-1">
+                  <div className="pt-1 flex flex-wrap gap-1.5">
                     <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       worker.cooperative_id === 1 || worker.is_nlcf_affiliated
                         ? 'bg-amber-50 text-amber-900 border border-amber-300'
                         : 'bg-blue-50 text-blue-900 border border-blue-200'
                     }`}>
                       {worker.cooperative_id === 1 || worker.is_nlcf_affiliated
-                        ? '🌟 Trusted Federation under NLCF'
+                        ? '🌟 Trusted Federation under LCF'
                         : '🛡️ Verified Federation'}
                     </span>
+
+                    {worker.toolkit_compliance === 'VERIFIED_EQUIPPED' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300">
+                        <Wrench size={10} className="text-emerald-700" />
+                        <span>🧰 ISI Toolkit Verified</span>
+                      </span>
+                    )}
                   </div>
 
                   {worker.certification_type && (
@@ -386,7 +395,7 @@ export default function FindWorker() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-blue-950 text-amber-300 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold">
                   {selectedWorker.name.charAt(0)}
                 </div>
                 <div>
@@ -417,6 +426,40 @@ export default function FindWorker() {
                   <div className="font-bold text-gray-700">{t('experience')}</div>
                   <div className="text-gray-900">{selectedWorker.experience_years} {t('years')}</div>
                 </div>
+              </div>
+
+              {/* Mandatory Toolkit Compliance in Profile Modal */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                    <Wrench size={14} className="text-blue-900" />
+                    <span>Mandatory Tool Kit Compliance:</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    selectedWorker.toolkit_compliance === 'VERIFIED_EQUIPPED'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-amber-100 text-amber-900 border border-amber-300'
+                  }`}>
+                    {selectedWorker.toolkit_compliance === 'VERIFIED_EQUIPPED' ? '✓ ISI Toolkit Verified' : 'Standard Gear'}
+                  </span>
+                </div>
+
+                {selectedWorker.tools_owned ? (
+                  <div>
+                    <span className="text-[10px] text-slate-500 block mb-1">Equipped Tools on Record:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedWorker.tools_owned.split(',').map((tool, i) => (
+                        <span key={i} className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-slate-700 text-[10px]">
+                          ✓ {tool.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500">
+                    Equipped with standard artisan tools and safety gear.
+                  </p>
+                )}
               </div>
 
               {selectedWorker.bio && (

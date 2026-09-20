@@ -5,6 +5,7 @@ const {
   getAdminWorkers,
   verifyWorker,
   getAdminBookings,
+  getAdminAuditLogs,
 } = require('../controllers/adminController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -16,5 +17,6 @@ router.get('/dashboard', getAdminDashboard);
 router.get('/workers', getAdminWorkers);
 router.put('/workers/:id/verify', verifyWorker);
 router.get('/bookings', getAdminBookings);
+router.get('/audit-logs', getAdminAuditLogs);
 
 module.exports = router;

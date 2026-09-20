@@ -21,21 +21,77 @@ export default function LiveRouteMap({
   const [selectedPinWorker, setSelectedPinWorker] = useState(null);
   const [isIframeLoading, setIsIframeLoading] = useState(true);
 
-  // Worker coordinates fallback
-  const workerLat = worker?.workerCoords?.lat || worker?.latitude || 20.2961;
-  const workerLng = worker?.workerCoords?.lng || worker?.longitude || 85.8245;
+  // 1. Resolve Customer Coordinates
+  let resolvedCustLat = customerCoords?.lat != null ? Number(customerCoords.lat) : NaN;
+  let resolvedCustLng = customerCoords?.lng != null ? Number(customerCoords.lng) : NaN;
 
-  const custLat = customerCoords?.lat || 20.3540;
-  const custLng = customerCoords?.lng || 85.8170;
+  const addressUpper = (customerAddress || '').toUpperCase();
+  if (isNaN(resolvedCustLat) || !resolvedCustLat) {
+    if (addressUpper.includes('PURI')) {
+      resolvedCustLat = 19.8135;
+      resolvedCustLng = 85.8312;
+    } else if (addressUpper.includes('CUTTACK')) {
+      resolvedCustLat = 20.4625;
+      resolvedCustLng = 85.8830;
+    } else {
+      resolvedCustLat = 20.3540;
+      resolvedCustLng = 85.8170;
+    }
+  }
+
+  // 2. Resolve Worker Coordinates (Strictly in the same district/city)
+  let resolvedWorkerLat = (worker?.workerCoords?.lat != null ? Number(worker.workerCoords.lat) : (worker?.latitude != null ? Number(worker.latitude) : NaN));
+  let resolvedWorkerLng = (worker?.workerCoords?.lng != null ? Number(worker.workerCoords.lng) : (worker?.longitude != null ? Number(worker.longitude) : NaN));
+
+  const isPuriLocality = addressUpper.includes('PURI') || (resolvedCustLat >= 19.7 && resolvedCustLat <= 19.95);
+  const isCuttackLocality = addressUpper.includes('CUTTACK') || (resolvedCustLat >= 20.42 && resolvedCustLat <= 20.55);
+
+  if (isNaN(resolvedWorkerLat) || !resolvedWorkerLat) {
+    if (isPuriLocality) {
+      resolvedWorkerLat = 19.8100;
+      resolvedWorkerLng = 85.8380;
+    } else if (isCuttackLocality) {
+      resolvedWorkerLat = 20.4890;
+      resolvedWorkerLng = 85.8770;
+    } else {
+      resolvedWorkerLat = 20.2750;
+      resolvedWorkerLng = 85.8100;
+    }
+  } else {
+    // Sanity check: Ensure worker is not mistakenly placed cross-district
+    if (isPuriLocality && resolvedWorkerLat > 20.1) {
+      resolvedWorkerLat = 19.8100;
+      resolvedWorkerLng = 85.8380;
+    } else if (isCuttackLocality && resolvedWorkerLat < 20.38) {
+      resolvedWorkerLat = 20.4890;
+      resolvedWorkerLng = 85.8770;
+    }
+  }
+
+  // 3. Accurate Haversine Distance Calculation (km)
+  const R = 6371;
+  const dLat = (resolvedCustLat - resolvedWorkerLat) * (Math.PI / 180);
+  const dLon = (resolvedCustLng - resolvedWorkerLng) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(resolvedWorkerLat * (Math.PI / 180)) * Math.cos(resolvedCustLat * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const straightDist = R * c;
+  const computedRoadDist = Math.max(1.2, Math.round(straightDist * 1.35 * 10) / 10);
 
   const distanceKm =
-    worker?.distanceKm ||
-    Math.round((Math.abs(workerLat - custLat) + Math.abs(workerLng - custLng)) * 80 * 10) / 10 ||
-    3.4;
-  const etaMinutes = worker?.etaMinutes || Math.max(8, Math.round(distanceKm * 3.2));
+    worker?.distanceKm && Number(worker.distanceKm) < 25
+      ? Number(worker.distanceKm)
+      : computedRoadDist;
+
+  const etaMinutes =
+    worker?.etaMinutes && Number(worker.etaMinutes) < 50
+      ? Number(worker.etaMinutes)
+      : Math.max(7, Math.round((distanceKm / 22) * 60) + 3);
 
   // Direct native Google Maps navigation URL for mobile & desktop
-  const googleMapsExternalUrl = `https://www.google.com/maps/dir/?api=1&origin=${workerLat},${workerLng}&destination=${custLat},${custLng}&travelmode=driving`;
+  const googleMapsExternalUrl = `https://www.google.com/maps/dir/?api=1&origin=${resolvedWorkerLat},${resolvedWorkerLng}&destination=${resolvedCustLat},${resolvedCustLng}&travelmode=driving`;
 
   // Build Verified Google Maps Embed URL (Works directly in iframes without 301 SAMEORIGIN blocking)
   const googleMapsEmbedUrl = useMemo(() => {
@@ -46,35 +102,33 @@ export default function LiveRouteMap({
     // Option 1: Official Google Maps Embed v1 (if custom API key is supplied)
     if (apiKey) {
       if (viewMode === 'ROUTE') {
-        const origin = `${workerLat},${workerLng}`;
-        const dest = encodeURIComponent(customerAddress || `${custLat},${custLng}`);
+        const origin = `${resolvedWorkerLat},${resolvedWorkerLng}`;
+        const dest = `${resolvedCustLat},${resolvedCustLng}`;
         return `https://www.google.com/maps/embed/v1/directions?key=${apiKey}&origin=${origin}&destination=${dest}&mode=driving`;
       } else if (viewMode === 'ARTISAN') {
-        const activeLat = selectedPinWorker?.latitude || workerLat;
-        const activeLng = selectedPinWorker?.longitude || workerLng;
+        const activeLat = selectedPinWorker?.latitude || resolvedWorkerLat;
+        const activeLng = selectedPinWorker?.longitude || resolvedWorkerLng;
         return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${activeLat},${activeLng}&zoom=${zoomLevel}`;
       } else {
-        const destQuery = encodeURIComponent(customerAddress || `${custLat},${custLng}`);
-        return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${destQuery}&zoom=${zoomLevel}`;
+        return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${resolvedCustLat},${resolvedCustLng}&zoom=${zoomLevel}`;
       }
     }
 
-    // Option 2: Direct Google Maps Embed Engine (Zero API Key required, 100% iframe allowed with X-Frame null)
+    // Option 2: Direct Google Maps Embed Engine (Zero API Key required, coordinates strictly in local district)
     let query = '';
     if (viewMode === 'ROUTE') {
-      const destText = customerAddress || `${custLat},${custLng}`;
-      query = `${workerLat},${workerLng} to ${destText}`;
+      query = `${resolvedWorkerLat},${resolvedWorkerLng} to ${resolvedCustLat},${resolvedCustLng}`;
     } else if (viewMode === 'ARTISAN') {
-      const activeLat = selectedPinWorker?.latitude || workerLat;
-      const activeLng = selectedPinWorker?.longitude || workerLng;
+      const activeLat = selectedPinWorker?.latitude || resolvedWorkerLat;
+      const activeLng = selectedPinWorker?.longitude || resolvedWorkerLng;
       query = `${activeLat},${activeLng}`;
     } else {
-      query = customerAddress ? `${customerAddress}, ${custLat},${custLng}` : `${custLat},${custLng}`;
+      query = `${resolvedCustLat},${resolvedCustLng}`;
     }
 
     const encodedQuery = encodeURIComponent(query);
     return `https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s${encodedQuery}!6i${zoomLevel}!3m1!1sen!5m1!1sen`;
-  }, [viewMode, zoomLevel, workerLat, workerLng, custLat, custLng, customerAddress, selectedPinWorker]);
+  }, [viewMode, zoomLevel, resolvedWorkerLat, resolvedWorkerLng, resolvedCustLat, resolvedCustLng, selectedPinWorker]);
 
   const handleRecenter = () => {
     setViewMode('ROUTE');

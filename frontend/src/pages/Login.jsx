@@ -1,282 +1,476 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
-  Lock, Mail, ShieldCheck, UserCheck, Briefcase, Building,
-  AlertCircle, ArrowRight
+  Lock, Mail, UserCheck, Briefcase, Building,
+  AlertCircle, ArrowRight, Eye, EyeOff, Hammer,
+  ShieldCheck, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export default function Login() {
+  const { lang, t } = useLanguage();
   const { user, login, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // Selected Portal: 'CUSTOMER' | 'WORKER' | 'ADMIN'
+  const PORTALS = useMemo(() => ({
+    CUSTOMER: {
+      label: t('tabCitizen', 'Citizen'),
+      desc: t('signInSub', 'Cooperative services at regulated base rates.'),
+      icon: UserCheck,
+      color: '#1A237E',
+      registerLink: '/register?role=customer',
+      registerText: t('newCitizenText', 'New here? Create account'),
+    },
+    WORKER: {
+      label: t('tabArtisan', 'Artisan'),
+      desc: lang === 'HI' ? 'दैनिक कार्य आवंटन, जीवनयापन योग्य मजदूरी और कारीगर कल्याण।' : lang === 'OR' ? 'ଦୈନିକ କାର୍ଯ୍ୟ ବଣ୍ଟନ, ନ୍ୟାଯ୍ୟ ମଜୁରୀ ଏବଂ ଶ୍ରମିକ କଲ୍ୟାଣ।' : lang === 'BN' ? 'দৈনিক কাজের বরাদ্দ, জীবনযাত্রার উপযোগী মজুরি ও শ্রমিক কল্যাণ।' : lang === 'TE' ? 'రోజువారీ కేటాయింపులు, గౌరవప్రదమైన వేతనాలు & సంక్షేమం.' : 'Daily dispatches, living wages & worker welfare.',
+      icon: Briefcase,
+      color: '#E67300',
+      registerLink: '/register?role=worker',
+      registerText: t('newArtisanText', 'New artisan? Register here'),
+    },
+    ADMIN: {
+      label: t('tabAdmin', 'Admin'),
+      desc: lang === 'HI' ? 'महासंघ पंजीयन एवं सहकारी शासन।' : lang === 'OR' ? 'ମହାସଂଘ ପଞ୍ଜୀକରଣ ଏବଂ ସମବାୟ ଶାସନ।' : lang === 'BN' ? 'ফেডারেশন নিবন্ধন ও সমবায় শাসন।' : lang === 'TE' ? 'సమాఖ్య నమోదు మరియు సహకార పాలన.' : 'Federation registry & society governance.',
+      icon: Building,
+      color: '#138808',
+      registerLink: '/society/register',
+      registerText: t('newSocietyText', 'New society? Register here'),
+    },
+  }), [lang, t]);
+
+  const LEFT_SLIDES = useMemo(() => [
+    {
+      role: 'CUSTOMER',
+      badge: t('slide1Badge', 'Citizen Assurance'),
+      badgeIcon: ShieldCheck,
+      title: t('slide1Title', 'Zero Surge Pricing. 100% Fair Tariffs.'),
+      desc: t('slide1Desc', 'Government-notified base rates, transparent escrow accounting, and a 30-day warranty on every booking.'),
+      stats: [
+        { value: t('slide1Stat1Val', '₹0'), label: t('slide1Stat1Lbl', 'Surge pricing') },
+        { value: t('slide1Stat2Val', '30-Day'), label: t('slide1Stat2Lbl', 'Warranty') },
+        { value: t('slide1Stat3Val', '15-Min'), label: t('slide1Stat3Lbl', 'Response') },
+      ],
+      highlight: t('slide1Quote', '“Zero surge pricing even in peak hours. Reliable, certified artisans every time.”'),
+      author: t('slide1Author', 'Ananya Patel • Citizen Member'),
+    },
+    {
+      role: 'WORKER',
+      badge: t('slide2Badge', 'Artisan Welfare'),
+      badgeIcon: Briefcase,
+      title: t('slide2Title', '93% Direct Pay. Zero Commissions.'),
+      desc: t('slide2Desc', 'Direct bank payouts with healthcare coverage, pension contributions, and zero-interest tool loans.'),
+      stats: [
+        { value: t('slide2Stat1Val', '93%'), label: t('slide2Stat1Lbl', 'Direct wage') },
+        { value: t('slide2Stat2Val', '₹5 Lakh'), label: t('slide2Stat2Lbl', 'Insurance') },
+        { value: t('slide2Stat3Val', '0%'), label: t('slide2Stat3Lbl', 'Tool loans') },
+      ],
+      highlight: t('slide2Quote', '“No private commissions. We work with dignity as cooperative owners.”'),
+      author: t('slide2Author', 'Ramesh Kumar • Master Electrician'),
+    },
+    {
+      role: 'ADMIN',
+      badge: t('slide3Badge', 'Cooperative Governance'),
+      badgeIcon: Building,
+      title: t('slide3Title', 'Federation Registry & Oversight'),
+      desc: t('slide3Desc', 'Statutory compliance under Odisha Cooperative Societies Act with live rosters and mutual aid.'),
+      stats: [
+        { value: t('slide3Stat1Val', '30'), label: t('slide3Stat1Lbl', 'Districts') },
+        { value: t('slide3Stat2Val', '100%'), label: t('slide3Stat2Lbl', 'Compliance') },
+        { value: t('slide3Stat3Val', 'LCF'), label: t('slide3Stat3Lbl', 'Affiliated') },
+      ],
+      highlight: t('slide3Quote', '“Digital public infrastructure empowering grassroots labour societies.”'),
+      author: t('slide3Author', 'Arun Pattnaik • Cooperative Secretary'),
+    },
+  ], [t]);
+
   const initialRole = searchParams.get('role') === 'worker' ? 'WORKER' : searchParams.get('role') === 'admin' ? 'ADMIN' : 'CUSTOMER';
   const [activePortal, setActivePortal] = useState(initialRole);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
   const [suggestedPortal, setSuggestedPortal] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const from = location.state?.from?.pathname || '/';
+  const portal = PORTALS[activePortal];
 
-  const redirectUser = (userObj) => {
-    if (!userObj) return;
-    if (userObj.role === 'COOPERATIVE_ADMIN') {
-      const isAllowed = from.startsWith('/admin') || from.startsWith('/federation');
-      navigate(isAllowed ? from : '/admin/dashboard', { replace: true });
-    } else if (userObj.role === 'WORKER') {
-      const isAllowed = from.startsWith('/worker');
-      navigate(isAllowed ? from : '/worker/dashboard', { replace: true });
+  const redirectUser = (u) => {
+    if (!u) return;
+    if (u.role === 'COOPERATIVE_ADMIN') {
+      if (u.admin_type === 'DCO_REGISTRAR') {
+        const ok = from.startsWith('/admin') || from.startsWith('/dco');
+        navigate(ok ? from : '/admin/dashboard', { replace: true });
+      } else {
+        const ok = from.startsWith('/federation') || from.startsWith('/tenders') || from.startsWith('/institutional-tenders');
+        navigate(ok ? from : '/federation/portal', { replace: true });
+      }
+    } else if (u.role === 'WORKER') {
+      navigate(from.startsWith('/worker') ? from : '/worker/dashboard', { replace: true });
     } else {
-      const isAllowed = from.startsWith('/customer');
-      navigate(isAllowed ? from : '/customer/bookings', { replace: true });
+      navigate(from.startsWith('/customer') ? from : '/customer/bookings', { replace: true });
     }
   };
 
-  // If already logged in, immediately redirect to respective role portal
-  useEffect(() => {
-    if (user) {
-      redirectUser(user);
-    }
-  }, [user]);
+  useEffect(() => { if (user) redirectUser(user); }, [user]);
+  useEffect(() => { setEmail(''); setPassword(''); setLocalError(''); setSuggestedPortal(null); }, [activePortal]);
 
-  // Sync email default when tab changes
+  // Auto-advance sliding info ONLY on the left side smoothly every 6 seconds
   useEffect(() => {
-    setEmail('');
-    setPassword('');
-    setLocalError('');
-    setSuggestedPortal(null);
-  }, [activePortal]);
+    if (isPaused || email.length > 0 || password.length > 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % LEFT_SLIDES.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isPaused, email, password]);
 
   const handleLogin = async (e) => {
-    if (e) e.preventDefault();
+    e?.preventDefault();
     setLocalError('');
     setSuggestedPortal(null);
     setLoading(true);
     try {
-      const loggedUser = await login(email, password, activePortal);
-      redirectUser(loggedUser);
+      const u = await login(email, password, activePortal);
+      redirectUser(u);
     } catch (err) {
       const msg = err.message || 'Invalid credentials';
       setLocalError(msg);
-      if (msg.includes('Citizen / Customer') || msg.includes('Citizen portal')) {
-        setSuggestedPortal('CUSTOMER');
-      } else if (msg.includes('Worker Member') || msg.includes('Worker portal')) {
-        setSuggestedPortal('WORKER');
-      } else if (msg.includes('Admin privileges') || msg.includes('Admin portal')) {
-        setSuggestedPortal('ADMIN');
-      }
+      if (msg.includes('Citizen') || msg.includes('Customer')) setSuggestedPortal('CUSTOMER');
+      else if (msg.includes('Worker')) setSuggestedPortal('WORKER');
+      else if (msg.includes('Admin')) setSuggestedPortal('ADMIN');
     } finally {
       setLoading(false);
     }
   };
 
-  // Portal theme configs
-  const portalConfigs = {
-    CUSTOMER: {
-      title: 'Citizen / Customer Portal',
-      subtitle: 'Sign in to book verified cooperative services, track active orders, pay securely, and download Form IV tax invoices.',
-      badgeText: 'Citizen Access',
-      badgeClass: 'bg-blue-100 text-blue-900 border-blue-200',
-      btnColor: 'bg-blue-900 hover:bg-blue-950 text-white',
-      registerLink: '/register?role=customer',
-      registerText: 'New citizen? Create an account here',
-    },
-    WORKER: {
-      title: 'Worker Member Portal',
-      subtitle: 'Sign in to manage on-duty availability, accept incoming dispatches, view daily earnings, and access social security welfare.',
-      badgeText: 'Worker Member Access',
-      badgeClass: 'bg-green-100 text-green-900 border-green-200',
-      btnColor: 'bg-green-700 hover:bg-green-800 text-white',
-      registerLink: '/register?role=worker',
-      registerText: 'Skilled artisan? Register with your local cooperative federation',
-    },
-    ADMIN: {
-      title: 'Cooperative Society & Federation Portal',
-      subtitle: 'Official portal for Society & Federation Administrators and Treasurers to manage worker rosters, NLCF tenders, 30-day guarantee disputes, and the 10 financial treasury KPIs.',
-      badgeText: 'Society / Federation Authority',
-      badgeClass: 'bg-amber-100 text-amber-900 border-amber-200',
-      btnColor: 'bg-amber-600 hover:bg-amber-700 text-white',
-      registerLink: '/society/register',
-      registerText: 'Forming a new society/federation? Complete the 9-Step Legal Formation Charter here',
-    },
-  };
-
-  const currentConfig = portalConfigs[activePortal];
-
   return (
-    <div className="container py-10 max-w-2xl mx-auto px-4">
-      {/* Top Header */}
-      <div className="text-center mb-8">
-        <img
-          src="/logo.png"
-          alt="Shram Setu Brand Logo"
-          className="w-20 h-20 mx-auto mb-3 object-contain rounded-2xl shadow-md border border-slate-200 bg-white p-1.5"
-        />
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          Shram Setu Single Sign-On
-        </h1>
-        <p className="text-xs md:text-sm text-gray-500 mt-1 max-w-lg mx-auto">
-          Official National Cooperative Labour Services & Federation Portal
-        </p>
-      </div>
+    <div className="min-h-screen flex" style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}>
 
-      {/* ── 3 Separate Portal Selection Tabs ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
-        {/* Customer Tab */}
-        <button
-          type="button"
-          onClick={() => setActivePortal('CUSTOMER')}
-          className={`p-3 rounded-xl border-2 transition text-center flex flex-col items-center gap-1.5 ${
-            activePortal === 'CUSTOMER'
-              ? 'border-blue-900 bg-blue-50 shadow-sm ring-2 ring-blue-900/20'
-              : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-600'
-          }`}
-        >
-          <div className={`p-1.5 rounded-lg ${activePortal === 'CUSTOMER' ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-600'}`}>
-            <UserCheck size={18} />
-          </div>
-          <div className={`font-bold text-xs ${activePortal === 'CUSTOMER' ? 'text-blue-950' : 'text-gray-800'}`}>
-            Citizen
-          </div>
-        </button>
+      {/* ── LEFT BRANDING & SLIDING INFO PANEL ── */}
+      <div className="hidden lg:flex lg:w-[48%] xl:w-[45%] relative overflow-hidden flex-col justify-between"
+        style={{ background: 'linear-gradient(165deg, #07152B 0%, #0F2347 45%, #152A55 100%)' }}>
 
-        {/* Worker Tab */}
-        <button
-          type="button"
-          onClick={() => setActivePortal('WORKER')}
-          className={`p-3 rounded-xl border-2 transition text-center flex flex-col items-center gap-1.5 ${
-            activePortal === 'WORKER'
-              ? 'border-green-700 bg-green-50 shadow-sm ring-2 ring-green-700/20'
-              : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-600'
-          }`}
-        >
-          <div className={`p-1.5 rounded-lg ${activePortal === 'WORKER' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-600'}`}>
-            <Briefcase size={18} />
-          </div>
-          <div className={`font-bold text-xs ${activePortal === 'WORKER' ? 'text-green-950' : 'text-gray-800'}`}>
-            Worker
-          </div>
-        </button>
+        {/* Subtle grid overlay */}
+        <div className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }} />
 
-        {/* Federation / Society Admin Tab */}
-        <button
-          type="button"
-          onClick={() => setActivePortal('ADMIN')}
-          className={`p-3 rounded-xl border-2 transition text-center flex flex-col items-center gap-1.5 ${
-            activePortal === 'ADMIN'
-              ? 'border-amber-600 bg-amber-50 shadow-sm ring-2 ring-amber-600/20'
-              : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-600'
-          }`}
-        >
-          <div className={`p-1.5 rounded-lg ${activePortal === 'ADMIN' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
-            <Building size={18} />
-          </div>
-          <div className={`font-bold text-xs ${activePortal === 'ADMIN' ? 'text-amber-950' : 'text-gray-800'}`}>
-            Society / Federation
-          </div>
-        </button>
-      </div>
+        {/* Top tri-color civic accent */}
+        <div className="absolute top-0 left-0 right-0 h-1.5"
+          style={{ background: 'linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%)' }} />
 
-      {/* ── Main Clean Login Panel ── */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-        {/* Active Portal Header */}
-        <div className="pb-4 border-b border-gray-100">
-          <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border mb-1.5 ${currentConfig.badgeClass}`}>
-            {currentConfig.badgeText}
-          </span>
-          <h2 className="text-lg font-bold text-gray-900">
-            {currentConfig.title}
-          </h2>
-          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            {currentConfig.subtitle}
-          </p>
-        </div>
-
-        {(localError || error) && (
-          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={16} className="shrink-0 text-red-600" />
-              <span>{localError || error}</span>
+        <div className="relative z-10 flex flex-col justify-between flex-1 px-10 xl:px-14 py-8">
+          {/* Top Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md border border-slate-200/40">
+              <img src="/logo-emblem.png" alt="Prithvi Fix" className="w-full h-full object-contain" />
             </div>
-            {suggestedPortal && suggestedPortal !== activePortal && (
-              <div className="pt-1 border-t border-red-200/60 flex items-center justify-between">
-                <span className="text-red-700 font-medium">Click here to switch portal:</span>
+            <div>
+              <div className="text-white text-base font-extrabold tracking-wide">PRITHVI FIX</div>
+              <div className="text-slate-300 text-[11px] font-medium tracking-wider uppercase">National Cooperative Infrastructure</div>
+            </div>
+          </div>
+
+          {/* Sliding Carousel Showcase */}
+          <div
+            className="relative w-full overflow-hidden my-auto py-4"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            <div
+              className="flex transition-transform duration-600 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {LEFT_SLIDES.map((slide, sIdx) => {
+                const BadgeIcon = slide.badgeIcon;
+                return (
+                  <div key={sIdx} className="w-full shrink-0 pr-3">
+                    <div className="civic-authority-chip mb-4">
+                      <BadgeIcon size={13} className="text-slate-300" />
+                      <span>{slide.badge}</span>
+                    </div>
+
+                    <h1 className="text-white text-3xl xl:text-4xl font-black leading-tight tracking-tight mb-3">
+                      {slide.title}
+                    </h1>
+
+                    <p className="text-blue-100/80 text-base leading-relaxed mb-5 max-w-md">
+                      {slide.desc}
+                    </p>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-white/[0.07] border border-white/10 backdrop-blur-sm mb-5">
+                      {slide.stats.map((st, i) => (
+                        <div key={i} className="text-left">
+                          <div className="text-white font-black text-2xl font-mono tracking-tight">{st.value}</div>
+                          <div className="text-blue-200/70 text-xs font-semibold mt-0.5 leading-tight">{st.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Testimonial Quote */}
+                    <div className="p-3.5 rounded-2xl bg-white/[0.05] border-l-2 border-white/40 border-y border-r border-white/10">
+                      <p className="text-white/90 text-sm italic leading-relaxed">
+                        {slide.highlight}
+                      </p>
+                      <div className="text-slate-300 text-xs font-medium mt-1.5">
+                        — {slide.author}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Slide Navigation Controls */}
+            <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-5">
+              {/* Dots */}
+              <div className="flex items-center gap-2">
+                {LEFT_SLIDES.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={() => setCurrentSlide(dotIdx)}
+                    className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      currentSlide === dotIdx ? 'w-8 bg-amber-400 shadow-sm shadow-amber-400/50' : 'w-2.5 bg-white/30 hover:bg-white/50'
+                    }`}
+                    aria-label={`Slide ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Prev / Next Arrows */}
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setActivePortal(suggestedPortal)}
-                  className="px-2.5 py-1 rounded-lg bg-red-800 text-white font-bold text-[11px] hover:bg-red-900 transition"
+                  onClick={() => setCurrentSlide((currentSlide - 1 + LEFT_SLIDES.length) % LEFT_SLIDES.length)}
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition border border-white/15 cursor-pointer"
+                  aria-label="Previous slide"
                 >
-                  Switch to {suggestedPortal === 'CUSTOMER' ? 'Citizen' : suggestedPortal === 'WORKER' ? 'Worker' : 'Admin'} Portal →
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentSlide((currentSlide + 1) % LEFT_SLIDES.length)}
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition border border-white/15 cursor-pointer"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight size={16} />
                 </button>
               </div>
-            )}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              {activePortal === 'WORKER' ? 'Worker Registered Email / ID' : activePortal === 'ADMIN' ? 'Official Admin Email' : 'Citizen Email Address'}
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <Mail size={16} />
-              </div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                placeholder={activePortal === 'WORKER' ? 'worker@coop.local' : activePortal === 'ADMIN' ? 'admin@coop.local' : 'citizen@email.com'}
-              />
             </div>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <Lock size={16} />
+          {/* Bottom Statutory Notice */}
+          <div className="text-white/30 text-xs font-medium">
+            Odisha Cooperative Societies Act • Digital Public Goods Infrastructure
+          </div>
+        </div>
+      </div>
+
+      {/* ── RIGHT FORM PANEL ── */}
+      <div className="flex-1 flex items-center justify-center bg-white px-5 py-4 sm:py-5 sm:px-8">
+        <style>{`
+          @keyframes portalSlideFade {
+            0% { opacity: 0; transform: translateX(8px); }
+            100% { opacity: 1; transform: translateX(0); }
+          }
+        `}</style>
+        <div className="w-full max-w-[460px]">
+
+          {/* Mobile-only brand & sliding info ticker */}
+          <div className="lg:hidden mb-3">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-xs border border-slate-200">
+                <img src="/logo-emblem.png" alt="Prithvi Fix" className="w-full h-full object-contain" />
               </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-900 text-xs"
-                placeholder="••••••••"
-              />
+              <div>
+                <div className="text-gray-900 text-base font-extrabold tracking-wide">PRITHVI FIX</div>
+                <div className="text-gray-500 text-[11px] font-bold tracking-widest uppercase">Cooperative Services</div>
+              </div>
+            </div>
+
+            {/* Compact Mobile Sliding Info Pill */}
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 overflow-hidden shadow-2xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 font-bold text-[11px] uppercase tracking-wide">
+                  {LEFT_SLIDES[currentSlide].badge}
+                </span>
+                <span className="truncate text-xs font-semibold text-slate-700">
+                  {LEFT_SLIDES[currentSlide].title}
+                </span>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                {LEFT_SLIDES.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setCurrentSlide(i)}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      currentSlide === i ? 'w-4 bg-amber-500' : 'w-1.5 bg-slate-300'
+                    }`}
+                    aria-label={`Slide ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="pt-2">
+          {/* Heading with maximized fonts & minimized margins */}
+          <div className="mb-3">
+            <h2 className="text-gray-900 text-3xl sm:text-4xl font-black tracking-tight mb-0.5" style={{ letterSpacing: '-0.025em' }}>
+              {t('signInTitle', 'Sign in')}
+            </h2>
+            <div key={activePortal} style={{ animation: 'portalSlideFade 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+              <p className="text-slate-600 text-base sm:text-[17px] font-medium leading-snug">
+                {portal.desc}
+              </p>
+            </div>
+          </div>
+
+          {/* ── Portal Tabs with Hardware-Accelerated Sliding Pill Animation ── */}
+          <div className="relative flex rounded-2xl p-1 mb-3 bg-slate-100 border border-slate-200/80 shadow-inner">
+            {/* Sliding Pill Indicator */}
+            <div
+              className="absolute top-1 bottom-1 rounded-xl bg-white shadow-sm border border-slate-200/70 transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] pointer-events-none"
+              style={{
+                width: 'calc((100% - 8px) / 3)',
+                transform: `translateX(calc(${['CUSTOMER', 'WORKER', 'ADMIN'].indexOf(activePortal)} * 100%))`,
+              }}
+            />
+            {['CUSTOMER', 'WORKER', 'ADMIN'].map((key) => {
+              const cfg = PORTALS[key];
+              const Icon = cfg.icon;
+              const active = activePortal === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActivePortal(key)}
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-base font-bold transition-colors duration-200 cursor-pointer ${
+                    active ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Icon size={18} className={active ? 'text-blue-900 stroke-[2.5]' : 'text-slate-400'} />
+                  <span>{cfg.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Error ── */}
+          {(localError || error) && (
+            <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
+                <span>{localError || error}</span>
+              </div>
+              {suggestedPortal && suggestedPortal !== activePortal && (
+                <div className="pt-2 border-t border-red-100 flex items-center justify-between">
+                  <span className="text-red-500 text-xs">{t('wrongPortalText', 'Wrong portal?')}</span>
+                  <button
+                    type="button"
+                    onClick={() => setActivePortal(suggestedPortal)}
+                    className="px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
+                  >
+                    {t('switchToPortal', 'Switch to')} {PORTALS[suggestedPortal]?.label} →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Form with compact margins and increased font sizes ── */}
+          <form onSubmit={handleLogin} className="space-y-3">
+            <div>
+              <label htmlFor="login-email" className="block text-base font-bold text-slate-800 mb-0.5">
+                {t('phoneOrEmailLabel', 'Phone Number or Email')}
+              </label>
+              <div className="relative">
+                <Mail size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  id="login-email"
+                  type="text"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('phoneOrEmailPlaceholder', 'Phone or Email (e.g. 9876543210)')}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 bg-white text-base sm:text-[17px] text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/5 font-semibold"
+                  style={{ fontFamily: 'inherit' }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="login-password" className="block text-base font-bold text-slate-800 mb-0.5">
+                {t('passwordLabel', 'Password')}
+              </label>
+              <div className="relative">
+                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-12 py-3.5 rounded-2xl border border-slate-200 bg-white text-base sm:text-[17px] text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/5 font-semibold"
+                  style={{ fontFamily: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
             <button
+              id="login-submit"
               type="submit"
               disabled={loading}
-              className={`w-full py-3 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 ${currentConfig.btnColor}`}
+              className="w-full py-4 rounded-2xl text-base sm:text-lg font-bold text-white flex items-center justify-center gap-2.5 transition-all duration-200 hover:opacity-95 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg cursor-pointer"
+              style={{ background: portal.color }}
             >
-              {loading ? 'Authenticating...' : `Sign In to ${currentConfig.title}`}
-              <ArrowRight size={14} />
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                    <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                  </svg>
+                  {t('signingIn', 'Signing in...')}
+                </span>
+              ) : (
+                <>
+                  {t('btnSignIn', 'Sign In')}
+                  <ArrowRight size={19} />
+                </>
+              )}
             </button>
-          </div>
-        </form>
+          </form>
 
-        <div className="text-center pt-3 border-t border-gray-100">
-          <Link
-            to={currentConfig.registerLink}
-            className="text-xs text-blue-900 font-semibold hover:underline"
-          >
-            {currentConfig.registerText} →
-          </Link>
+          {/* ── Register Link ── */}
+          <div className="mt-4 text-center">
+            <Link
+              to={portal.registerLink}
+              className="text-sm sm:text-base font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              {portal.registerText} <span className="text-slate-400">→</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

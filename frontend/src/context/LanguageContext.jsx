@@ -5,9 +5,9 @@ const LanguageContext = createContext(null);
 export const TRANSLATIONS = {
   EN: {
     // Top Bar & Branding
-    govSupportTag: 'National Labour Cooperatives Federation (NLCF) Supported',
-    portalSubHeader: 'National Cooperative Labour Services Federation Portal',
-    brandName: 'Shram Setu',
+    govSupportTag: 'Labour Cooperatives Federation (LCF) Supported',
+    portalSubHeader: 'Cooperative Labour Services Federation Portal',
+    brandName: 'Prithvi Fix',
     brandSubtitle: 'Cooperative Gig Services Portal',
     tollFreeLabel: 'Toll-Free Helpline',
     listenVoice: 'Listen to Page',
@@ -20,7 +20,7 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'Live Notice',
-    tickerText: '100% ITI & Police-verified cooperative artisans across all 30 districts • Regulated base tariffs • 30-Day free repair guarantee • Toll-Free Booking: 1800-345-7788',
+    tickerText: '100% Skill & Police-verified cooperative artisans across all 30 districts • Regulated base tariffs • 30-Day free repair guarantee • Toll-Free Booking: 1800-345-7788',
 
     // Hero Section
     heroTitlePart1: 'Verified Trade Skills.',
@@ -45,7 +45,7 @@ export const TRANSLATIONS = {
     nearbyArtisanTag: 'Live Nearby Artisan',
     fixedRateTag: 'Fixed Base Rate',
     sampleWorkerName: 'Ramesh Kumar',
-    sampleWorkerRole: 'Master Electrician • ITI Gold Certified',
+    sampleWorkerRole: 'Master Electrician • Gold Skill Certified',
     sampleWorkerStats: '124+ Jobs Completed • 1.2 km away',
     policeVerifiedBadge: 'Police & Aadhaar Verified',
     bookNowShort: 'Book Now →',
@@ -56,7 +56,7 @@ export const TRANSLATIONS = {
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% Verified Artisans',
-    pillar1Desc: 'ITI / NSDC & Police background verified',
+    pillar1Desc: 'Skill & Police background verified',
     pillar2Title: 'Zero Surge Pricing',
     pillar2Desc: 'Regulated cooperative base tariffs',
     pillar3Title: '100% Social Security',
@@ -198,10 +198,103 @@ export const TRANSLATIONS = {
     // Navigation Links
     navHome: 'Home',
     navServices: 'Services',
+    navServicesBooking: 'Services & Booking',
     navFindWorker: 'Find Worker',
     navBookService: 'Book Service',
     navAbout: 'About',
     navHelp: 'Help',
+    navRateCard: 'Rate Card',
+    currentLocation: 'Current Location',
+    detectingLocation: 'Detecting Location...',
+    detectGps: 'Detect GPS Location',
+    redetectGps: 'Re-detect GPS Location',
+
+    // Authentication (Login & Register)
+    signInTitle: 'Sign in',
+    signInSub: 'Cooperative services at regulated base rates.',
+    tabCitizen: 'Citizen',
+    tabArtisan: 'Artisan',
+    tabAdmin: 'Admin',
+    phoneOrEmailLabel: 'Phone Number or Email',
+    phoneOrEmailPlaceholder: 'Phone or Email (e.g. 9876543210)',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'Remember me',
+    forgotPassword: 'Forgot password?',
+    btnSignIn: 'Sign In',
+    signingIn: 'Signing in...',
+    newCitizenText: 'New here? Create account',
+    newArtisanText: 'New artisan? Register here',
+    newSocietyText: 'New society? Register here',
+    wrongPortalText: 'Wrong portal?',
+    switchToPortal: 'Switch to',
+
+    // Login Left Carousel
+    slide1Badge: 'Citizen Assurance',
+    slide1Title: 'Zero Surge Pricing. 100% Fair Tariffs.',
+    slide1Desc: 'Government-notified base rates, transparent escrow accounting, and a 30-day warranty on every booking.',
+    slide1Stat1Val: '₹0',
+    slide1Stat1Lbl: 'Surge pricing',
+    slide1Stat2Val: '30-Day',
+    slide1Stat2Lbl: 'Warranty',
+    slide1Stat3Val: '15-Min',
+    slide1Stat3Lbl: 'Response',
+    slide1Quote: '“Zero surge pricing even in peak hours. Reliable, certified artisans every time.”',
+    slide1Author: 'Ananya Patel • Citizen Member',
+
+    slide2Badge: 'Artisan Welfare',
+    slide2Title: '93% Direct Pay. Zero Commissions.',
+    slide2Desc: 'Direct bank payouts with healthcare coverage, pension contributions, and zero-interest tool loans.',
+    slide2Stat1Val: '93%',
+    slide2Stat1Lbl: 'Direct wage',
+    slide2Stat2Val: '₹5 Lakh',
+    slide2Stat2Lbl: 'Insurance',
+    slide2Stat3Val: '0%',
+    slide2Stat3Lbl: 'Tool loans',
+    slide2Quote: '“No private commissions. We work with dignity as cooperative owners.”',
+    slide2Author: 'Ramesh Kumar • Master Electrician',
+
+    slide3Badge: 'Cooperative Governance',
+    slide3Title: 'Federation Registry & Oversight',
+    slide3Desc: 'Statutory compliance under Odisha Cooperative Societies Act with live rosters and mutual aid.',
+    slide3Stat1Val: '30',
+    slide3Stat1Lbl: 'Districts',
+    slide3Stat2Val: '100%',
+    slide3Stat2Lbl: 'Compliance',
+    slide3Stat3Val: 'LCF',
+    slide3Stat3Lbl: 'Affiliated',
+    slide3Quote: '“Digital public infrastructure empowering grassroots labour societies.”',
+    slide3Author: 'Arun Pattnaik • Cooperative Secretary',
+
+    // Rate Card Page
+    rcBadge: 'Regulated Cooperative Tariffs',
+    rcHeroTitle: 'Transparent Rate Card',
+    rcHeroSub: 'Fixed cooperative prices with the 93-2-5 model. No surge, no hidden fees.',
+    rcShramSuraksha: 'Shram Suraksha Cover',
+    rcEndToEnd: 'End-to-End Service Protection',
+    rcBacking: 'Every booking is backed by our cooperative safety net',
+    rcSearchPlaceholder: 'Search any spare part or service rate...',
+    rcExpandAll: 'Expand All',
+    rcCollapseAll: 'Collapse All',
+    rcPartName: 'Component / Service Description',
+    rcFixedTariff: 'Fixed Rate',
+    rcGovNorms: 'Cooperative Norms',
+    rcSplitBtn: '93-2-5 Split',
+
+    // About Page
+    aboutBadge: 'Cooperative Institutional Framework',
+    aboutTitle: 'About Prithvi Fix',
+    aboutSub: 'A cooperative-owned digital gig services platform connecting certified, federation-backed skilled workers with households and institutions.',
+    aboutDiffTitle: 'The Cooperative Difference',
+    aboutDiffDesc: 'Unlike commercial gig intermediaries that extract high commissions without providing long-term security, Prithvi Fix is built on the cooperative ethos: workers are member-owners.',
+
+    // Help Page
+    helpBadge: 'Public Support & Grievance Redressal',
+    helpTitle: 'Help & Citizen Grievance Desk',
+    helpSub: 'Official cooperative dispute redressal, live emergency support, and FAQ directory.',
+    helpTollFreeTitle: 'National Toll-Free Helpline',
+    helpEmergencyTitle: '24x7 Emergency Line',
+    helpLodgeTitle: 'Lodge Grievance or Enquiry',
 
     // Common Buttons
     btnCancel: 'Cancel',
@@ -261,6 +354,9 @@ export const TRANSLATIONS = {
     // CustomerBookings Page
     myBookingsTitle: 'My Service Bookings',
     myBookingsSub: 'Track and manage your home service orders',
+    btnRefresh: 'Refresh',
+    assignedArtisan: 'Assigned Artisan',
+    totalTariff: 'Total Tariff',
     bookNewService: 'Book New Service',
     tabAll: 'All',
     tabActive: 'Active',
@@ -311,9 +407,9 @@ export const TRANSLATIONS = {
 
   HI: {
     // Top Bar & Branding
-    govSupportTag: 'राष्ट्रीय श्रम सहकारी महासंघ (NLCF) समर्थित',
-    portalSubHeader: 'राष्ट्रीय श्रम सहकारी महासंघ पोर्टल',
-    brandName: 'श्रम सेतु',
+    govSupportTag: 'श्रम सहकारी महासंघ (LCF) समर्थित',
+    portalSubHeader: 'श्रम सहकारी महासंघ पोर्टल',
+    brandName: 'पृथ्वी फिक्स',
     brandSubtitle: 'सहकारी गिग सेवा पोर्टल',
     tollFreeLabel: 'टोल-फ्री हेल्पलाइन',
     listenVoice: 'बोलकर सुनें',
@@ -351,7 +447,7 @@ export const TRANSLATIONS = {
     nearbyArtisanTag: 'निकटतम सत्यापित कारीगर',
     fixedRateTag: 'फिक्स्ड आधार दर',
     sampleWorkerName: 'रमेश कुमार',
-    sampleWorkerRole: 'मास्टर इलेक्ट्रीशियन • ITI Gold Certified',
+    sampleWorkerRole: 'मास्टर इलेक्ट्रीशियन • Gold Skill Certified',
     sampleWorkerStats: '124+ कार्य पूर्ण • 1.2 km दूर',
     policeVerifiedBadge: 'पुलिस एवं आधार सत्यापित',
     bookNowShort: 'तुरंत बुक करें →',
@@ -362,7 +458,7 @@ export const TRANSLATIONS = {
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% प्रमाणित कारीगर',
-    pillar1Desc: 'ITI / NSDC एवं पुलिस सत्यापित',
+    pillar1Desc: 'कुशल एवं पुलिस सत्यापित',
     pillar2Title: 'शून्य अतिरिक्त शुल्क',
     pillar2Desc: 'सहकारी विनियमित आधार दरें',
     pillar3Title: '100% सामाजिक सुरक्षा',
@@ -504,10 +600,103 @@ export const TRANSLATIONS = {
     // Navigation Links
     navHome: 'होम',
     navServices: 'सेवाएं',
+    navServicesBooking: 'सेवाएं और बुकिंग',
     navFindWorker: 'कारीगर खोजें',
     navBookService: 'सेवा बुक करें',
     navAbout: 'हमारे बारे में',
     navHelp: 'सहायता',
+    navRateCard: 'दर तालिका',
+    currentLocation: 'वर्तमान स्थान',
+    detectingLocation: 'स्थान खोजा जा रहा है...',
+    detectGps: 'जीपीएस स्थान पहचानें',
+    redetectGps: 'जीपीएस स्थान पुनः पहचानें',
+
+    // Authentication (Login & Register)
+    signInTitle: 'साइन इन',
+    signInSub: 'सहकारी दरों पर विनियमित सेवाएं।',
+    tabCitizen: 'नागरिक',
+    tabArtisan: 'कारीगर',
+    tabAdmin: 'प्रशासन',
+    phoneOrEmailLabel: 'फ़ोन नंबर या ईमेल',
+    phoneOrEmailPlaceholder: 'फ़ोन या ईमेल (उदा. 9876543210)',
+    passwordLabel: 'पासवर्ड',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'मुझे याद रखें',
+    forgotPassword: 'पासवर्ड भूल गए?',
+    btnSignIn: 'साइन इन करें',
+    signingIn: 'साइन इन हो रहा है...',
+    newCitizenText: 'नए हैं? खाता बनाएं',
+    newArtisanText: 'नए कारीगर? यहाँ पंजीकरण करें',
+    newSocietyText: 'नई सहकारी समिति? यहाँ पंजीकरण करें',
+    wrongPortalText: 'गलत पोर्टल?',
+    switchToPortal: 'पर स्विच करें',
+
+    // Login Left Carousel
+    slide1Badge: 'नागरिक आश्वासन',
+    slide1Title: 'शून्य अतिरिक्त शुल्क। 100% उचित दरें।',
+    slide1Desc: 'सरकारी अधिसूचित मूल दरें, पारदर्शी एस्क्रो खाता और प्रत्येक बुकिंग पर 30-दिन की गारंटी।',
+    slide1Stat1Val: '₹0',
+    slide1Stat1Lbl: 'अतिरिक्त शुल्क',
+    slide1Stat2Val: '30 दिन',
+    slide1Stat2Lbl: 'वारंटी',
+    slide1Stat3Val: '15 मिनट',
+    slide1Stat3Lbl: 'त्वरित प्रतिक्रिया',
+    slide1Quote: '“व्यस्त समय में भी कोई अतिरिक्त शुल्क नहीं। हर बार भरोसेमंद, प्रमाणित कारीगर।”',
+    slide1Author: 'अनन्या पटेल • नागरिक सदस्य',
+
+    slide2Badge: 'कारीगर कल्याण',
+    slide2Title: '93% सीधा भुगतान। शून्य कमीशन।',
+    slide2Desc: 'स्वास्थ्य सेवा, पेंशन अंशदान और शून्य-ब्याज टूल ऋण के साथ सीधे बैंक भुगतान।',
+    slide2Stat1Val: '93%',
+    slide2Stat1Lbl: 'सीधी मजदूरी',
+    slide2Stat2Val: '₹5 लाख',
+    slide2Stat2Lbl: 'बीमा कवर',
+    slide2Stat3Val: '0%',
+    slide2Stat3Lbl: 'उपकरण ऋण',
+    slide2Quote: '“कोई निजी बिचौलिया नहीं। हम सहकारी स्वामी के रूप में गरिमा से काम करते हैं।”',
+    slide2Author: 'रमेश कुमार • मास्टर इलेक्ट्रीशियन',
+
+    slide3Badge: 'सहकारी सुशासन',
+    slide3Title: 'महासंघ पंजीयन एवं निगरानी',
+    slide3Desc: 'ओडिशा सहकारी समिति अधिनियम के अंतर्गत वैधानिक अनुपालन, सजीव रोस्टर और पारस्परिक सहयोग।',
+    slide3Stat1Val: '30',
+    slide3Stat1Lbl: 'जिले',
+    slide3Stat2Val: '100%',
+    slide3Stat2Lbl: 'अनुपालन',
+    slide3Stat3Val: 'LCF',
+    slide3Stat3Lbl: 'संबद्ध',
+    slide3Quote: '“जमीनी श्रम सहकारी समितियों को सशक्त बनाने वाला डिजिटल सार्वजनिक ढांचा।”',
+    slide3Author: 'अरुण पट्टनायक • सहकारी सचिव',
+
+    // Rate Card Page
+    rcBadge: 'विनियमित सहकारी दरें',
+    rcHeroTitle: 'पारदर्शी दर तालिका',
+    rcHeroSub: '93-2-5 मॉडल के साथ निर्धारित सहकारी मूल्य। कोई छिपा हुआ शुल्क नहीं।',
+    rcShramSuraksha: 'श्रम सुरक्षा कवच',
+    rcEndToEnd: 'संपूर्ण सेवा सुरक्षा',
+    rcBacking: 'प्रत्येक बुकिंग हमारे सहकारी सुरक्षा जाल द्वारा समर्थित है',
+    rcSearchPlaceholder: 'कोई भी स्पेयर पार्ट या सेवा दर खोजें...',
+    rcExpandAll: 'सभी खोलें',
+    rcCollapseAll: 'सभी समेटें',
+    rcPartName: 'घटक / सेवा विवरण',
+    rcFixedTariff: 'नियत दर',
+    rcGovNorms: 'सहकारी मानक',
+    rcSplitBtn: '93-2-5 विभाजन',
+
+    // About Page
+    aboutBadge: 'सहकारी संस्थागत ढांचा',
+    aboutTitle: 'पृथ्वी फिक्स के बारे में',
+    aboutSub: 'एक सहकारी स्वामित्व वाला डिजिटल सेवा मंच जो प्रमाणित कारीगरों को परिवारों व संस्थानों से जोड़ता है।',
+    aboutDiffTitle: 'सहकारी विशेषता',
+    aboutDiffDesc: 'भारी कमीशन लेने वाली निजी कंपनियों के विपरीत, पृथ्वी फिक्स सहकारी भावना पर निर्मित है: कारीगर स्वयं स्वामी हैं।',
+
+    // Help Page
+    helpBadge: 'सार्वजनिक सहायता एवं शिकायत निवारण',
+    helpTitle: 'सहायता एवं नागरिक शिकायत प्रकोष्ठ',
+    helpSub: 'आधिकारिक सहकारी विवाद समाधान, 24x7 आपातकालीन सहायता और प्रश्नोत्तरी।',
+    helpTollFreeTitle: 'राष्ट्रीय टोल-फ्री हेल्पलाइन',
+    helpEmergencyTitle: '24x7 आपातकालीन हेल्पलाइन',
+    helpLodgeTitle: 'शिकायत या पूछताछ दर्ज करें',
 
     // Common Buttons
     btnCancel: 'रद्द करें',
@@ -564,6 +753,9 @@ export const TRANSLATIONS = {
 
     myBookingsTitle: 'मेरी सेवा बुकिंग्स',
     myBookingsSub: 'अपने घरेलू सेवा ऑर्डर ट्रैक और प्रबंधित करें',
+    btnRefresh: 'रिफ्रेश',
+    assignedArtisan: 'आवंटित कारीगर',
+    totalTariff: 'कुल शुल्क',
     bookNewService: 'नई सेवा बुक करें',
     tabAll: 'सभी',
     tabActive: 'सक्रिय',
@@ -610,9 +802,9 @@ export const TRANSLATIONS = {
 
   OR: {
     // Top Bar & Branding
-    govSupportTag: 'ଜାତୀୟ ଶ୍ରମ ସମବାୟ ମହାସଂଘ (NLCF) ଦ୍ୱାରା ସମର୍ଥିତ',
-    portalSubHeader: 'ଜାତୀୟ ଶ୍ରମ ସମବାୟ ମହାସଂଘ ପୋର୍ଟାଲ',
-    brandName: 'ଶ୍ରମ ସେତୁ',
+    govSupportTag: 'ଶ୍ରମ ସମବାୟ ମହାସଂଘ (LCF) ଦ୍ୱାରା ସମର୍ଥିତ',
+    portalSubHeader: 'ଶ୍ରମ ସମବାୟ ମହାସଂଘ ପୋର୍ଟାଲ',
+    brandName: 'ପୃଥିବୀ ଫିକ୍ସ',
     brandSubtitle: 'ସମବାୟ ଗିଗ୍ ସେବା ପୋର୍ଟାଲ',
     tollFreeLabel: 'ଟୋଲ୍-ଫ୍ରି ହେଲ୍ପଲାଇନ୍',
     listenVoice: 'ଶୁଣନ୍ତୁ',
@@ -650,7 +842,7 @@ export const TRANSLATIONS = {
     nearbyArtisanTag: 'ନିକଟତମ ପ୍ରମାଣିତ ଶ୍ରମିକ',
     fixedRateTag: 'ସ୍ଥିର ମୂଳ ଦର',
     sampleWorkerName: 'ରମେଶ କୁମାର',
-    sampleWorkerRole: 'ମାଷ୍ଟର ଇଲେକ୍ଟ୍ରିସିଆନ୍ • ITI Gold Certified',
+    sampleWorkerRole: 'ମାଷ୍ଟର ଇଲେକ୍ଟ୍ରିସିଆନ୍ • Gold Skill Certified',
     sampleWorkerStats: '୧୨୪+ କାର୍ଯ୍ୟ ସମ୍ପନ୍ନ • ୧.୨ କିମି ଦୂର',
     policeVerifiedBadge: 'ପୋଲିସ ଓ ଆଧାର ଯାଞ୍ଚ ହୋଇଥିବା',
     bookNowShort: 'ତୁରନ୍ତ ବୁକ୍ କରନ୍ତୁ →',
@@ -661,7 +853,7 @@ export const TRANSLATIONS = {
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '୧୦୦% ପ୍ରମାଣିତ ଶ୍ରମିକ',
-    pillar1Desc: 'ITI / NSDC ଓ ପୋଲିସ ଯାଞ୍ଚ ହୋଇଥିବା',
+    pillar1Desc: 'ଦକ୍ଷ ଓ ପୋଲିସ ଯାଞ୍ଚ ହୋଇଥିବା',
     pillar2Title: 'କୌଣସି ଅତିରିକ୍ତ ଶୁଳ୍କ ନାହିଁ',
     pillar2Desc: 'ସମବାୟ ନିୟନ୍ତ୍ରିତ ମୂଳ ଦର',
     pillar3Title: '୧୦୦% ସାମାଜିକ ସୁରକ୍ଷା',
@@ -803,10 +995,103 @@ export const TRANSLATIONS = {
     // Navigation Links
     navHome: 'ମୂଳ ପୃଷ୍ଠା',
     navServices: 'ସେବା ସମୂହ',
+    navServicesBooking: 'ସେବା ଏବଂ ବୁକିଂ',
     navFindWorker: 'ଶ୍ରମିକ ଖୋଜନ୍ତୁ',
     navBookService: 'ସେବା ବୁକ୍ କରନ୍ତୁ',
     navAbout: 'ଆମ ବିଷୟରେ',
     navHelp: 'ସହାୟତା',
+    navRateCard: 'ଦର ତାଲିକା',
+    currentLocation: 'ବର୍ତ୍ତମାନର ସ୍ଥାନ',
+    detectingLocation: 'ସ୍ଥାନ ଖୋଜା ଚାଲିଛି...',
+    detectGps: 'ଜିପିଏସ ସ୍ଥାନ ଚିହ୍ନଟ କରନ୍ତୁ',
+    redetectGps: 'ପୁନର୍ବାର ଜିପିଏସ ସ୍ଥାନ ଚିହ୍ନଟ କରନ୍ତୁ',
+
+    // Authentication (Login & Register)
+    signInTitle: 'ସାଇନ୍ ଇନ୍',
+    signInSub: 'ସମବାୟ ନିୟନ୍ତ୍ରିତ ଦରରେ ସେବା।',
+    tabCitizen: 'ନାଗରିକ',
+    tabArtisan: 'କାରିଗର',
+    tabAdmin: 'ପ୍ରଶାସନ',
+    phoneOrEmailLabel: 'ଫୋନ୍ ନମ୍ବର କିମ୍ବା ଇମେଲ୍',
+    phoneOrEmailPlaceholder: 'ଫୋନ୍ କିମ୍ବା ଇମେଲ୍ (ଯଥା: ୯୮୭୬୫୪୩୨୧୦)',
+    passwordLabel: 'ପାସୱାର୍ଡ',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'ମନେ ରଖନ୍ତୁ',
+    forgotPassword: 'ପାସୱାର୍ଡ ଭୁଲିଗଲେ କି?',
+    btnSignIn: 'ସାଇନ୍ ଇନ୍ କରନ୍ତୁ',
+    signingIn: 'ସାଇନ୍ ଇନ୍ ହେଉଛି...',
+    newCitizenText: 'ନୂଆ ଅଟନ୍ତି କି? ଖାତା ତିଆରି କରନ୍ତୁ',
+    newArtisanText: 'ନୂଆ କାରିଗର? ଏଠାରେ ପଞ୍ଜୀକରଣ କରନ୍ତୁ',
+    newSocietyText: 'ନୂଆ ସମବାୟ ସମିତି? ଏଠାରେ ପଞ୍ଜୀକରଣ କରନ୍ତୁ',
+    wrongPortalText: 'ଭୁଲ୍ ପୋର୍ଟାଲ୍ କି?',
+    switchToPortal: 'କୁ ପରିବର୍ତ୍ତନ କରନ୍ତୁ',
+
+    // Login Left Carousel
+    slide1Badge: 'ନାଗରିକ ପ୍ରତିଶ୍ରୁତି',
+    slide1Title: 'ଶୂନ ଅତିରିକ୍ତ ଶୁଳ୍କ। ୧୦୦% ନ୍ୟାଯ୍ୟ ଦର।',
+    slide1Desc: 'ସରକାରୀ ନିର୍ଦ୍ଧାରିତ ମୂଳ ଦର, ସ୍ୱଚ୍ଛ ହିସାବ ଏବଂ ପ୍ରତ୍ୟେକ ବୁକିଂରେ ୩୦-ଦିନିଆ ଗ୍ୟାରେଣ୍ଟି।',
+    slide1Stat1Val: '₹୦',
+    slide1Stat1Lbl: 'ଅତିରିକ୍ତ ଦର',
+    slide1Stat2Val: '୩୦-ଦିନ',
+    slide1Stat2Lbl: 'ୱାରେଣ୍ଟି',
+    slide1Stat3Val: '୧୫-ମିନିଟ୍',
+    slide1Stat3Lbl: 'ତ୍ୱରିତ ସେବା',
+    slide1Quote: '“ବ୍ୟସ୍ତ ସମୟରେ ମଧ୍ୟ କୌଣସି ଅତିରିକ୍ତ ଶୁଳ୍କ ନାହିଁ। ସବୁବେଳେ ପ୍ରମାଣିତ ବିଶ୍ୱସ୍ତ କାରିଗର।”',
+    slide1Author: 'ଅନନ୍ୟା ପଟେଲ • ନାଗରିକ ସଦସ୍ୟା',
+
+    slide2Badge: 'କାରିଗର କଲ୍ୟାଣ',
+    slide2Title: '୯୩% ସିଧାସଳଖ ମଜୁରୀ। ଶୂନ କମିଶନ।',
+    slide2Desc: 'ସ୍ୱାସ୍ଥ୍ୟ ବୀମା, ପେନସନ ପାଣ୍ଠି ଏବଂ ଶୂନ ସୁଧରେ ଉପକରଣ ଋଣ ସହିତ ସିଧା ବ୍ୟାଙ୍କ ଖାତାକୁ ଦେୟ।',
+    slide2Stat1Val: '୯୩%',
+    slide2Stat1Lbl: 'ସିଧା ମଜୁରୀ',
+    slide2Stat2Val: '₹୫ ଲକ୍ଷ',
+    slide2Stat2Lbl: 'ବୀମା କଭର୍',
+    slide2Stat3Val: '୦%',
+    slide2Stat3Lbl: 'ଉପକରଣ ଋଣ',
+    slide2Quote: '“କୌଣସି ଘରୋଇ ମଧ୍ୟସ୍ଥି ନାହିଁ। ଆମେ ସମବାୟର ମାଲିକ ଭାବେ ମର୍ଯ୍ୟାଦାର ସହିତ କାମ କରୁ।”',
+    slide2Author: 'ରମେଶ କୁମାର • ମାଷ୍ଟର ଇଲେକ୍ଟ୍ରିସିଆନ୍',
+
+    slide3Badge: 'ସମବାୟ ଶାସନ',
+    slide3Title: 'ମହାସଂଘ ପଞ୍ଜିକରଣ ଓ ତଦାରଖ',
+    slide3Desc: 'ଓଡ଼ିଶା ସମବାୟ ସମିତି ଆଇନ ଅନୁଯାୟୀ ଆଇନଗତ ଅନୁପାଳନ, ସକ୍ରିୟ ରୋଷ୍ଟର ଏବଂ ପାରସ୍ପରିକ ସହାୟତା।',
+    slide3Stat1Val: '୩୦',
+    slide3Stat1Lbl: 'ଜିଲ୍ଲା',
+    slide3Stat2Val: '୧୦୦%',
+    slide3Stat2Lbl: 'ଅନୁପାଳନ',
+    slide3Stat3Val: 'LCF',
+    slide3Stat3Lbl: 'ସଂଯୁକ୍ତ',
+    slide3Quote: '“ତୃଣମୂଳ ଶ୍ରମ ସମବାୟ ସମିତିଗୁଡ଼ିକୁ ସଶକ୍ତ କରୁଥିବା ଡିଜିଟାଲ୍ ସାର୍ବଜନୀନ ବ୍ୟବସ୍ଥା।”',
+    slide3Author: 'ଅରୁଣ କୁମାର ପଟ୍ଟନାୟକ • ସମବାୟ ସମ୍ପାଦକ',
+
+    // Rate Card Page
+    rcBadge: 'ନିୟନ୍ତ୍ରିତ ସମବାୟ ଦର',
+    rcHeroTitle: 'ସ୍ୱଚ୍ଛ ଦର ତାଲିକା',
+    rcHeroSub: '୯୩-୨-୫ ମଡେଲ୍ ସହିତ ନିର୍ଦ୍ଧାରିତ ସମବାୟ ଦର। କୌଣସି ଲୁକ୍କାୟିତ ଶୁଳ୍କ ନାହିଁ।',
+    rcShramSuraksha: 'ଶ୍ରମ ସୁରକ୍ଷା କବଚ',
+    rcEndToEnd: 'ସମ୍ପୂର୍ଣ୍ଣ ସେବା ସୁରକ୍ଷା',
+    rcBacking: 'ପ୍ରତ୍ୟେକ ବୁକିଂ ଆମର ସମବାୟ ସୁରକ୍ଷା ଦ୍ୱାରା ନିଶ୍ଚିତ',
+    rcSearchPlaceholder: 'କୌଣସି ପାର୍ଟସ୍ କିମ୍ବା ସେବା ଦର ଖୋଜନ୍ତୁ...',
+    rcExpandAll: 'ସବୁ ଖୋଲନ୍ତୁ' ,
+    rcCollapseAll: 'ସବୁ ବନ୍ଦ କରନ୍ତୁ',
+    rcPartName: 'ଉପକରଣ / ସେବା ବିବରଣୀ',
+    rcFixedTariff: 'ନିର୍ଦ୍ଦିଷ୍ଟ ଦର',
+    rcGovNorms: 'ସମବାୟ ନିୟମ',
+    rcSplitBtn: '୯୩-୨-୫ ବିଭାଜନ',
+
+    // About Page
+    aboutBadge: 'ସମବାୟ ସାଂସ୍ଥାନିକ ବ୍ୟବସ୍ଥା',
+    aboutTitle: 'ପୃଥିବୀ ଫିକ୍ସ ସମ୍ପର୍କରେ',
+    aboutSub: 'ଏକ ସମବାୟ ମାଲିକାନା ବିଶିଷ୍ଟ ଡିଜିଟାଲ୍ ସେବା ପ୍ଲାଟଫର୍ମ ଯାହା ପ୍ରମାଣିତ ଶ୍ରମିକମାନଙ୍କୁ ପରିବାର ଓ ସଂସ୍ଥା ସହିତ ଯୋଡ଼ିଥାଏ।',
+    aboutDiffTitle: 'ସମବାୟର ପାର୍ଥକ୍ୟ',
+    aboutDiffDesc: 'ଘରୋଇ କମ୍ପାନୀଗୁଡ଼ିକ ଉଚ୍ଚ କମିଶନ ନେଇଥାନ୍ତି, କିନ୍ତୁ ପୃଥିବୀ ଫିକ୍ସରେ ଶ୍ରମିକମାନେ ନିଜେ ସମବାୟର ମାଲିକ ଅଟନ୍ତି।',
+
+    // Help Page
+    helpBadge: 'ସାର୍ବଜନୀନ ସହାୟତା ଓ ଅଭିଯୋଗ ନିବାରଣ',
+    helpTitle: 'ସହାୟତା ଓ ନାଗରିକ ଅଭିଯୋଗ କକ୍ଷ',
+    helpSub: 'ସରକାରୀ ସମବାୟ ବିବାଦ ସମାଧାନ, ଜରୁରୀକାଳୀନ ସହାୟତା ଏବଂ ପ୍ରଶ୍ନୋତ୍ତରୀ।',
+    helpTollFreeTitle: 'ଜାତୀୟ ଟୋଲ୍-ଫ୍ରି ହେଲ୍ପଲାଇନ୍',
+    helpEmergencyTitle: '୨୪x୭ ଜରୁରୀକାଳୀନ ହେଲ୍ପଲାଇନ୍',
+    helpLodgeTitle: 'ଅଭିଯୋଗ କିମ୍ବା ଅନୁସନ୍ଧାନ ଦାଖଲ କରନ୍ତୁ',
 
     // Common Buttons
     btnCancel: 'ବାତିଲ କରନ୍ତୁ',
@@ -863,6 +1148,9 @@ export const TRANSLATIONS = {
 
     myBookingsTitle: 'ମୋ ସେବା ବୁକିଂ',
     myBookingsSub: 'ଆପଣଙ୍କ ଘରୋଇ ସେବା ଅର୍ଡର ଟ୍ରାକ ଓ ପରିଚାଳନା କରନ୍ତୁ',
+    btnRefresh: 'ରିଫ୍ରେଶ୍',
+    assignedArtisan: 'ନିଯୁକ୍ତ ଶ୍ରମିକ',
+    totalTariff: 'ମୋଟ ଦେୟ',
     bookNewService: 'ନୂଆ ସେବା ବୁକ୍ କରନ୍ତୁ',
     tabAll: 'ସମସ୍ତ',
     tabActive: 'ସକ୍ରିୟ',
@@ -909,9 +1197,9 @@ export const TRANSLATIONS = {
 
   BN: {
     // Top Bar & Branding
-    govSupportTag: 'জাতীয় শ্রম সমবায় ফেডারেশন (NLCF) সমর্থিত',
-    portalSubHeader: 'জাতীয় শ্রম সমবায় ফেডারেশন পোর্টাল',
-    brandName: 'শ্রম সেতু',
+    govSupportTag: 'শ্রম সমবায় ফেডারেশন (LCF) সমর্থিত',
+    portalSubHeader: 'শ্রম সমবায় ফেডারেশন পোর্টাল',
+    brandName: 'পৃথ্বী ফিক্স',
     brandSubtitle: 'সমবায় গিগ সেবা প্ল্যাটফর্ম',
     tollFreeLabel: 'টোল-ফ্রি হেল্পলাইন',
     listenVoice: 'শুনুন',
@@ -949,7 +1237,7 @@ export const TRANSLATIONS = {
     nearbyArtisanTag: 'নিকটতম যাচাইকৃত কর্মী',
     fixedRateTag: 'স্থির মূল হার',
     sampleWorkerName: 'রমেশ কুমার',
-    sampleWorkerRole: 'মাস্টার ইলেকট্রিশিয়ান • ITI Gold Certified',
+    sampleWorkerRole: 'মাস্টার ইলেকট্রিশিয়ান • Gold Skill Certified',
     sampleWorkerStats: '১২৪+ কাজ সম্পন্ন • ১.২ কিমি দূরে',
     policeVerifiedBadge: 'পুলিশ ও আধার যাচাইকৃত',
     bookNowShort: 'বুক করুন →',
@@ -960,7 +1248,7 @@ export const TRANSLATIONS = {
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '১০০% যাচাইকৃত কর্মী',
-    pillar1Desc: 'ITI / NSDC ও পুলিশ যাচাইকৃত',
+    pillar1Desc: 'দক্ষ ও পুলিশ যাচাইকৃত',
     pillar2Title: 'অতিরিক্ত চার্জ নেই',
     pillar2Desc: 'সমবায় নিয়ন্ত্রিত মূল হার',
     pillar3Title: '১০০% সামাজিক নিরাপত্তা',
@@ -1102,10 +1390,103 @@ export const TRANSLATIONS = {
     // Navigation Links
     navHome: 'হোম',
     navServices: 'পরিষেবাসমূহ',
+    navServicesBooking: 'পরিষেবা ও বুকিং',
     navFindWorker: 'কর্মী খুঁজুন',
     navBookService: 'পরিষেবা বুক করুন',
     navAbout: 'আমাদের সম্পর্কে',
     navHelp: 'সহায়তা',
+    navRateCard: 'মূল্য তালিকা',
+    currentLocation: 'বর্তমান অবস্থান',
+    detectingLocation: 'অবস্থান শনাক্ত করা হচ্ছে...',
+    detectGps: 'জিপিএস অবস্থান শনাক্ত করুন',
+    redetectGps: 'পুনরায় জিপিএস শনাক্ত করুন',
+
+    // Authentication (Login & Register)
+    signInTitle: 'সাইন ইন',
+    signInSub: 'নিয়ন্ত্রিত সমবায় মূল্যে নির্ভরযোগ্য পরিষেবা।',
+    tabCitizen: 'নাগরিক',
+    tabArtisan: 'কারিগর',
+    tabAdmin: 'প্রশাসন',
+    phoneOrEmailLabel: 'ফোন নম্বর বা ইমেল',
+    phoneOrEmailPlaceholder: 'ফোন বা ইমেল (যেমন: ৯৮৭৬৫৪৩২১০)',
+    passwordLabel: 'পাসওয়ার্ড',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'আমাকে মনে রাখুন',
+    forgotPassword: 'পাসওয়ার্ড ভুলে গেছেন?',
+    btnSignIn: 'সাইন ইন করুন',
+    signingIn: 'সাইন ইন হচ্ছে...',
+    newCitizenText: 'নতুন এখানে? অ্যাকাউন্ট তৈরি করুন',
+    newArtisanText: 'নতুন কারিগর? এখানে নিবন্ধন করুন',
+    newSocietyText: 'নতুন সমবায় সমিতি? এখানে নিবন্ধন করুন',
+    wrongPortalText: 'ভুল পোর্টাল?',
+    switchToPortal: 'এ পরিবর্তন করুন',
+
+    // Login Left Carousel
+    slide1Badge: 'নাগরিক নিশ্চয়তা',
+    slide1Title: 'কোন অতিরিক্ত চার্জ নেই। ১০০% ন্যায্য দর।',
+    slide1Desc: 'সরকারি বেস রেট, স্বচ্ছ হিসাব এবং প্রতিটি বুকিংয়ে ৩০ দিনের ওয়ারেন্টি।',
+    slide1Stat1Val: '₹০',
+    slide1Stat1Lbl: 'সার্জ মূল্য',
+    slide1Stat2Val: '৩০ দিন',
+    slide1Stat2Lbl: 'ওয়ারেন্টি',
+    slide1Stat3Val: '১৫ মিনিট',
+    slide1Stat3Lbl: 'সাড়া প্রদান',
+    slide1Quote: '“ব্যস্ত সময়েও কোনো অতিরিক্ত মূল্য নেই। প্রতিবার নির্ভরযোগ্য, দক্ষ কারিগর।”',
+    slide1Author: 'অনন্যা প্যাটেল • নাগরিক সদস্য',
+
+    slide2Badge: 'কারিগর কল্যাণ',
+    slide2Title: '৯৩% সরাসরি পারিশ্রমিক। শূন্য কমিশন।',
+    slide2Desc: 'স্বাস্থ্যবীমা, পেনশন তহবিল ও শূন্য সুদে যন্ত্রপাতি ঋণসহ সরাসরি ব্যাংক অ্যাকাউন্টে অর্থ প্রদান।',
+    slide2Stat1Val: '৯৩%',
+    slide2Stat1Lbl: 'সরাসরি মজুরি',
+    slide2Stat2Val: '₹৫ লাখ',
+    slide2Stat2Lbl: 'বীমা সুরক্ষা',
+    slide2Stat3Val: '০%',
+    slide2Stat3Lbl: 'টুল লোন',
+    slide2Quote: '“কোনো বেসরকারি মধ্যস্বত্বভোগী নেই। আমরা সমবায়ের মালিক হিসেবে কাজ করি।”',
+    slide2Author: 'রমেশ কুমার • মাস্টার ইলেকট্রিশিয়ান',
+
+    slide3Badge: 'সমবায় শাসন',
+    slide3Title: 'ফেডারেশন নিবন্ধন ও তদারকি',
+    slide3Desc: 'সমবায় আইন অনুসারে আইনি সম্মতি, সক্রিয় রোস্টার ও পারস্পরিক সহযোগিতা।',
+    slide3Stat1Val: '৩০',
+    slide3Stat1Lbl: 'জেলা',
+    slide3Stat2Val: '১০০%',
+    slide3Stat2Lbl: 'সম্মতি',
+    slide3Stat3Val: 'LCF',
+    slide3Stat3Lbl: 'সংযুক্ত',
+    slide3Quote: '“তৃণমূল শ্রম সমবায়কে ক্ষমতায়িত করার ডিজিটাল পাবলিক পরিকাঠামো।”',
+    slide3Author: 'অরুণ পট্টনায়েক • সমবায় সচিব',
+
+    // Rate Card Page
+    rcBadge: 'নিয়ন্ত্রিত সমবায় মূল্য',
+    rcHeroTitle: 'স্বচ্ছ মূল্য তালিকা',
+    rcHeroSub: '৯৩-২-৫ মডেলের সাথে নির্ধারিত সমবায় মূল্য। কোনো লুকানো চার্জ নেই।',
+    rcShramSuraksha: 'শ্রম সুরক্ষা কবচ',
+    rcEndToEnd: 'সম্পূর্ণ সেবা সুরক্ষা',
+    rcBacking: 'প্রতিটি বুকিং আমাদের সমবায় সুরক্ষা দ্বারা সুরক্ষিত',
+    rcSearchPlaceholder: 'যন্ত্রাংশ বা পরিষেবা মূল্য অনুসন্ধান করুন...',
+    rcExpandAll: 'সব খুলুন',
+    rcCollapseAll: 'সব বন্ধ করুন',
+    rcPartName: 'যন্ত্রাংশ / পরিষেবা বিবরণ',
+    rcFixedTariff: 'নির্দিষ্ট মূল্য',
+    rcGovNorms: 'সমবায় মানদণ্ড',
+    rcSplitBtn: '৯৩-২-৫ বিভাজন',
+
+    // About Page
+    aboutBadge: 'প্রাতিষ্ঠানিক সমবায় কাঠামো',
+    aboutTitle: 'পৃথ্বী ফিক্স সম্পর্কে',
+    aboutSub: 'একটি সমবায় মালিকানাধীন ডিজিটাল সেবা প্ল্যাটফর্ম যা দক্ষ কর্মীদের পরিবার ও প্রতিষ্ঠানের সাথে যুক্ত করে।',
+    aboutDiffTitle: 'সমবায়ের বৈশিষ্ট্য',
+    aboutDiffDesc: 'উচ্চ কমিশন নেওয়া বেসরকারি অ্যাপগুলির বিপরীতে, পৃথ্বী ফিক্সে কর্মীরা নিজেরাই মালিক।',
+
+    // Help Page
+    helpBadge: 'গণসহায়তা ও অভিযোগ নিষ্পত্তি',
+    helpTitle: 'সহায়তা ও নাগরিক অভিযোগ সেল',
+    helpSub: 'অফিসিয়াল সমবায় বিরোধ নিষ্পত্তি, সার্বক্ষণিক সহায়তা ও প্রশ্নোত্তর।',
+    helpTollFreeTitle: 'জাতীয় টোল-ফ্রি হেল্পলাইন',
+    helpEmergencyTitle: '২৪x৭ জরুরি হেল্পলাইন',
+    helpLodgeTitle: 'অভিযোগ বা অনুসন্ধান জমা দিন',
 
     // Common Buttons
     btnCancel: 'বাতিল করুন',
@@ -1162,6 +1543,9 @@ export const TRANSLATIONS = {
 
     myBookingsTitle: 'আমার পরিষেবা বুকিং',
     myBookingsSub: 'আপনার গৃহস্থালি পরিষেবা অর্ডার ট্র্যাক ও পরিচালনা করুন',
+    btnRefresh: 'রিফ্রেশ',
+    assignedArtisan: 'নিযুক্ত কর্মী',
+    totalTariff: 'মোট চার্জ',
     bookNewService: 'নতুন পরিষেবা বুক করুন',
     tabAll: 'সকল',
     tabActive: 'সক্রিয়',
@@ -1208,9 +1592,9 @@ export const TRANSLATIONS = {
 
   TE: {
     // Top Bar & Branding
-    govSupportTag: 'నేషనల్ లేబర్ కోఆపరేటివ్ ఫెడరేషన్ (NLCF) మద్దతు',
-    portalSubHeader: 'జాతీయ లేబర్ కోఆపరేటివ్ ఫెడరేషన్ పోర్టల్',
-    brandName: 'శ్రమ్ సేతు',
+    govSupportTag: 'లేబర్ కోఆపరేటివ్ ఫెడరేషన్ (LCF) మద్దతు',
+    portalSubHeader: 'లేబర్ కోఆపరేటివ్ ఫెడరేషన్ పోర్టల్',
+    brandName: 'పృథ్వీ ఫిక్స్',
     brandSubtitle: 'కోఆపరేటివ్ గిగ్ సర్వీసెస్ పోర్టల్',
     tollFreeLabel: 'టోల్-ఫ్రీ హెల్ప్‌లైన్',
     listenVoice: 'వినండి',
@@ -1223,7 +1607,7 @@ export const TRANSLATIONS = {
 
     // Live Ticker
     tickerLabel: 'ప్రత్యక్ష సమాచారం',
-    tickerText: 'అన్ని 30 జిల్లాల్లో 100% ITI మరియు పోలీస్ ధృవీకరించిన కార్మికులు అందుబాటులో ఉన్నారు • సహకార నియంత్రిత ధరలు • 30 రోజుల ఉచిత మరమ్మతు హామీ • కాల్ చేయండి: 1800-345-7788',
+    tickerText: 'అన్ని 30 జిల్లాల్లో 100% నైపుణ్యం మరియు పోలీస్ ధృవీకరించిన కార్మికులు అందుబాటులో ఉన్నారు • సహకార నియంత్రిత ధరలు • 30 రోజుల ఉచిత మరమ్మతు హామీ • కాల్ చేయండి: 1800-345-7788',
 
     // Hero Section
     heroTitlePart1: 'ధృవీకరించబడిన నైపుణ్యాలు.',
@@ -1248,7 +1632,7 @@ export const TRANSLATIONS = {
     nearbyArtisanTag: 'సమీపంలోని ధృవీకరించబడిన కార్మికుడు',
     fixedRateTag: 'స్థిరమైన బేస్ ధర',
     sampleWorkerName: 'రమేష్ కుమార్',
-    sampleWorkerRole: 'మాస్టర్ ఎలక్ట్రీషియన్ • ITI Gold Certified',
+    sampleWorkerRole: 'మాస్టర్ ఎలక్ట్రీషియన్ • Gold Skill Certified',
     sampleWorkerStats: '124+ పనులు పూర్తి • 1.2 కి.మీ దూరం',
     policeVerifiedBadge: 'పోలీస్ & ఆధార్ ధృవీకరించబడింది',
     bookNowShort: 'ఇప్పుడే బుక్ చేయండి →',
@@ -1259,7 +1643,7 @@ export const TRANSLATIONS = {
 
     // Trust Pillars (Hero bottom)
     pillar1Title: '100% ధృవీకరించబడిన కార్మికులు',
-    pillar1Desc: 'ITI / NSDC మరియు పోలీస్ ధృవీకరించబడింది',
+    pillar1Desc: 'నైపుణ్యం మరియు పోలీస్ ధృవీకరించబడింది',
     pillar2Title: 'అదనపు ఛార్జీలు లేవు',
     pillar2Desc: 'సహకార నియంత్రిత బేస్ టారిఫ్‌లు',
     pillar3Title: '100% సామాజిక భద్రత',
@@ -1401,10 +1785,103 @@ export const TRANSLATIONS = {
     // Navigation Links
     navHome: 'హోమ్',
     navServices: 'సేవలు',
+    navServicesBooking: 'సేవలు & బుకింగ్',
     navFindWorker: 'కార్మికుడిని కనుగొనండి',
     navBookService: 'సేవను బుక్ చేయండి',
     navAbout: 'మా గురించి',
     navHelp: 'సహాయం',
+    navRateCard: 'ధరల పట్టిక',
+    currentLocation: 'ప్రస్తుత స్థానం',
+    detectingLocation: 'స్థానాన్ని గుర్తిస్తోంది...',
+    detectGps: 'జీపీఎస్ స్థానాన్ని గుర్తించండి',
+    redetectGps: 'తిరిగి జీపీఎస్ గుర్తించండి',
+
+    // Authentication (Login & Register)
+    signInTitle: 'సైన్ ఇన్',
+    signInSub: 'సహకార నియంత్రిత ధరలతో నమ్మకమైన సేవలు.',
+    tabCitizen: 'పౌరుడు',
+    tabArtisan: 'కార్మికుడు',
+    tabAdmin: 'అడ్మిన్',
+    phoneOrEmailLabel: 'ఫోన్ నంబర్ లేదా ఇమెయిల్',
+    phoneOrEmailPlaceholder: 'ఫోన్ లేదా ఇమెయిల్ (ఉదా: 9876543210)',
+    passwordLabel: 'పాస్‌వర్డ్',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'నన్ను గుర్తుంచుకోండి',
+    forgotPassword: 'పాస్‌వర్డ్ మర్చిపోయారా?',
+    btnSignIn: 'సైన్ ఇన్ చేయండి',
+    signingIn: 'సైన్ ఇన్ అవుతోంది...',
+    newCitizenText: 'కొత్తవారా? ఖాతా తెరవండి',
+    newArtisanText: 'కొత్త కార్మికుడా? ఇక్కడ నమోదు చేసుకోండి',
+    newSocietyText: 'కొత్త సహకార సంఘమా? ఇక్కడ నమోదు చేయండి',
+    wrongPortalText: 'తప్పు పోర్టలా?',
+    switchToPortal: 'కి మారండి',
+
+    // Login Left Carousel
+    slide1Badge: 'పౌరుల భరోసా',
+    slide1Title: 'జీరో సర్జ్ ధరలు. 100% న్యాయమైన ధరలు.',
+    slide1Desc: 'ప్రభుత్వ నోటిఫైడ్ మూల ధరలు, పారదర్శక ఖాతా మరియు ప్రతి బుకింగ్‌పై 30 రోజుల వారంటీ.',
+    slide1Stat1Val: '₹0',
+    slide1Stat1Lbl: 'అదనపు ఛార్జీలు',
+    slide1Stat2Val: '30 రోజులు',
+    slide1Stat2Lbl: 'వారంటీ',
+    slide1Stat3Val: '15 నిమిషాలు',
+    slide1Stat3Lbl: 'త్వరిత స్పందన',
+    slide1Quote: '“రద్దీ సమయాల్లోనూ అదనపు ఛార్జీలు ఉండవు. ప్రతిసారీ నమ్మకమైన నిపుణుల సేవలు.”',
+    slide1Author: 'అనన్య పటేల్ • పౌర సభ్యురాలు',
+
+    slide2Badge: 'కార్మికుల సంక్షేమం',
+    slide2Title: '93% నేరుగా చెల్లింపు. జీరో కమిషన్.',
+    slide2Desc: 'ఆరోగ్య బీమా, పెన్షన్ మరియు సున్నా వడ్డీతో టూల్ రుణాలతో నేరుగా బ్యాంక్ చెల్లింపులు.',
+    slide2Stat1Val: '93%',
+    slide2Stat1Lbl: 'నేరుగా వేతనం',
+    slide2Stat2Val: '₹5 లక్షలు',
+    slide2Stat2Lbl: 'బీమా రక్షణ',
+    slide2Stat3Val: '0%',
+    slide2Stat3Lbl: 'పరికరాల రుణాలు',
+    slide2Quote: '“ప్రైవేట్ దళారులు లేరు. మేము సహకార సంఘ యజమానులుగా గౌరవంగా పనిచేస్తాము.”',
+    slide2Author: 'రమేష్ కుమార్ • మాస్టర్ ఎలక్ట్రీషియన్',
+
+    slide3Badge: 'సహకార పాలన',
+    slide3Title: 'సమాఖ్య నమోదు మరియు పర్యవేక్షణ',
+    slide3Desc: 'ఒడిశా సహకార చట్టం ప్రకారం చట్టబద్ధమైన పాలన మరియు కార్మికుల సంరక్షణ.',
+    slide3Stat1Val: '30',
+    slide3Stat1Lbl: 'జిల్లాలు',
+    slide3Stat2Val: '100%',
+    slide3Stat2Lbl: 'నిబంధనల అమలు',
+    slide3Stat3Val: 'LCF',
+    slide3Stat3Lbl: 'అనుబంధం',
+    slide3Quote: '“గ్రామీణ కార్మిక సంఘాలను శక్తివంతం చేసే డిజిటల్ పబ్లిక్ వ్యవస్థ.”',
+    slide3Author: 'అరుణ్ పట్నాయక్ • సహకార కార్యదర్శి',
+
+    // Rate Card Page
+    rcBadge: 'నియంత్రిత సహకార ధరలు',
+    rcHeroTitle: 'పారదర్శక ధరల పట్టిక',
+    rcHeroSub: '93-2-5 విధానంతో నిర్ణయించబడిన సహకార ధరలు. ఎలాంటి దాచిన ఛార్జీలు లేవు.',
+    rcShramSuraksha: 'శ్రమ రక్షణ కవచం',
+    rcEndToEnd: 'సమగ్ర సేవా రక్షణ',
+    rcBacking: 'ప్రతి బుకింగ్ మా సహకార రక్షణ వలయం ద్వారా సురక్షితం',
+    rcSearchPlaceholder: 'ఏదైనా స్పేర్ పార్ట్ లేదా సేవా ధరను వెతకండి...',
+    rcExpandAll: 'అన్నీ చూపించు',
+    rcCollapseAll: 'అన్నీ మూసివేయి',
+    rcPartName: 'భాగం / సేవా వివరాలు',
+    rcFixedTariff: 'స్థిర ధర',
+    rcGovNorms: 'సహకార నిబంధనలు',
+    rcSplitBtn: '93-2-5 విభజన',
+
+    // About Page
+    aboutBadge: 'సహకార సంస్థాగత వ్యవస్థ',
+    aboutTitle: 'పృథ్వీ ఫిక్స్ గురించి',
+    aboutSub: 'ధృవీకరించబడిన కార్మికులను కుటుంబాలతో అనుసంధానించే సహకార డిజిటల్ సేవా వేదిక.',
+    aboutDiffTitle: 'సహకార ప్రత్యేకత',
+    aboutDiffDesc: 'కమిషన్లు తీసుకునే ప్రైవేట్ యాప్‌ల మాదిరిగా కాకుండా, పృథ్వీ ఫిక్స్‌లో కార్మికులే యజమానులు.',
+
+    // Help Page
+    helpBadge: 'ప్రజా మద్దతు & ఫిర్యాదుల పరిష్కారం',
+    helpTitle: 'సహాయం & పౌర ఫిర్యాదుల విభాగం',
+    helpSub: 'అధికారిక సహకార వివాద పరిష్కారం, అత్యవసర సహాయం మరియు తరచుగా అడిగే ప్రశ్నలు.',
+    helpTollFreeTitle: 'జాతీయ టోల్-ఫ్రీ హెల్ప్‌లైన్',
+    helpEmergencyTitle: '24x7 అత్యవసర హెల్ప్‌లైన్',
+    helpLodgeTitle: 'ఫిర్యాదు లేదా విచారణను నమోదు చేయండి',
 
     // Common Buttons
     btnCancel: 'రద్దు చేయండి',
@@ -1461,6 +1938,9 @@ export const TRANSLATIONS = {
 
     myBookingsTitle: 'నా సేవా బుకింగ్‌లు',
     myBookingsSub: 'మీ గృహ సేవా ఆర్డర్లను ట్రాక్ మరియు నిర్వహించండి',
+    btnRefresh: 'రిఫ్రెష్',
+    assignedArtisan: 'కేటాయించిన కార్మికుడు',
+    totalTariff: 'మొత్తం ఛార్జీ',
     bookNewService: 'కొత్త సేవను బుక్ చేయండి',
     tabAll: 'అన్నీ',
     tabActive: 'సక్రియ',
@@ -1516,9 +1996,11 @@ export function LanguageProvider({ children }) {
     setLangState(newLang);
   };
 
-  const t = (key) => {
+  const t = (key, fallback) => {
     const currentDict = TRANSLATIONS[lang] || TRANSLATIONS.EN;
-    return currentDict[key] || TRANSLATIONS.EN[key] || key;
+    if (currentDict && currentDict[key] !== undefined) return currentDict[key];
+    if (TRANSLATIONS.EN && TRANSLATIONS.EN[key] !== undefined) return TRANSLATIONS.EN[key];
+    return fallback !== undefined ? fallback : key;
   };
 
   return (

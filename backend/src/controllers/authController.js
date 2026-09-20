@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { query } = require('../db/connection');
-const { generateToken } = require('../utils/jwt');
+const { generateToken, revokeToken } = require('../utils/jwt');
+const { maskAadhaar, maskPan } = require('../utils/piiMasker');
 
 /**
  * POST /api/auth/register
@@ -86,19 +88,29 @@ async function register(req, res) {
       if (district === 'Cuttack') cooperativeId = 2;
       else if (district === 'Puri') cooperativeId = 3;
 
+      // KYC DPDP Compliance: Compute SHA-256 hash for dedup/verification, store only masked Aadhaar
+      const rawAadhaar = aadhaarNumber ? String(aadhaarNumber).replace(/\D/g, '') : null;
+      const aadhaarHash = rawAadhaar ? crypto.createHash('sha256').update(rawAadhaar).digest('hex') : null;
+      const maskedAadhaar = rawAadhaar ? maskAadhaar(rawAadhaar) : null;
+      const maskedPanNumber = panNumber ? maskPan(panNumber) : null;
+      // Set police verification validity (standard 12 months)
+      const policeVerificationExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
       const workerInsertRes = await query(
         `INSERT INTO workers (
           user_id, worker_code, cooperative_id, service_area, experience_years,
           latitude, longitude, verification_status, availability, primary_trade,
-          sub_skills, tools_owned, bio, aadhaar_number, pan_number, ration_card,
+          sub_skills, tools_owned, bio, aadhaar_number, aadhaar_hash, police_verification_expiry,
+          verification_badge, pan_number, ration_card,
           bank_name, bank_account, bank_ifsc, emergency_contact_name,
           emergency_contact_phone, emergency_contact_relation, application_no
         ) VALUES (
           $1, $2, $3, $4, $5,
           20.2961, 85.8245, 'PENDING', 'OFFLINE', $6,
           $7, $8, $9, $10, $11, $12,
-          $13, $14, $15, $16,
-          $17, $18, $19
+          'COOPERATIVE_VERIFIED', $13, $14,
+          $15, $16, $17, $18,
+          $19, $20, $21
         ) RETURNING id`,
         [
           newUser.id,
@@ -110,8 +122,10 @@ async function register(req, res) {
           Array.isArray(subSkills) ? subSkills.join(', ') : (subSkills || null),
           toolsOwned || null,
           bio || null,
-          aadhaarNumber || null,
-          panNumber || null,
+          maskedAadhaar,
+          aadhaarHash,
+          policeVerificationExpiry,
+          maskedPanNumber,
           rationCard || null,
           bankName || null,
           bankAccount || null,
@@ -137,7 +151,7 @@ async function register(req, res) {
               [
                 workerId,
                 cert.certificationName || 'Trade Certificate',
-                cert.issuingOrganization || 'National ITI / State Skill Council',
+                cert.issuingOrganization || 'State Skill Council / NCVT',
                 cert.certificateNumber || 'CERT-PENDING',
                 cert.issueDate || new Date().toISOString().split('T')[0],
                 cert.expiryDate || null,
@@ -155,9 +169,9 @@ async function register(req, res) {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING')`,
           [
             workerId,
-            req.body.certificationName || 'ITI / NSDC National Trade Certificate',
-            req.body.issuingOrganization || 'National ITI / NCVT',
-            req.body.certificateNumber || 'ITI-OD-2024-9812',
+            req.body.certificationName || 'National Trade Skill Certificate',
+            req.body.issuingOrganization || 'State Skill Council / NCVT',
+            req.body.certificateNumber || 'SKILL-OD-2024-9812',
             req.body.issueDate || '2022-06-15',
             null,
             req.body.documentUrl || 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400',
@@ -209,7 +223,7 @@ async function register(req, res) {
           address || 'District Cooperative Road',
           pincode || '751001',
           isNlcf,
-          isNlcf ? `NLCF-CERT-2026-${Math.floor(1000 + Math.random() * 9000)}` : null,
+          isNlcf ? `LCF-CERT-2026-${Math.floor(1000 + Math.random() * 9000)}` : null,
           initialCapital,
           trackingId,
         ]
@@ -239,17 +253,18 @@ async function register(req, res) {
  */
 async function login(req, res) {
   try {
-    const { email, password, portalRole } = req.body;
+    const { email, password, portalRole, emailOrPhone } = req.body;
+    const identifier = email || emailOrPhone;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         error: 'Validation Error',
-        message: 'Email and password are required.',
+        message: 'Email/Phone and password are required.',
       });
     }
 
-    // Find user
-    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    // Find user by email or phone
+    const result = await query('SELECT * FROM users WHERE email = $1 OR phone = $1', [identifier]);
     const user = result.rows[0];
 
     if (!user) {
@@ -331,7 +346,7 @@ async function getMe(req, res) {
   try {
     const userRes = await query(
       `SELECT id, name, email, phone, role, district, city, address, pincode, 
-              latitude, longitude, avatar_url, is_active, created_at
+              latitude, longitude, avatar_url, is_active, admin_type, designation, society_id, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
     );
@@ -386,4 +401,22 @@ async function getMe(req, res) {
   }
 }
 
-module.exports = { register, login, getMe };
+/**
+ * POST /api/auth/logout
+ * Invalidate current JWT token and terminate session.
+ */
+async function logout(req, res) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      await revokeToken(token);
+    }
+    res.json({ message: 'Logged out successfully. Token revoked.' });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to process logout.' });
+  }
+}
+
+module.exports = { register, login, getMe, logout };

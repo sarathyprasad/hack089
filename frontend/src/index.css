@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   Shram Setu — Indian Public Cooperative Portal Design System
-   National Labour Cooperatives Federation (NLCF) Initiative
+   Prithvi Fix — Indian Public Cooperative Portal Design System
+   Labour Cooperatives Federation (LCF) Initiative
    ========================================================================== */
 
 :root {
@@ -14,11 +14,11 @@
   --gov-saffron: #FF9933;
   --gov-saffron-dark: #E67300;
   --gov-saffron-light: #FFF3E6;
-  
+
   --gov-green: #138808;
   --gov-green-dark: #0B5E05;
   --gov-green-light: #E8F5E9;
-  
+
   --gov-navy: #0A1931;
   --gov-navy-medium: #152A55;
   --gov-navy-light: #1E3A8A;
@@ -32,7 +32,7 @@
   --gov-bg: #F8FAFC;
   --gov-surface: #FFFFFF;
   --gov-khadi: #FCFBF7;
-  
+
   --gov-gray-50: #F8FAFC;
   --gov-gray-100: #F1F5F9;
   --gov-gray-200: #E2E8F0;
@@ -77,6 +77,87 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Modern Civic Dark Mode (Midnight Navy & Clean Obsidian)
+   ========================================================================== */
+html.dark {
+  --gov-bg: #0A0F24;
+  --gov-surface: #131B38;
+  --gov-gray-50: #0F172A;
+  --gov-gray-100: #131B38;
+  --gov-gray-200: #1E294B;
+  --gov-gray-300: #334155;
+  --gov-gray-400: #64748B;
+  --gov-gray-500: #94A3B8;
+  --gov-gray-600: #CBD5E1;
+  --gov-gray-700: #E2E8F0;
+  --gov-gray-800: #F1F5F9;
+  --gov-gray-900: #FFFFFF;
+  --gov-navy: #0F172A;
+  --gov-navy-medium: #131B38;
+  --gov-navy-light: #1E294B;
+  --gov-ashoka-blue: #38BDF8;
+  color: #F8FAFC;
+}
+
+html.dark body {
+  background-color: #0A0F24;
+  color: #F8FAFC;
+}
+
+html.dark .card,
+html.dark .bg-white {
+  background-color: #131B38;
+  color: #FFFFFF;
+  border-color: #1E294B;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-gray-50 {
+  background-color: #0F172A;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-gray-100 {
+  background-color: #1A2447;
+}
+
+html.dark .border-slate-200,
+html.dark .border-gray-200,
+html.dark .border-slate-100,
+html.dark .border-gray-100 {
+  border-color: #1E294B;
+}
+
+html.dark .text-slate-900,
+html.dark .text-gray-900,
+html.dark .text-slate-800,
+html.dark .text-gray-800 {
+  color: #FFFFFF;
+}
+
+html.dark .text-slate-700,
+html.dark .text-gray-700,
+html.dark .text-slate-600,
+html.dark .text-gray-600 {
+  color: #CBD5E1;
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #94A3B8;
+}
+
+html.dark .portal-sidebar {
+  background-color: #0F172A;
+  border-color: #1E294B;
+}
+
+html.dark .portal-topbar {
+  background: rgba(10, 15, 30, 0.98);
+  border-bottom-color: rgba(30, 41, 75, 0.8);
 }
 
 /* ==========================================================================
@@ -140,43 +221,76 @@ html.high-contrast .btn-secondary {
 .tricolor-ribbon {
   height: 4px;
   width: 100%;
-  background: linear-gradient(
-    to right,
-    #FF9933 0%,
-    #FF9933 33.33%,
-    #FFFFFF 33.33%,
-    #FFFFFF 66.66%,
-    #138808 66.66%,
-    #138808 100%
-  );
+  background: linear-gradient(to right,
+      #FF9933 0%,
+      #FF9933 33.33%,
+      #FFFFFF 33.33%,
+      #FFFFFF 66.66%,
+      #138808 66.66%,
+      #138808 100%);
 }
 
 /* ==========================================================================
    Creative Animations & Visual Effects
    ========================================================================== */
 @keyframes floatSlow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes floatReverse {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(8px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(8px);
+  }
 }
 
 @keyframes pulseSoft {
-  0%, 100% { opacity: 0.9; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.03); }
+
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
 }
 
 @keyframes radarWave {
-  0% { transform: scale(0.8); opacity: 0.8; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 @keyframes shimmerText {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
 }
 
 .animate-float-slow {
@@ -202,8 +316,8 @@ html.high-contrast .btn-secondary {
 
 .hero-creative-bg {
   background: radial-gradient(circle at 80% 20%, rgba(255, 153, 51, 0.15) 0%, transparent 40%),
-              radial-gradient(circle at 10% 80%, rgba(19, 136, 8, 0.12) 0%, transparent 45%),
-              linear-gradient(145deg, #071224 0%, #0A1931 45%, #152A55 100%);
+    radial-gradient(circle at 10% 80%, rgba(19, 136, 8, 0.12) 0%, transparent 45%),
+    linear-gradient(145deg, #071224 0%, #0A1931 45%, #152A55 100%);
 }
 
 .glass-card-dark {
@@ -481,9 +595,11 @@ html.high-contrast .btn-secondary {
 
 .portal-topbar {
   height: var(--portal-topbar-height);
-  background-color: var(--gov-navy);
-  color: var(--gov-white);
-  border-bottom: 2px solid var(--gov-saffron);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #F8FAFC;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.65);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -491,7 +607,7 @@ html.high-contrast .btn-secondary {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
 }
 
 .portal-main-wrapper {
@@ -534,31 +650,49 @@ html.high-contrast .btn-secondary {
 .portal-nav-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 8px;
-  color: var(--gov-gray-700);
-  font-size: 0.875rem;
-  font-weight: 600;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 9px;
+  color: #64748B;
+  font-size: 0.8125rem;
+  font-weight: 500;
   text-decoration: none;
   transition: all 0.15s ease;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
 .portal-nav-link:hover {
-  background-color: var(--gov-gray-100);
-  color: var(--gov-navy);
+  background-color: #F8FAFC;
+  color: #0F172A;
 }
 
 .portal-nav-link.active {
-  background: linear-gradient(135deg, var(--gov-navy-light) 0%, var(--gov-navy) 100%);
-  color: var(--gov-white);
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(10, 25, 49, 0.15);
+  background: #F1F5F9;
+  color: #0F172A;
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .portal-nav-link.active .portal-nav-icon {
-  color: var(--gov-saffron);
+  color: #0284C7;
+}
+
+html.dark .portal-nav-link {
+  color: #94A3B8;
+}
+
+html.dark .portal-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #F8FAFC;
+}
+
+html.dark .portal-nav-link.active {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+html.dark .portal-nav-link.active .portal-nav-icon {
+  color: #38BDF8;
 }
 
 /* ==========================================================================
@@ -599,7 +733,6 @@ html.high-contrast .btn-secondary {
 
 .gov-footer ul {
   list-style: none;
-  space-y: 0.6rem;
 }
 
 .gov-footer ul li {
@@ -671,5 +804,254 @@ html.high-contrast .btn-secondary {
   .portal-content {
     padding: 1rem;
     width: 100%;
+  }
+}
+
+/* ==========================================================================
+   Civic Loading Buffer & Orbital Animations
+   ========================================================================== */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.97);
+    filter: drop-shadow(0 0 8px rgba(255, 153, 51, 0.3));
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 22px rgba(16, 185, 129, 0.45));
+  }
+}
+
+@keyframes civic-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 3s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+.civic-loader-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 153, 51, 0.15) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: civic-sweep 2.2s infinite;
+}
+
+/* ==========================================================================
+   Fluent Scroll-Driven Reveal & Micro-Interaction Animations (Web & Mobile Friendly)
+   Fluent Scroll-Driven Reveal & Micro-Interaction Animations (Web & Mobile Friendly)
+   Hardware-Accelerated Fluid Springs • Re-animates dynamically on every scroll
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Base Scroll Reveal Element (Soft Upward Glide) */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Leftward Entrance */
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translate3d(-32px, 0, 0);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal-left.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Rightward Entrance */
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translate3d(32px, 0, 0);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal-right.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scale & Pop Entrance */
+.scroll-reveal-scale {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0) scale(0.95);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal-scale.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Individual Grid Card Reveal with Cascading Wave Delays */
+.scroll-reveal-card {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.97);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal-card.is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal-card.is-revealed:nth-child(4n+1) { transition-delay: 20ms; }
+.scroll-reveal-card.is-revealed:nth-child(4n+2) { transition-delay: 70ms; }
+.scroll-reveal-card.is-revealed:nth-child(4n+3) { transition-delay: 120ms; }
+.scroll-reveal-card.is-revealed:nth-child(4n+4) { transition-delay: 170ms; }
+
+/* Staggered Children Container (Fluid Staggered Group Entrance) */
+.scroll-reveal-stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.97);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.scroll-reveal-stagger.is-revealed > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal-stagger.is-revealed > *:nth-child(1) { transition-delay: 25ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(2) { transition-delay: 55ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(3) { transition-delay: 85ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(4) { transition-delay: 115ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(5) { transition-delay: 145ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(6) { transition-delay: 175ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(7) { transition-delay: 205ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(8) { transition-delay: 235ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(9) { transition-delay: 265ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(10) { transition-delay: 295ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(11) { transition-delay: 325ms; }
+.scroll-reveal-stagger.is-revealed > *:nth-child(12) { transition-delay: 355ms; }
+
+/* Micro-Interactions & Hover Dynamics */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate3d(0, 0px, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(0.8deg);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+
+.home-interactive-card {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+
+.home-interactive-card:hover {
+  transform: translate3d(0, -6px, 0) scale(1.008);
+  box-shadow: 0 18px 32px -8px rgba(15, 23, 42, 0.12), 0 6px 12px -4px rgba(15, 23, 42, 0.05);
+}
+
+.home-interactive-card:active {
+  transform: translate3d(0, -1px, 0) scale(0.995);
+}
+
+/* ==========================================================================
+   Authentic Civic Authority Badges & Chips (Human-Designed Government Aesthetic)
+   Replaces AI-generated neon amber pills with crisp, dignified civic badges
+   ========================================================================== */
+.civic-authority-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  background: rgba(255, 255, 255, 0.08);
+  color: #E2E8F0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.civic-authority-chip .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #34D399; /* Emerald 400 */
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal-left,
+  .scroll-reveal-right,
+  .scroll-reveal-scale,
+  .scroll-reveal-card,
+  .scroll-reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
   }
 }

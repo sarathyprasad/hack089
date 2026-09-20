@@ -24,6 +24,7 @@ export default function BookService() {
 
   // Data states
   const [services, setServices] = useState([]);
+  const [societies, setSocieties] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [recommendedWorkers, setRecommendedWorkers] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -37,6 +38,7 @@ export default function BookService() {
   // Form states (Phase 2)
   const [formData, setFormData] = useState({
     district: user?.district || 'Khordha',
+    societyId: '',
     city: user?.city || 'Bhubaneswar',
     address: user?.address || 'Plot 104, Patia',
     pincode: user?.pincode || '751024',
@@ -44,8 +46,36 @@ export default function BookService() {
     scheduledTime: '10:00 AM',
     isEmergency: false,
     isBulkOrder: false,
+    squadSize: 1,
     notes: '',
   });
+
+  const handleDistrictChange = (dist) => {
+    const socs = societies.filter((s) => s.district.toLowerCase() === dist.toLowerCase());
+    const first = socs[0];
+    setFormData((prev) => ({
+      ...prev,
+      district: dist,
+      societyId: first ? String(first.id) : '',
+      city: first?.city || (dist === 'Cuttack' ? 'Cuttack' : dist === 'Puri' ? 'Puri' : 'Bhubaneswar'),
+      address: first?.address || prev.address,
+      pincode: first?.pincode || (dist === 'Cuttack' ? '753001' : dist === 'Puri' ? '752001' : '751001'),
+    }));
+  };
+
+  const handleSocietyChange = (socId) => {
+    const soc = societies.find((s) => String(s.id) === String(socId));
+    if (soc) {
+      setFormData((prev) => ({
+        ...prev,
+        societyId: String(soc.id),
+        district: soc.district,
+        city: soc.city || prev.city,
+        address: soc.address || prev.address,
+        pincode: soc.pincode || prev.pincode,
+      }));
+    }
+  };
 
   // Dynamic 60-minute emergency time window from current time
   const getEmergencyTimeWindow = () => {
@@ -246,19 +276,41 @@ export default function BookService() {
       return;
     }
 
-    api.getServices()
-      .then(async (data) => {
+    Promise.all([
+      api.getServices(),
+      api.getSocietiesList().catch(() => ({ societies: [] })),
+    ])
+      .then(async ([data, socData]) => {
         const sList = data.services || [];
         setServices(sList);
+        const socList = socData?.societies || [];
+        setSocieties(socList);
 
         const queryWorkerId = searchParams.get('workerId');
         const queryServiceId = searchParams.get('serviceId');
         const queryCategory = searchParams.get('category');
         const querySearch = searchParams.get('search') || searchParams.get('q');
         const queryDistrict = searchParams.get('district');
+        const queryAreaId = searchParams.get('area_id');
+        const querySocietyId = searchParams.get('society_id');
 
         if (queryDistrict) {
           setFormData((prev) => ({ ...prev, district: queryDistrict }));
+        }
+
+        if (querySocietyId || queryAreaId) {
+          const targetSocId = querySocietyId || queryAreaId;
+          const matchedSoc = socList.find((s) => String(s.id) === String(targetSocId));
+          if (matchedSoc) {
+            setFormData((prev) => ({
+              ...prev,
+              societyId: String(matchedSoc.id),
+              district: matchedSoc.district,
+              city: matchedSoc.city || prev.city,
+              address: matchedSoc.address || prev.address,
+              pincode: matchedSoc.pincode || prev.pincode,
+            }));
+          }
         }
 
         if (querySearch) {
@@ -270,7 +322,7 @@ export default function BookService() {
               serviceName: ranked[0].name,
               trade: ranked[0].category,
               likelyParts: getLikelyPartsForTrade(ranked[0].category, ranked[0].name),
-              standardTariff: `Cooperative Regulated • ₹${ranked[0].base_price}`,
+              standardTariff: `Cooperative Regulated • ₹${ranked[0].price || ranked[0].base_price}`,
             });
           }
         }
@@ -288,7 +340,7 @@ export default function BookService() {
                   serviceName: match.name,
                   trade: match.category,
                   likelyParts: getLikelyPartsForTrade(match.category, match.name),
-                  standardTariff: `Cooperative Regulated • ₹${match.base_price}`,
+                  standardTariff: `Cooperative Regulated • ₹${match.price || match.base_price}`,
                 });
               }
               setCurrentStep(2);
@@ -307,7 +359,7 @@ export default function BookService() {
               serviceName: match.name,
               trade: match.category,
               likelyParts: getLikelyPartsForTrade(match.category, match.name),
-              standardTariff: `Cooperative Regulated • ₹${match.base_price}`,
+              standardTariff: `Cooperative Regulated • ₹${match.price || match.base_price}`,
             });
             if (match.category === 'Emergency Services') {
               setFormData((prev) => ({ ...prev, isEmergency: true }));
@@ -339,6 +391,25 @@ export default function BookService() {
       })
       .catch((err) => console.error('Failed to load services:', err));
   }, [searchParams]);
+
+  // Recalculate localized area pricing when district or society changes
+  useEffect(() => {
+    if (!selectedService) return;
+    const params = {};
+    if (formData.district) params.district = formData.district;
+    if (formData.societyId) params.society_id = formData.societyId;
+
+    api.getServices(params)
+      .then((res) => {
+        if (res?.services) {
+          const updated = res.services.find((s) => s.id === selectedService.id);
+          if (updated) {
+            setSelectedService(updated);
+          }
+        }
+      })
+      .catch((err) => console.error('Error updating localized service price:', err));
+  }, [formData.district, formData.societyId]);
 
   // High-performance Ranked Search Filtering
   const filteredServices = useMemo(() => {
@@ -471,6 +542,7 @@ export default function BookService() {
         pincode: formData.pincode,
         is_emergency: formData.isEmergency,
         is_bulk_order: formData.isBulkOrder,
+        squad_size: formData.squadSize || 1,
         notes: formData.notes || 'Standard booking',
       };
 
@@ -485,19 +557,58 @@ export default function BookService() {
     }
   };
 
-  // 93-2-5 Split Calculation: 93% Worker, 2% Platform Fee, 5% PF & Insurance
-  let rawBasePrice = selectedService
-    ? (formData.isEmergency ? Math.max(selectedService.base_price, 499) : selectedService.base_price)
-    : 0;
+  // Dynamic Cooperative Tariff Calculation
+  const selectedSoc = societies.find((s) => String(s.id) === String(formData.societyId));
+  const workerWagePct = selectedSoc?.worker_wage_share_pct ? Number(selectedSoc.worker_wage_share_pct) : 93.0;
+  const welfareFundPct = selectedSoc?.welfare_fund_share_pct ? Number(selectedSoc.welfare_fund_share_pct) : 2.0;
+  const platformUpkeepPct = selectedSoc?.platform_upkeep_share_pct ? Number(selectedSoc.platform_upkeep_share_pct) : 5.0;
 
-  const bulkDiscount = formData.isBulkOrder ? Math.round(rawBasePrice * 0.15 * 100) / 100 : 0;
-  const basePrice = rawBasePrice - bulkDiscount;
-  const coopFee = Math.round(basePrice * 0.05 * 100) / 100; // 5% PF & Insurance
-  const platformFee = Math.round(basePrice * 0.02 * 100) / 100; // 2% Platform Fee
-  const totalEstimated = Math.round((basePrice + coopFee + platformFee) * 100) / 100;
+  const serviceEffectivePrice = Number(selectedService?.price || selectedService?.base_price) || 0;
+  const singleUnitLabor = selectedService
+    ? (formData.isEmergency ? Math.max(Math.round(serviceEffectivePrice * 1.2), 499) : serviceEffectivePrice)
+    : 0;
+  const rawBasePrice = singleUnitLabor * (formData.squadSize || 1);
+
+  const bulkDiscount = formData.isBulkOrder ? Math.round(rawBasePrice * 0.15) : 0;
+  const totalEstimated = Math.max(0, rawBasePrice - bulkDiscount);
+  const workerWage = Math.round(totalEstimated * (workerWagePct / 100));
+  const coopFee = Math.round(totalEstimated * (platformUpkeepPct / 100)); // Local Society Reserve
+  const platformFee = Math.round(totalEstimated * (welfareFundPct / 100)); // Cooperative Welfare Fund
 
   return (
     <div className="container py-8 max-w-5xl mx-auto px-4">
+      {/* Page Header with Mode Switcher */}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-bold uppercase tracking-wider mb-2">
+              <ShieldCheck size={14} /> Rapid Dispatch Booking
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+              {t('navServicesBooking') || 'Services & Booking'}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              Guaranteed 93-2-5 fair wage cooperative dispatch with verified local artisans
+            </p>
+          </div>
+
+          {/* Unified Mode Switcher */}
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold self-start md:self-auto shadow-inner">
+            <Link
+              to="/services"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition-all font-semibold"
+            >
+              <Layers size={15} className="text-emerald-600" />
+              <span>← Catalog & Tariffs</span>
+            </Link>
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white text-slate-900 shadow-sm font-bold border border-slate-200/60">
+              <Zap size={15} className="text-amber-500" />
+              <span>Instant Booking Wizard</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Wizard Step Progress Tracker */}
       <div className="mb-8">
         <div className="relative flex items-center justify-between max-w-2xl mx-auto px-4">
@@ -566,9 +677,9 @@ export default function BookService() {
           {/* Clean Step Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>Select Service & Repair Issue</span>
-              </h1>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 Type your problem (e.g. tap leaking, fan sparking) or choose a trade category below
               </p>
@@ -857,22 +968,110 @@ export default function BookService() {
               </label>
             </div>
 
+            {/* Squad Size & Multi-Worker Allocation */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <User size={15} className="text-[#0F294A]" />
+                  Artisan Squad Deployment Headcount
+                </label>
+                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900">
+                  {formData.squadSize === 1 ? '1 Solo Artisan' : `${formData.squadSize} Artisans Squad`}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Choose squad size according to workload. Multi-worker squads are synchronized and dispatched together with fair rotational allocation.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                {[
+                  { size: 1, label: '1 Solo', sub: 'Standard Job', icon: '👤' },
+                  { size: 2, label: '2 Pair', sub: 'Heavy / Dual', icon: '👥' },
+                  { size: 3, label: '3 Crew', sub: 'Renovation', icon: '🛠️' },
+                  { size: 4, label: '4 Squad', sub: 'Commercial', icon: '🏗️' },
+                ].map((item) => {
+                  const isSelected = (formData.squadSize || 1) === item.size;
+                  return (
+                    <button
+                      key={item.size}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, squadSize: item.size })}
+                      className={`p-2.5 rounded-xl border text-left transition ${
+                        isSelected
+                          ? 'border-[#0F294A] bg-white ring-2 ring-[#0F294A] shadow-xs'
+                          : 'border-slate-200 bg-white/60 hover:bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">{item.icon}</span>
+                        {isSelected && <Check size={14} className="text-[#0F294A] stroke-[3]" />}
+                      </div>
+                      <div className={`text-xs font-bold mt-1 ${isSelected ? 'text-[#0F294A]' : 'text-slate-800'}`}>
+                        {item.label}
+                      </div>
+                      <div className="text-[10px] text-slate-500">{item.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  District *
+                  District Jurisdiction *
                 </label>
                 <select
                   value={formData.district}
-                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white"
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
                 >
-                  <option value="Khordha">Khordha (Bhubaneswar)</option>
-                  <option value="Cuttack">Cuttack</option>
-                  <option value="Puri">Puri</option>
+                  <option value="Khordha">Khordha (Bhubaneswar Metro)</option>
+                  <option value="Cuttack">Cuttack District</option>
+                  <option value="Puri">Puri Coastal Heritage</option>
                 </select>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Local Cooperative Society & Locality *
+                </label>
+                <select
+                  value={formData.societyId}
+                  onChange={(e) => handleSocietyChange(e.target.value)}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
+                >
+                  <option value="">-- Select Local Cooperative Society --</option>
+                  {societies
+                    .filter((s) => s.district.toLowerCase() === formData.district.toLowerCase())
+                    .map((soc) => (
+                      <option key={soc.id} value={soc.id}>
+                        {soc.name} ({soc.address ? soc.address.split(',')[0] : soc.city})
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            {formData.societyId && (
+              <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 size={16} className="text-blue-900 shrink-0" />
+                  <span>
+                    Assigned Cooperative Society: <strong>{societies.find((s) => String(s.id) === String(formData.societyId))?.name}</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] bg-blue-900 text-white font-bold px-2 py-0.5 rounded uppercase">
+                    DCO Monitored
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    PIN: {societies.find((s) => String(s.id) === String(formData.societyId))?.pincode}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   City / Locality *
@@ -880,25 +1079,9 @@ export default function BookService() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Patia, Saheed Nagar, College Square"
+                  placeholder="e.g. Saheed Nagar, Patia, Badambadi, Grand Road"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Street Address / Flat / Landmark *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. House No 42, Near DAV Public School"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
                 />
               </div>
@@ -910,12 +1093,26 @@ export default function BookService() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 751024"
+                  placeholder="e.g. 751001"
                   value={formData.pincode}
                   onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs font-mono"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                Street Address / Flat / Landmark *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Plot 42, Near Cooperative Bank / DAV Public School"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1026,13 +1223,13 @@ export default function BookService() {
             <button
               type="button"
               onClick={() => setShowRouteMap(!showRouteMap)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer ${
                 showRouteMap
-                  ? 'bg-amber-500 text-slate-950 border border-amber-400'
-                  : 'bg-blue-950 text-white hover:bg-blue-900 border border-blue-900'
+                  ? 'bg-blue-900 text-white border border-blue-800'
+                  : 'bg-slate-900 text-white hover:bg-slate-800 border border-slate-700'
               }`}
             >
-              <Navigation size={13} className={showRouteMap ? 'rotate-45 text-slate-950' : 'text-amber-300'} />
+              <Navigation size={13} className={showRouteMap ? 'rotate-45 text-white' : 'text-blue-300'} />
               <span>{showRouteMap ? 'Hide Locality Radar' : '🗺️ View Nearby Artisan Radar'}</span>
             </button>
           </div>
@@ -1040,7 +1237,7 @@ export default function BookService() {
           {/* Policy Banner: Zero Authority to choose worker */}
           <div className="p-4 bg-blue-50/80 rounded-2xl border-2 border-blue-200 text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-950 text-amber-300 flex items-center justify-center shrink-0 font-bold">
+              <div className="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0 font-bold">
                 ⚖️
               </div>
               <div>
@@ -1083,6 +1280,16 @@ export default function BookService() {
                   </span>
                 </div>
                 <div className="text-gray-600">{selectedService?.description}</div>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
+                    👥 Squad Size: {formData.squadSize || 1} {Number(formData.squadSize) > 1 ? 'Artisans' : 'Artisan'}
+                  </span>
+                  {selectedSoc && (
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Society: {selectedSoc.name}
+                    </span>
+                  )}
+                </div>
                 {formData.isBulkOrder && (
                   <div className="text-indigo-700 font-bold text-[11px]">
                     ✓ Bulk Society Master Contract Discount Applied (-15%)
@@ -1125,54 +1332,61 @@ export default function BookService() {
               </div>
             </div>
 
-            {/* Right: Transparent 93-2-5 Split */}
+            {/* Right: Transparent Cooperative Tariff Split */}
             <div className="p-6 bg-blue-950 text-white rounded-2xl flex flex-col justify-between shadow-md">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-1.5">
-                  <ShieldCheck size={16} /> Transparent 93-2-5 Tariff Split
+                  <ShieldCheck size={16} /> Transparent Cooperative Tariff Split ({workerWagePct}-{welfareFundPct}-{platformUpkeepPct})
                 </div>
 
                 <div className="space-y-2.5 text-xs border-b border-white/15 pb-4 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-blue-200">Labour Base Charge (Worker 93%):</span>
-                    <span className="font-bold">₹{rawBasePrice.toFixed(2)}</span>
+                    <span className="text-blue-200">
+                      Regulated Tariff ({formData.squadSize || 1} {Number(formData.squadSize) > 1 ? 'Artisans' : 'Artisan'}):
+                    </span>
+                    <span className="font-bold font-mono">₹{rawBasePrice}</span>
                   </div>
                   {formData.isBulkOrder && (
                     <div className="flex justify-between text-indigo-300">
                       <span>Society Contract Discount (15%):</span>
-                      <span className="font-bold">-₹{bulkDiscount.toFixed(2)}</span>
+                      <span className="font-bold font-mono">-₹{bulkDiscount}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-blue-200">PF & Insurance Pool (5%):</span>
-                    <span className="font-bold">₹{coopFee.toFixed(2)}</span>
+                  <div className="flex justify-between text-emerald-300">
+                    <span>{workerWagePct}% Direct Artisan Pay:</span>
+                    <span className="font-bold font-mono">₹{workerWage}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-200">Platform Operating Fee (2%):</span>
-                    <span className="font-bold">₹{platformFee.toFixed(2)}</span>
+                  <div className="flex justify-between text-blue-300">
+                    <span>{welfareFundPct}% Welfare & Social Security Fund:</span>
+                    <span className="font-bold font-mono">₹{platformFee}</span>
+                  </div>
+                  <div className="flex justify-between text-purple-300">
+                    <span>{platformUpkeepPct}% Local Cooperative Reserve:</span>
+                    <span className="font-bold font-mono">₹{coopFee}</span>
                   </div>
                 </div>
 
                 <div className="flex items-baseline justify-between text-base font-bold mb-3">
-                  <span>Total Payable:</span>
-                  <span className="text-2xl text-amber-400 font-mono">₹{totalEstimated.toFixed(2)}</span>
+                  <span>Total Regulated Fee:</span>
+                  <span className="text-2xl text-amber-400 font-mono">₹{totalEstimated}</span>
                 </div>
 
-                <div className="text-[10px] text-blue-200 bg-white/10 p-2.5 rounded-lg leading-relaxed space-y-0.5">
-                  <div>• 93% goes directly to the artisan's cooperative wallet.</div>
-                  <div>• 2% platform fee for server and dispatch network upkeep.</div>
-                  <div>• 5% pools directly into PF & accident/health coverage.</div>
-                  <div>• 30-Day Free Repair Guarantee automatically armed upon completion.</div>
+                <div className="text-[10px] text-blue-200 bg-white/10 p-2.5 rounded-lg leading-relaxed space-y-1">
+                  <div>• {workerWagePct}% deposited directly to artisan bank/wallet upon OTP verification.</div>
+                  <div>• {welfareFundPct}% welfare fund for accident insurance & occupational cover.</div>
+                  <div>• {platformUpkeepPct}% local cooperative reserve for tool subsidies & training.</div>
+                  <div>• <strong>Doorstep Transit Protection:</strong> If cancelled post-dispatch, ₹50 is credited to the artisan.</div>
+                  <div>• 30-Day Free Workmanship Warranty included automatically.</div>
                 </div>
               </div>
 
               <div className="mt-5 space-y-2">
                 {!isAuthenticated ? (
-                  <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-400/40 text-center space-y-2">
-                    <p className="text-xs text-amber-200">You must be signed in to confirm your booking.</p>
+                  <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-center space-y-2">
+                    <p className="text-xs text-slate-600 dark:text-slate-300">You must be signed in to confirm your booking.</p>
                     <Link
                       to="/login"
-                      className="btn btn-saffron btn-sm font-bold text-xs inline-block"
+                      className="btn btn-primary btn-sm font-bold text-xs inline-block"
                     >
                       Login to Book
                     </Link>

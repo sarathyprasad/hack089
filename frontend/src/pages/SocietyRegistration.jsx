@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   Building2, Users, FileText, CheckCircle2, AlertCircle, ArrowRight,
   ArrowLeft, ShieldCheck, Landmark, UploadCloud, Search, Clock, Award,
@@ -9,15 +10,22 @@ import {
 
 export default function SocietyRegistration() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('NEW_FORMATION'); // 'NEW_FORMATION' or 'TRACK_STATUS'
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const initialTab = searchParams.get('tab') === 'dco_queue' || user?.admin_type === 'DCO_REGISTRAR'
+    ? 'DCO_QUEUE'
+    : (searchParams.get('tab') === 'track' ? 'TRACK_STATUS' : 'NEW_FORMATION');
+  const [activeTab, setActiveTab] = useState(initialTab); // 'NEW_FORMATION', 'TRACK_STATUS', or 'DCO_QUEUE'
 
   // Wizard Steps (1 to 7 interactive form, 8 & 9 timeline tracking)
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Form State
+  // Form State with Applicant Account Credentials (Flowchart: Create a new Account - Email Id, Password)
   const [formData, setFormData] = useState({
     name: '',
+    admin_name: '',
     registered_email: '',
+    password: 'demo123',
     registered_phone: '',
     district: 'Khordha',
     city: 'Bhubaneswar',
@@ -29,6 +37,12 @@ export default function SocietyRegistration() {
     cooperative_bank_name: 'District Central Cooperative Bank',
     bank_ifsc: '',
   });
+
+  // DCO Approvals Queue State
+  const [dcoQueue, setDcoQueue] = useState([]);
+  const [dcoLoading, setDcoLoading] = useState(false);
+  const [dcoActionLoading, setDcoActionLoading] = useState(false);
+  const [dcoActionSuccess, setDcoActionSuccess] = useState('');
 
   // Founding Members (Minimum 10 Required - Page 1)
   const [foundingMembers, setFoundingMembers] = useState([
@@ -57,6 +71,7 @@ export default function SocietyRegistration() {
   const [searchTrackingId, setSearchTrackingId] = useState('');
   const [trackedSociety, setTrackedSociety] = useState(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
+  const [updatingStage, setUpdatingStage] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -136,56 +151,166 @@ export default function SocietyRegistration() {
     }
   };
 
+  const handleRegistrarReviewAction = async (newStage) => {
+    if (!trackedSociety?.society?.id) return;
+    setUpdatingStage(true);
+    try {
+      const res = await api.updateSocietyTimeline(trackedSociety.society.id, {
+        stage: newStage,
+      });
+      if (res.success) {
+        setTrackedSociety({
+          ...trackedSociety,
+          society: {
+            ...trackedSociety.society,
+            timeline_stage: newStage,
+            status: newStage === 9 ? 'ACTIVE' : trackedSociety.society.status,
+          },
+        });
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update review stage.');
+    } finally {
+      setUpdatingStage(false);
+    }
+  };
+
+  const fetchDcoQueue = async () => {
+    setDcoLoading(true);
+    setDcoActionSuccess('');
+    try {
+      const res = await api.getPendingSocietiesForDco();
+      if (res.success) {
+        setDcoQueue(res.societies || []);
+      }
+    } catch (err) {
+      console.error('Failed to load DCO queue:', err);
+    } finally {
+      setDcoLoading(false);
+    }
+  };
+
+  const handleDcoApprovalAction = async (socId, action) => {
+    setDcoActionLoading(true);
+    setError('');
+    try {
+      const res = await api.dcoReviewSociety(socId, { action });
+      if (res.success) {
+        setDcoActionSuccess(res.message);
+        fetchDcoQueue();
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to process DCO action.');
+    } finally {
+      setDcoActionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'DCO_QUEUE') {
+      fetchDcoQueue();
+    }
+  }, [activeTab]);
+
   return (
-    <div className="container py-8 max-w-5xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto py-5 sm:py-6 px-3 sm:px-6 lg:px-8 space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-900 rounded-2xl p-6 md:p-8 text-white shadow-md relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
-            <Building2 size={14} className="text-amber-400" />
-            National Federation of Labour Cooperatives • Statutory Formation Portal
+      <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 border border-blue-800/40 rounded-3xl p-6 sm:p-8 lg:p-10 text-white shadow-2xl relative overflow-hidden">
+        {/* Subtle Ambient Decorative Glows */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 space-y-3">
+          {/* Pill Badge with Pulse Indicator (National removed) */}
+          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-blue-900/60 border border-blue-500/30 text-blue-200 text-xs font-semibold uppercase tracking-wider backdrop-blur-md shadow-inner">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+            </span>
+            <Building2 size={15} className="text-amber-400" />
+            <span>Federation of Labour Cooperatives • Statutory Formation Portal</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white">
-            Cooperative Society Registration & Formation Workflow
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Cooperative Society Registration &amp; Formation Workflow
           </h1>
-          <p className="text-xs md:text-sm text-blue-200 max-w-3xl">
-            Legal formation process under the Cooperative Societies Act for new artisan collectives, district federations, and labour associations to become certified and eligible on <strong>Shram Setu</strong>.
+
+          <p className="text-xs sm:text-sm text-blue-100/90 max-w-3xl leading-relaxed">
+            Legal formation process under the Cooperative Societies Act for new artisan collectives, district federations, and labour associations to become certified and eligible on <strong className="text-white font-semibold">Prithvi Fix</strong>.
           </p>
+
+          {/* Statutory Trust Badges Strip */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-blue-200/80">
+            <span className="inline-flex items-center gap-1 bg-blue-900/40 border border-blue-800/50 px-2.5 py-0.5 rounded-md">
+              <ShieldCheck size={12} className="text-emerald-400" /> Multi-State Cooperative Societies Act
+            </span>
+            <span className="inline-flex items-center gap-1 bg-blue-900/40 border border-blue-800/50 px-2.5 py-0.5 rounded-md">
+              <FileCheck size={12} className="text-amber-400" /> 9-Step Statutory Verification
+            </span>
+            <span className="inline-flex items-center gap-1 bg-blue-900/40 border border-blue-800/50 px-2.5 py-0.5 rounded-md">
+              <Landmark size={12} className="text-blue-300" /> Direct LCF Work Orders
+            </span>
+            <span className="inline-flex items-center gap-1 bg-blue-900/40 border border-blue-800/50 px-2.5 py-0.5 rounded-md">
+              <HelpCircle size={12} className="text-indigo-300" /> Toll-Free Helpline: 1800-345-7788
+            </span>
+          </div>
         </div>
 
-        {/* Top Tab Bar */}
-        <div className="mt-6 flex flex-wrap gap-2 relative z-10 border-t border-blue-800/60 pt-4">
-          <button
-            onClick={() => { setActiveTab('NEW_FORMATION'); setError(''); }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === 'NEW_FORMATION'
-                ? 'bg-amber-400 text-blue-950 shadow-sm'
-                : 'bg-blue-900/50 text-blue-200 hover:bg-blue-800'
-            }`}
-          >
-            <Plus size={14} /> New Society Registration (9-Step Legal Formation)
-          </button>
-          <button
-            onClick={() => { setActiveTab('TRACK_STATUS'); setError(''); }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === 'TRACK_STATUS'
-                ? 'bg-amber-400 text-blue-950 shadow-sm'
-                : 'bg-blue-900/50 text-blue-200 hover:bg-blue-800'
-            }`}
-          >
-            <Search size={14} /> Track Application / Statutory Timeline
-          </button>
-          <Link
-            to="/society/timeline"
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-900/50 text-blue-200 hover:bg-blue-800 transition flex items-center gap-2"
-          >
-            <Clock size={14} /> Recognized Societies Progression
-          </Link>
+        {/* Top Tab Bar & Navigation Actions */}
+        <div className="mt-6 pt-5 border-t border-blue-800/50 relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* Main Wizard Tabs */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => { setActiveTab('NEW_FORMATION'); setError(''); }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 shadow-xs ${
+                activeTab === 'NEW_FORMATION'
+                  ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20 font-extrabold ring-2 ring-amber-300/60'
+                  : 'bg-blue-900/60 text-blue-100 border border-blue-700/40 hover:bg-blue-800/80 hover:text-white'
+              }`}
+            >
+              <Plus size={14} className={activeTab === 'NEW_FORMATION' ? 'stroke-[2.5]' : ''} />
+              New Society Registration (9-Step Legal Formation)
+            </button>
+            <button
+              onClick={() => { setActiveTab('TRACK_STATUS'); setError(''); }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 shadow-xs ${
+                activeTab === 'TRACK_STATUS'
+                  ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20 font-extrabold ring-2 ring-amber-300/60'
+                  : 'bg-blue-900/60 text-blue-100 border border-blue-700/40 hover:bg-blue-800/80 hover:text-white'
+              }`}
+            >
+              <Search size={14} className={activeTab === 'TRACK_STATUS' ? 'stroke-[2.5]' : ''} />
+              Track Application / Statutory Timeline
+            </button>
+            <button
+              onClick={() => { setActiveTab('DCO_QUEUE'); setError(''); fetchDcoQueue(); }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-2 shadow-xs ${
+                activeTab === 'DCO_QUEUE'
+                  ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20 font-extrabold ring-2 ring-amber-300/60'
+                  : 'bg-blue-900/60 text-blue-100 border border-blue-700/40 hover:bg-blue-800/80 hover:text-white'
+              }`}
+            >
+              <FileCheck size={14} className={activeTab === 'DCO_QUEUE' ? 'stroke-[2.5]' : ''} />
+              District Registrar Scrutiny Queue
+            </button>
+            <Link
+              to="/society/timeline"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-900/60 text-blue-100 border border-blue-700/40 hover:bg-blue-800/80 hover:text-white transition-all duration-150 flex items-center gap-2 shadow-xs"
+            >
+              <Clock size={14} />
+              Recognized Societies Progression
+            </Link>
+          </div>
+
+          {/* Federation Executive Login CTA */}
           <Link
             to="/login?role=admin"
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition flex items-center gap-2 ml-auto shadow-xs"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/30 border border-emerald-400/30 shrink-0"
           >
-            <Award size={14} /> Federation Login & Portal (Credentials Required) <ArrowRight size={14} />
+            <Award size={14} className="text-amber-300" />
+            <span>Federation Login &amp; Portal</span>
+            <span className="text-[10px] bg-emerald-700/70 text-emerald-100 px-1.5 py-0.5 rounded font-medium">Official</span>
+            <ArrowRight size={14} />
           </Link>
         </div>
       </div>
@@ -216,13 +341,12 @@ export default function SocietyRegistration() {
               ].map((step) => (
                 <div
                   key={step.s}
-                  className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                    currentStep === step.s
+                  className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition ${currentStep === step.s
                       ? 'bg-blue-900 text-white shadow-xs'
                       : currentStep > step.s
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-gray-100 text-gray-400'
-                  }`}
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}
                 >
                   <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-white/20">
                     {currentStep > step.s ? '✓' : step.s}
@@ -257,6 +381,50 @@ export default function SocietyRegistration() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-900"
                   />
+                </div>
+
+                {/* Step 1A: Executive Administrator Account Credentials (Flowchart Specification: Create a new Account - Email Id, Password) */}
+                <div className="sm:col-span-2 p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5 uppercase tracking-wider">
+                      <ShieldCheck size={16} className="text-blue-900" />
+                      Step 1A: Lead Founder / Executive Administrator Account
+                    </span>
+                    <span className="text-[10px] font-bold bg-blue-200 text-blue-900 px-2 py-0.5 rounded">
+                      Statutory Formation Account
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-blue-800 leading-relaxed">
+                    Under cooperative regulations, create your executive administrator account to receive the statutory tracking dossier, upload formation resolutions, and access the Federation Governance Portal.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Lead Administrator Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Bikash Mohanty"
+                        value={formData.admin_name}
+                        onChange={(e) => setFormData({ ...formData, admin_name: e.target.value })}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-900 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Administrator Account Password *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-xs font-medium font-mono focus:ring-2 focus:ring-blue-900 bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -376,11 +544,10 @@ export default function SocietyRegistration() {
                   </p>
                 </div>
 
-                <div className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 ${
-                  foundingMembers.length >= 10
+                <div className={`px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 ${foundingMembers.length >= 10
                     ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
                     : 'bg-amber-100 text-amber-900 border border-amber-300'
-                }`}>
+                  }`}>
                   {foundingMembers.length >= 10 ? <CheckCircle2 size={14} className="text-emerald-700" /> : <AlertCircle size={14} className="text-amber-700" />}
                   Founding Members: {foundingMembers.length} / 10 {foundingMembers.length >= 10 ? '(Statute Satisfied)' : '(Add More)'}
                 </div>
@@ -408,11 +575,10 @@ export default function SocietyRegistration() {
                           <td className="p-2.5">{m.occupation}</td>
                           <td className="p-2.5 font-mono text-[11px] text-gray-500">{m.aadhaar_number}</td>
                           <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              m.role_in_society === 'PRESIDENT' ? 'bg-blue-100 text-blue-900' :
-                              m.role_in_society === 'SECRETARY' ? 'bg-purple-100 text-purple-900' :
-                              m.role_in_society === 'TREASURER' ? 'bg-emerald-100 text-emerald-900' : 'bg-gray-100 text-gray-600'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.role_in_society === 'PRESIDENT' ? 'bg-blue-100 text-blue-900' :
+                                m.role_in_society === 'SECRETARY' ? 'bg-purple-100 text-purple-900' :
+                                  m.role_in_society === 'TREASURER' ? 'bg-emerald-100 text-emerald-900' : 'bg-gray-100 text-gray-600'
+                              }`}>
                               {m.role_in_society}
                             </span>
                           </td>
@@ -767,6 +933,22 @@ export default function SocietyRegistration() {
                 {submittedData.tracking_id}
               </div>
 
+              {/* Applicant Administrator Account Credentials Receipt */}
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-left space-y-2 text-xs">
+                <span className="font-bold text-emerald-950 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                  <CheckCircle2 size={15} className="text-emerald-700" />
+                  Executive Administrator Account Ready (Login Credentials)
+                </span>
+                <p className="text-emerald-900">
+                  Your society administrator account has been created. You can sign in anytime via the <strong>Admin Portal Tab</strong>:
+                </p>
+                <div className="p-3 rounded-lg bg-white border border-emerald-200 font-mono text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <span>Email: <strong>{formData.registered_email}</strong></span>
+                  <span>Password: <strong>{formData.password}</strong></span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Role: Cooperative Admin</span>
+                </div>
+              </div>
+
               {/* Next Steps Timeline (Page 1) */}
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-left space-y-3 text-xs">
                 <h4 className="font-bold text-gray-900 uppercase tracking-wider text-[11px]">
@@ -784,7 +966,7 @@ export default function SocietyRegistration() {
                     <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">9</span>
                     <div>
                       <strong className="text-gray-900">Approval & Certification:</strong>
-                      <p className="text-gray-600 text-[11px]">Registrar issues official Certificate of Registration. Society becomes a legal entity and is <strong>Eligible to Be in Shram Setu</strong>.</p>
+                      <p className="text-gray-600 text-[11px]">Registrar issues official Certificate of Registration. Society becomes a legal entity and is <strong>Eligible to Be in Prithvi Fix</strong>.</p>
                     </div>
                   </div>
                 </div>
@@ -857,11 +1039,10 @@ export default function SocietyRegistration() {
                   </p>
                 </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-extrabold shrink-0 ${
-                  trackedSociety.society.status === 'ACTIVE'
+                <span className={`px-3 py-1 rounded-full text-xs font-extrabold shrink-0 ${trackedSociety.society.status === 'ACTIVE'
                     ? 'bg-emerald-600 text-white'
                     : 'bg-amber-500 text-white'
-                }`}>
+                  }`}>
                   Stage {trackedSociety.society.timeline_stage || 7} of 9
                 </span>
               </div>
@@ -881,19 +1062,17 @@ export default function SocietyRegistration() {
                     { n: 6, label: 'Affidavit Verified', done: true },
                     { n: 7, label: 'Unique ID Generated', done: true },
                     { n: 8, label: 'District Registrar Review', done: trackedSociety.society.timeline_stage >= 8 },
-                    { n: 9, label: 'Eligible in Shram Setu', done: trackedSociety.society.timeline_stage >= 9 },
+                    { n: 9, label: 'Eligible in Prithvi Fix', done: trackedSociety.society.timeline_stage >= 9 },
                   ].map((s) => (
                     <div
                       key={s.n}
-                      className={`p-3 rounded-lg border flex items-center gap-2 ${
-                        s.done
+                      className={`p-3 rounded-lg border flex items-center gap-2 ${s.done
                           ? 'bg-emerald-50 border-emerald-200 text-emerald-900 font-semibold'
                           : 'bg-gray-50 border-gray-200 text-gray-400'
-                      }`}
+                        }`}
                     >
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        s.done ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'
-                      }`}>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${s.done ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'
+                        }`}>
                         {s.done ? '✓' : s.n}
                       </span>
                       <span className="text-[11px]">{s.label}</span>
@@ -923,6 +1102,261 @@ export default function SocietyRegistration() {
                   </div>
                 </div>
               )}
+
+              {/* Official District Registrar Review & Approval Desk */}
+              <div className="p-5 rounded-2xl border-2 border-blue-900/40 bg-gradient-to-br from-blue-950/5 via-white to-blue-50/50 space-y-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-950 text-amber-400 flex items-center justify-center font-bold shrink-0 shadow-xs">
+                      <Landmark size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-blue-950">
+                        Statutory Approval Authority: District Cooperative Officer (DCO) & Registrar
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Odisha Cooperative Societies Act, 1962 (Section 7 & 8) • Statutory Formation Scrutiny
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase self-start sm:self-auto ${
+                    (trackedSociety.society.timeline_stage || 7) >= 9
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : (trackedSociety.society.timeline_stage || 7) >= 8
+                      ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                      : 'bg-amber-100 text-amber-900 border border-amber-300'
+                  }`}>
+                    {(trackedSociety.society.timeline_stage || 7) >= 9
+                      ? '✓ Fully Approved & Certified'
+                      : (trackedSociety.society.timeline_stage || 7) >= 8
+                      ? 'Stage 8: Scrutiny Cleared'
+                      : 'Stage 8: Under Review'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Designated Reviewing Officer
+                    </span>
+                    <strong className="text-slate-900 text-sm block">
+                      {trackedSociety.society.district?.toLowerCase() === 'khordha'
+                        ? 'Shri Debendra Nayak'
+                        : trackedSociety.society.district?.toLowerCase() === 'cuttack'
+                        ? 'Smt. Minati Sahu'
+                        : trackedSociety.society.district?.toLowerCase() === 'puri'
+                        ? 'Shri Alok Mohapatra'
+                        : 'District Cooperative Officer (DCO)'}
+                    </strong>
+                    <p className="text-[11px] text-slate-500">
+                      Assistant Registrar of Cooperative Societies (ARCS), {trackedSociety.society.district} District Circle
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Statutory Review Scope
+                    </span>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Auditing Form-1 legal application, 10 founding members KYC and affidavits, model cooperative bylaws compliance, and ₹10,000+ bank capital certificate.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Registrar Review Actions */}
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-[11px] text-slate-600">
+                    {(trackedSociety.society.timeline_stage || 7) >= 9 ? (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                        <span>Registration Approved. Society is now an active legal entity in Prithvi Fix.</span>
+                      </span>
+                    ) : (trackedSociety.society.timeline_stage || 7) === 8 ? (
+                      <span className="text-blue-900 font-medium flex items-center gap-1.5">
+                        <Clock size={14} className="text-blue-700 shrink-0" />
+                        <span>Stage 8 scrutiny passed. Ready for final Section 8 Certificate of Registration issuance.</span>
+                      </span>
+                    ) : (
+                      <span className="text-amber-800 font-medium flex items-center gap-1.5">
+                        <Clock size={14} className="text-amber-700 shrink-0" />
+                        <span>Dossier submitted. Awaiting District Registrar scrutiny and verification.</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {(trackedSociety.society.timeline_stage || 7) < 8 && (
+                      <button
+                        type="button"
+                        disabled={updatingStage}
+                        onClick={() => handleRegistrarReviewAction(8)}
+                        className="btn btn-sm btn-primary py-2 px-4 text-xs font-bold bg-blue-950 hover:bg-blue-900 text-white rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <ShieldCheck size={14} />
+                        <span>{updatingStage ? 'Updating...' : 'Approve Scrutiny (Advance to Stage 8)'}</span>
+                      </button>
+                    )}
+
+                    {(trackedSociety.society.timeline_stage || 7) === 8 && (
+                      <button
+                        type="button"
+                        disabled={updatingStage}
+                        onClick={() => handleRegistrarReviewAction(9)}
+                        className="btn btn-sm btn-primary py-2 px-4 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Award size={14} />
+                        <span>{updatingStage ? 'Activating...' : 'Grant Certificate & Activate in Prithvi Fix (Stage 9)'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          TAB 3: DISTRICT REGISTRAR REVIEW QUEUE (DCO CONSOLE)
+         ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'DCO_QUEUE' && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-6 md:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <FileCheck size={18} className="text-blue-900" />
+                  District Registrar Statutory Scrutiny &amp; Approval Queue
+                </h2>
+                <span className="text-[10px] font-extrabold bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full uppercase">
+                  DCO Console
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Official statutory docket for District Cooperative Officers (DCO) to audit founding member rosters, inspect bylaws, verify cooperative bank initial capital, and issue Legal Certificates of Registration.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={fetchDcoQueue}
+              disabled={dcoLoading}
+              className="btn btn-secondary btn-sm text-xs font-bold shrink-0 flex items-center gap-1.5"
+            >
+              <Clock size={13} /> {dcoLoading ? 'Refreshing...' : 'Refresh Queue'}
+            </button>
+          </div>
+
+          {dcoActionSuccess && (
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+              <span>{dcoActionSuccess}</span>
+            </div>
+          )}
+
+          {dcoLoading ? (
+            <div className="py-12 text-center text-xs text-gray-500 space-y-2">
+              <div className="animate-spin w-6 h-6 border-2 border-blue-900 border-t-transparent rounded-full mx-auto" />
+              <p>Retrieving district cooperative registry applications...</p>
+            </div>
+          ) : dcoQueue.length === 0 ? (
+            <div className="py-12 text-center text-xs text-gray-500 space-y-2 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+              <CheckCircle2 size={36} className="text-emerald-500 mx-auto" />
+              <strong className="text-gray-900 block text-sm">All District Applications Clear</strong>
+              <p>No new society formation applications are currently pending scrutiny in this jurisdiction.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dcoQueue.map((soc) => (
+                <div
+                  key={soc.id}
+                  className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:border-blue-300 transition space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-blue-950 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          {soc.tracking_id}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-100 text-amber-900">
+                          {soc.status}
+                        </span>
+                        <span className="text-[11px] text-gray-500">District: <strong className="text-gray-900">{soc.district}</strong></span>
+                      </div>
+                      <h3 className="text-base font-bold text-gray-900 mt-1">{soc.name}</h3>
+                      <p className="text-xs text-gray-500">
+                        Applicant / Secretary: <strong className="text-gray-800">{soc.applicant_name || 'Society Founder'}</strong> • {soc.registered_email} • {soc.registered_phone}
+                      </p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] text-gray-500 uppercase block font-semibold">Initial Capital Proof</span>
+                      <span className="text-base font-extrabold text-emerald-950 font-mono">
+                        ₹{(soc.initial_capital_balance || 10000).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Statutory Checklist Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 space-y-0.5">
+                      <span className="text-[10px] text-gray-500 uppercase font-semibold block">Founding Members</span>
+                      <strong className="text-gray-900 flex items-center gap-1">
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        {soc.founding_members_count || 10} / 10 Verified
+                      </strong>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 space-y-0.5">
+                      <span className="text-[10px] text-gray-500 uppercase font-semibold block">Bylaws &amp; Resolution</span>
+                      <strong className="text-gray-900 flex items-center gap-1">
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        Cooperative Act Format
+                      </strong>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 space-y-0.5">
+                      <span className="text-[10px] text-gray-500 uppercase font-semibold block">Bank Certificate</span>
+                      <strong className="text-gray-900 flex items-center gap-1 font-mono">
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        {soc.cooperative_bank_name || 'Cooperative Bank'}
+                      </strong>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 space-y-0.5">
+                      <span className="text-[10px] text-gray-500 uppercase font-semibold block">Non-Profit Affidavit</span>
+                      <strong className="text-gray-900 flex items-center gap-1">
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        Notarized Form IV
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* DCO Review Decision Actions */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                    <span className="text-xs text-slate-500">
+                      Statutory Review Officer: <strong>{user?.name || 'District Cooperative Officer & Registrar'}</strong>
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={dcoActionLoading}
+                        onClick={() => handleDcoApprovalAction(soc.id, 'REQUEST_CLARIFICATION')}
+                        className="btn btn-secondary btn-sm text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <HelpCircle size={14} /> Clarification / Hearing
+                      </button>
+                      <button
+                        type="button"
+                        disabled={dcoActionLoading}
+                        onClick={() => handleDcoApprovalAction(soc.id, 'APPROVE')}
+                        className="btn btn-primary btn-sm text-xs font-bold bg-emerald-700 hover:bg-emerald-600 border-emerald-700 text-white flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      >
+                        <Award size={14} /> Verify &amp; Issue Registration Certificate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

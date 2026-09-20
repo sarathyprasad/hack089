@@ -9,11 +9,11 @@ import {
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 
-const SESSION_STORAGE_KEY = 'shram_setu_ai_chat_session';
+const SESSION_STORAGE_KEY = 'prithvi_fix_ai_chat_session';
 
 const INITIAL_GREETING = {
   role: 'assistant',
-  content: `👋 **Namaste! I am Sahayak AI**, your official **Shram Setu** Virtual Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Cooperative 93-2-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **30-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
+  content: `👋 **Namaste! I am Sahayak AI**, your official **Prithvi Fix** Virtual Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Cooperative 93-2-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **30-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
   suggestions: [
     'How does the 93-2-5 tariff split work?',
     'Book an Electrician or Plumber',
@@ -73,6 +73,22 @@ export default function AIChatBot() {
       console.warn('Failed to save chat to session storage', e);
     }
   }, [messages]);
+
+  // Clean up speech when modal is closed or component unmounted
+  useEffect(() => {
+    if (!isOpen) {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setSpeakingIndex(null);
+      setIsListening(false);
+    }
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isOpen]);
 
   // Send message handler
   const handleSend = async (textToSend) => {
@@ -247,34 +263,15 @@ export default function AIChatBot() {
     <>
       {/* ── 1. Floating Launch Badge (Bottom-Right) ── */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-5 right-5 z-50 animate-in fade-in duration-200">
           <button
             onClick={() => setIsOpen(true)}
-            className="group relative flex items-center gap-3 pl-2.5 pr-5 py-2 bg-gradient-to-r from-[#0F294A] via-[#122F55] to-[#0A1D36] text-white rounded-full shadow-2xl shadow-blue-950/40 hover:shadow-blue-900/60 hover:scale-[1.03] active:scale-95 transition-all border border-blue-500/30 backdrop-blur-md"
-            aria-label="Open Shram Setu AI Assistant"
+            className="group flex items-center gap-2 px-3.5 py-2 bg-slate-900 text-white rounded-full shadow-lg hover:bg-slate-800 transition-all border border-slate-700/60 text-xs font-medium"
+            aria-label="Open Prithvi Fix AI Assistant"
           >
-            {/* Medallion Avatar with Live Status Dot */}
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-sm border border-amber-400 shrink-0 p-0.5">
-                <img src="/logo-emblem.png" alt="Sahayak AI" className="w-full h-full object-contain" />
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#0F294A]"></span>
-              </span>
-            </div>
-
-            <div className="text-left">
-              <div className="text-xs font-black tracking-tight leading-tight flex items-center gap-1.5">
-                <span className="text-white">Sahayak AI</span>
-                <span className="text-[9px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full shadow-2xs">
-                  Coop AI
-                </span>
-              </div>
-              <div className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                <span>Instant Tariffs & Support</span>
-              </div>
-            </div>
+            <Sparkles size={14} className="text-amber-400" />
+            <span>Sahayak AI</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </button>
         </div>
       )}
@@ -301,7 +298,7 @@ export default function AIChatBot() {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-extrabold text-sm text-white">Sahayak AI</h3>
-                  <span className="text-[9px] font-bold bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/30">
+                  <span className="text-[9px] font-medium bg-white/10 text-slate-200 px-1.5 py-0.5 rounded border border-white/15">
                     Cooperative Portal
                   </span>
                 </div>

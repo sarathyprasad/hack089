@@ -1,5 +1,5 @@
 /**
- * Shram Setu — Regulated Cooperative Rate Card & Suraksha Cover Data
+ * Prithvi Fix — Regulated Cooperative Rate Card & Suraksha Cover Data
  * Implements the 93-2-5 Cooperative Economic Model:
  * 93% to Certified Artisan, 2% to Platform Operations, 5% to Worker Social Security & ESIC Health Fund.
  * 
@@ -16,9 +16,9 @@ export const MODEL_9325 = {
 };
 
 export const SURAKSHA_PROTECTION = {
-  badge: 'Shram Suraksha Cover',
+  badge: 'Prithvi Suraksha Cover',
   title: 'End-to-End Service Protection',
-  subtitle: 'Every booking made on Shram Setu is backed by our cooperative safety net and dispute resolution charter.',
+  subtitle: 'Every booking made on Prithvi Fix is backed by our cooperative safety net and dispute resolution charter.',
   cards: [
     {
       id: 'warranty',

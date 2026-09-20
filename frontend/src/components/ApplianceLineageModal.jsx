@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, ShieldCheck, Wrench, Calendar, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
+import CivicLoader from './CivicLoader';
 
 export default function ApplianceLineageModal({ isOpen, onClose, customerId }) {
   const [lineage, setLineage] = useState([]);
@@ -51,10 +52,12 @@ export default function ApplianceLineageModal({ isOpen, onClose, customerId }) {
         {/* Content */}
         <div className="overflow-y-auto flex-1 py-4 space-y-4">
           {loading ? (
-            <div className="py-12 text-center text-gray-500 text-sm">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-900 border-t-transparent mb-2"></div>
-              <p>Loading digital service lineage records...</p>
-            </div>
+            <CivicLoader
+              variant="card"
+              size="sm"
+              title="Loading Digital Lineage Records..."
+              subtitle="Auditing parts serial numbers and warranty milestones"
+            />
           ) : lineage.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
               <FileText className="w-10 h-10 text-gray-400 mx-auto mb-2" />

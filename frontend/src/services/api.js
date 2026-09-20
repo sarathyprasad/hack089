@@ -26,7 +26,7 @@ export async function request(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401 && data.message?.includes('token')) {
+    if (response.status === 401 && (data.message?.toLowerCase().includes('token') || data.message?.toLowerCase().includes('revoked'))) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
@@ -43,10 +43,17 @@ export const api = {
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: credentials }),
   register: (userData) => request('/auth/register', { method: 'POST', body: userData }),
+  logout: () => request('/auth/logout', { method: 'POST' }).catch(() => ({})),
   getMe: () => request('/auth/me'),
 
   // Services
-  getServices: () => request('/services'),
+  getServices: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== '' && v !== null && v !== 'ALL')
+    ).toString();
+    return request(`/services${query ? `?${query}` : ''}`);
+  },
+  getServiceLocations: (district = '') => request(`/services/locations${district ? `?district=${encodeURIComponent(district)}` : ''}`),
   getServiceById: (id) => request(`/services/${id}`),
 
   // Workers
@@ -97,6 +104,8 @@ export const api = {
     request(`/worker-portal/jobs/${bookingId}/action`, { method: 'PUT', body: { action } }),
   getWorkerWelfare: () => request('/worker-portal/welfare'),
   enrollWorkerWelfare: (data) => request('/worker-portal/welfare/enroll', { method: 'POST', body: data }),
+  getWorkerToolkits: () => request('/worker-portal/toolkits'),
+  orderWorkerToolkit: (data) => request('/worker-portal/toolkits/order', { method: 'POST', body: data }),
 
   // Admin Portal
   getAdminDashboard: () => request('/admin/dashboard'),
@@ -167,6 +176,15 @@ export const api = {
       method: 'PATCH',
       body: data,
     }),
+  getPendingSocietiesForDco: () =>
+    request('/societies/pending/dco'),
+  getFederationsOverview: (district = '') =>
+    request(`/societies/federation-overview${district ? `?district=${encodeURIComponent(district)}` : ''}`),
+  dcoReviewSociety: (id, data) =>
+    request(`/societies/${id}/dco-review`, {
+      method: 'POST',
+      body: data,
+    }),
 
   // Federation Dual-Console Management (Pages 3 & 4)
   getFederationAdminDashboard: (societyId = 1) =>
@@ -182,6 +200,28 @@ export const api = {
     request('/federation/tenders'),
   registerWorkerByFederation: (data) =>
     request('/federation/workers/register', {
+      method: 'POST',
+      body: data,
+    }),
+  resolveDisputeTicket: (disputeId, data) =>
+    request(`/federation/disputes/${disputeId}/resolve`, {
+      method: 'POST',
+      body: data,
+    }),
+
+  // DCO Statutory Regulatory
+  updateSocietyAudit: (id, data) =>
+    request(`/societies/${id}/audit`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  updateSocietyGovernance: (id, data) =>
+    request(`/societies/${id}/governance`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  createOrUpdateInquiry: (data) =>
+    request('/societies/inquiries', {
       method: 'POST',
       body: data,
     }),

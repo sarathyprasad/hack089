@@ -3,7 +3,7 @@ const { query } = require('../db/connection');
 // Dynamic openers to ensure varied, non-repetitive conversational phrasing
 const OPENERS = [
   "Namaste! Let me assist you with that right away.",
-  "Hello! I am happy to help troubleshoot and guide you on Shram Setu.",
+  "Hello! I am happy to help troubleshoot and guide you on Prithvi Fix.",
   "Welcome! Here is the exact technical and cooperative guidance for your request:",
   "Thanks for reaching out! Let me break this down clearly for you:",
   "Glad you asked! Here is the official diagnostic and service information:",
@@ -181,7 +181,7 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 1. Emergency / SOS
   if (msg.includes('sos') || msg.includes('emergency') || msg.includes('urgent') || msg.includes('shock') || msg.includes('fire') || msg.includes('burst')) {
     return {
-      reply: `🚨 **EMERGENCY ASSISTANCE ACTIVE**\n\nFor immediate safety hazards:\n• **National Emergency Helpline**: Dial [112](tel:112)\n• **Medical Ambulance**: Dial [108](tel:108)\n• **Shram Setu 24/7 Rapid Dispatch**: Dial [1800-345-7788](tel:18003457788)\n\nOur cooperative emergency priority dispatch mobilizes a verified master technician within **60 minutes** for major water line bursts or electrical short-circuits.`,
+      reply: `🚨 **EMERGENCY ASSISTANCE ACTIVE**\n\nFor immediate safety hazards:\n• **National Emergency Helpline**: Dial [112](tel:112)\n• **Medical Ambulance**: Dial [108](tel:108)\n• **Prithvi Fix 24/7 Rapid Dispatch**: Dial [1800-345-7788](tel:18003457788)\n\nOur cooperative emergency priority dispatch mobilizes a verified master technician within **60 minutes** for major water line bursts or electrical short-circuits.`,
       suggestions: ['Book 24/7 Emergency Service', 'Call Toll-Free Helpline', 'View Active SOS Status'],
       links: [{ label: '⚡ Book Emergency Repair', url: '/book-service?emergency=true' }],
     };
@@ -190,7 +190,7 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 2. 93-2-5 Revenue Split & Cooperative Welfare
   if (msg.includes('93-2-5') || msg.includes('90-5-5') || msg.includes('split') || msg.includes('commission') || msg.includes('welfare') || msg.includes('pf') || msg.includes('insurance') || msg.includes('esic') || msg.includes('social security')) {
     const variations = [
-      `🏛️ **Transparent 93-2-5 Statutory Tariff Architecture**:\n\nUnlike commercial aggregator apps that extract 25%–35% middleman commission, **Shram Setu** operates on a regulated cooperative model:\n\n• **93%**: Directly paid to the verified artisan's wallet for their skilled labour.\n• **2%**: Capped platform operations and server maintenance.\n• **5%**: Deposited into the **PF & Insurance (Worker Welfare Fund)** for ESIC accident insurance, medical coverage, and retirement corpus.\n\nEvery booking you make directly empowers skilled blue-collar artisans!`,
+      `🏛️ **Transparent 93-2-5 Statutory Tariff Architecture**:\n\nUnlike commercial aggregator apps that extract 25%–35% middleman commission, **Prithvi Fix** operates on a regulated cooperative model:\n\n• **93%**: Directly paid to the verified artisan's wallet for their skilled labour.\n• **2%**: Capped platform operations and server maintenance.\n• **5%**: Deposited into the **PF & Insurance (Worker Welfare Fund)** for ESIC accident insurance, medical coverage, and retirement corpus.\n\nEvery booking you make directly empowers skilled blue-collar artisans!`,
       `💰 **How the 93-2-5 Fair Wage Split Protects Artisans & Citizens**:\n\nBy state cooperative bylaws, every rupee is accounted for transparently:\n\n1. **93% Worker Take-Home**: Fair, guaranteed earnings with zero commission deductions.\n2. **2% Platform Fee**: Transparent, minimal fee to maintain servers, dispatch, and support.\n3. **5% PF & Insurance Net**: Automated social security, healthcare, and accident insurance pooling under ESIC/EPFO.\n\nNo surge pricing, no arbitrary contractor markups!`,
     ];
 
@@ -204,7 +204,7 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 3. 2-Stage OTP Handshake
   if (msg.includes('otp') || msg.includes('handshake') || msg.includes('arrival') || msg.includes('completion otp') || msg.includes('security code')) {
     return {
-      reply: `${opener}\n\n🔐 **Two-Stage Cryptographic Security Handshake**:\n\nTo protect citizens from unauthorized entries and premature billing, Shram Setu enforces a strict 2-step OTP verification:\n\n1. **Arrival OTP (4 Digits)**: Generated when your order is dispatched. Share this with the artisan *only upon their arrival* at your doorstep to initiate the work session.\n2. **Completion OTP (4 Digits)**: Generated after repairs. Share this *only when you are 100% satisfied* with the completed work. Entering this OTP releases the artisan wage and automatically arms your **30-Day Free Repair Guarantee**!`,
+      reply: `${opener}\n\n🔐 **Two-Stage Cryptographic Security Handshake**:\n\nTo protect citizens from unauthorized entries and premature billing, Prithvi Fix enforces a strict 2-step OTP verification:\n\n1. **Arrival OTP (4 Digits)**: Generated when your order is dispatched. Share this with the artisan *only upon their arrival* at your doorstep to initiate the work session.\n2. **Completion OTP (4 Digits)**: Generated after repairs. Share this *only when you are 100% satisfied* with the completed work. Entering this OTP releases the artisan wage and automatically arms your **30-Day Free Repair Guarantee**!`,
       suggestions: ['Check Active Booking Status', 'How to Claim 30-Day Guarantee', 'Book a Verified Artisan'],
       links: [{ label: '📋 View My Bookings', url: '/customer/bookings' }],
     };
@@ -213,7 +213,7 @@ function generateContextualResponse(userMessage, history = [], catalog = {}, lan
   // 4. 30-Day Guarantee / Warranty
   if (msg.includes('guarantee') || msg.includes('warranty') || msg.includes('repair failed') || msg.includes('issue again') || msg.includes('complaint') || msg.includes('dispute')) {
     return {
-      reply: `${opener}\n\n🛡️ **30-Day Free Cooperative Repair Guarantee**:\n\nEvery job completed through Shram Setu is backed by an automated 30-day workmanship warranty:\n\n• If the same technical issue or defect recurs within **30 days** of service completion, simply go to your booking details or dispute desk.\n• Click **"Claim Free Re-dispatch"**.\n• A certified **Senior Master Artisan** will be dispatched to resolve the issue with **₹0 labour charges**.\n• All replacement parts carry standard manufacturer ISI warranties.`,
+      reply: `${opener}\n\n🛡️ **30-Day Free Cooperative Repair Guarantee**:\n\nEvery job completed through Prithvi Fix is backed by an automated 30-day workmanship warranty:\n\n• If the same technical issue or defect recurs within **30 days** of service completion, simply go to your booking details or dispute desk.\n• Click **"Claim Free Re-dispatch"**.\n• A certified **Senior Master Artisan** will be dispatched to resolve the issue with **₹0 labour charges**.\n• All replacement parts carry standard manufacturer ISI warranties.`,
       suggestions: ['Open Dispute & Guarantee Desk', 'View Form IV Tax Bill', 'Book a New Service'],
       links: [{ label: '🛡️ Open My Bookings & Guarantee', url: '/customer/bookings' }, { label: '⚖️ Grievance Helpdesk', url: '/help' }],
     };
@@ -277,7 +277,7 @@ async function handleAIChat(req, res) {
     if (process.env.GEMINI_API_KEY) {
       try {
         const fetch = global.fetch || require('node-fetch');
-        const systemPrompt = `You are "Sahayak AI", the official virtual assistant for Shram Setu, the National Cooperative Gig Services Platform supported by the National Labour Cooperatives Federation (NLCF).
+        const systemPrompt = `You are "Sahayak AI", the official virtual assistant for Prithvi Fix, the Cooperative Gig Services Platform supported by the Labour Cooperatives Federation (LCF).
 Platform Facts:
 - 93-2-5 statutory revenue split: 93% direct to artisan wage, 2% platform operations fee, 5% PF & insurance fund.
 - Zero surge pricing and regulated cooperative tariffs.

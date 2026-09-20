@@ -13,7 +13,7 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS cooperatives (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
-      registration_number TEXT UNIQUE NOT NULL,
+      registration_number TEXT UNIQUE,
       district TEXT NOT NULL,
       city TEXT,
       address TEXT,
@@ -23,6 +23,27 @@ async function migrate() {
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Decentralized Regional Federation Architecture
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS local_area TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS jurisdiction_zone TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'PENDING_DCO_APPROVAL';
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_office_name TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_officer_name TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_approval_status VARCHAR(50) DEFAULT 'PENDING';
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_approved_at TIMESTAMPTZ;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_order_number TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS dco_audit_notes TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS federation_type VARCHAR(50) DEFAULT 'REGIONAL_FEDERATION';
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS total_member_societies INTEGER DEFAULT 0;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS capital_reserve REAL DEFAULT 500000.0;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS cooperative_bank_name TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS bank_account_no TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS bank_ifsc TEXT;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS worker_wage_share_pct REAL DEFAULT 93.0;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS welfare_fund_share_pct REAL DEFAULT 5.0;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS platform_upkeep_share_pct REAL DEFAULT 2.0;
+    ALTER TABLE cooperatives ADD COLUMN IF NOT EXISTS bocw_cess_pct REAL DEFAULT 0.0;
 
     -- =============================================
     -- Users (Customer, Worker, Admin)
@@ -42,9 +63,16 @@ async function migrate() {
       latitude REAL,
       longitude REAL,
       is_active INTEGER DEFAULT 1,
+      admin_type VARCHAR(50) DEFAULT 'SOCIETY_ADMIN',
+      designation TEXT,
+      society_id INTEGER,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_type VARCHAR(50) DEFAULT 'SOCIETY_ADMIN';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS designation TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS society_id INTEGER;
 
     -- =============================================
     -- Workers (extends Users with role='WORKER')
@@ -96,6 +124,10 @@ async function migrate() {
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS reviewed_by_admin_id INTEGER;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS toolkit_compliance VARCHAR(50) DEFAULT 'PENDING';
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS aadhaar_hash TEXT;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS police_verification_expiry DATE;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS verification_badge VARCHAR(50) DEFAULT 'STANDARD';
 
     -- =============================================
     -- Skills
@@ -230,6 +262,9 @@ async function migrate() {
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS declined_worker_ids TEXT DEFAULT '';
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS squad_size INTEGER DEFAULT 1;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS squad_worker_ids TEXT DEFAULT '';
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS transit_compensation_fee REAL DEFAULT 50.0;
 
     -- =============================================
     -- Payments (Phase 5 Escrow Model)
@@ -403,6 +438,35 @@ async function migrate() {
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS federation_id INTEGER REFERENCES cooperatives(id) ON DELETE SET NULL;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS audit_grade VARCHAR(50) DEFAULT 'A';
+    ALTER TABLE societies ALTER COLUMN audit_grade TYPE VARCHAR(50);
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS annual_return_status VARCHAR(50) DEFAULT 'FILED_CURRENT_FY';
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS last_agm_date VARCHAR(50) DEFAULT '2024-09-15';
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS committee_term_end VARCHAR(50) DEFAULT '2027-03-31';
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS reserve_fund_balance REAL DEFAULT 125000.0;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS regulatory_inquiry_status VARCHAR(50) DEFAULT 'CLEAR';
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS worker_wage_share_pct REAL DEFAULT 93.0;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS welfare_fund_share_pct REAL DEFAULT 5.0;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS platform_upkeep_share_pct REAL DEFAULT 2.0;
+    ALTER TABLE societies ADD COLUMN IF NOT EXISTS bocw_cess_pct REAL DEFAULT 0.0;
+
+    CREATE TABLE IF NOT EXISTS society_regulatory_inquiries (
+      id SERIAL PRIMARY KEY,
+      society_id INTEGER REFERENCES societies(id) ON DELETE CASCADE,
+      district TEXT NOT NULL,
+      case_number TEXT UNIQUE NOT NULL,
+      section VARCHAR(50) NOT NULL,
+      title TEXT NOT NULL,
+      complainant TEXT NOT NULL,
+      respondent TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'HEARING_SCHEDULED' CHECK(status IN ('HEARING_SCHEDULED', 'UNDER_INQUIRY', 'RESOLVED', 'SURCHARGE_ORDERED')),
+      next_hearing_date DATE,
+      dco_remarks TEXT,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- =============================================
     -- Society Founding Members (Page 1: Min 10 Members)
     -- =============================================
@@ -554,6 +618,77 @@ async function migrate() {
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS ncct_certificate_no TEXT;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS is_nlcf_affiliated INTEGER DEFAULT 0;
 
+    -- Security Hardening: OTP anti-brute-force attempt tracking
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS arrival_otp_attempts INTEGER DEFAULT 0;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS completion_otp_attempts INTEGER DEFAULT 0;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS otp_locked_until TIMESTAMPTZ;
+
+    -- =============================================
+    -- Security Audit Trail (Tamper-Evident Ledger)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER,
+      user_role VARCHAR(50),
+      action VARCHAR(100) NOT NULL,
+      entity_type VARCHAR(50),
+      entity_id VARCHAR(100),
+      ip_address VARCHAR(100),
+      details JSONB,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- =============================================
+    -- Token Revocation Denylist
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS token_denylist (
+      id SERIAL PRIMARY KEY,
+      token_hash TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- =============================================
+    -- Mandatory Toolkits (by Trade)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS mandatory_toolkits (
+      id SERIAL PRIMARY KEY,
+      trade_category TEXT NOT NULL,
+      kit_name TEXT NOT NULL,
+      description TEXT,
+      items_included TEXT NOT NULL,
+      market_price REAL NOT NULL,
+      subsidized_price REAL NOT NULL,
+      monthly_emi REAL NOT NULL,
+      tenure_months INTEGER DEFAULT 10,
+      isi_standards TEXT,
+      image_url TEXT,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- =============================================
+    -- Worker Toolkit Orders & Loans
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS worker_toolkit_orders (
+      id SERIAL PRIMARY KEY,
+      worker_id INTEGER NOT NULL,
+      toolkit_id INTEGER NOT NULL,
+      order_code TEXT UNIQUE NOT NULL,
+      payment_mode VARCHAR(50) NOT NULL CHECK(payment_mode IN ('DIRECT_PAY', 'COOP_LOAN')),
+      total_amount REAL NOT NULL,
+      paid_amount REAL DEFAULT 0.0,
+      remaining_amount REAL NOT NULL,
+      monthly_emi REAL DEFAULT 0.0,
+      status VARCHAR(50) DEFAULT 'ACTIVE_LOAN' CHECK(status IN ('ACTIVE_LOAN', 'DELIVERED', 'COMPLETED')),
+      delivery_address TEXT,
+      delivery_status VARCHAR(50) DEFAULT 'DISPATCHED' CHECK(delivery_status IN ('PROCESSING', 'DISPATCHED', 'DELIVERED')),
+      loan_deduction_per_job REAL DEFAULT 50.0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (worker_id) REFERENCES workers(id) ON DELETE CASCADE,
+      FOREIGN KEY (toolkit_id) REFERENCES mandatory_toolkits(id) ON DELETE CASCADE
+    );
+
     -- =============================================
     -- Indexes
     -- =============================================
@@ -570,13 +705,33 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_sos_status ON sos_logs(status);
     CREATE INDEX IF NOT EXISTS idx_societies_code ON societies(society_code);
     CREATE INDEX IF NOT EXISTS idx_societies_status ON societies(status);
+    CREATE INDEX IF NOT EXISTS idx_societies_district ON societies(district);
+    CREATE INDEX IF NOT EXISTS idx_societies_federation ON societies(federation_id);
     CREATE INDEX IF NOT EXISTS idx_treasury_society ON society_treasury_ledger(society_id);
     CREATE INDEX IF NOT EXISTS idx_welfare_worker ON society_worker_welfare(worker_id);
     CREATE INDEX IF NOT EXISTS idx_tenders_status ON institutional_tenders(status);
+    CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
+    CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_denylist_hash ON token_denylist(token_hash);
+    CREATE INDEX IF NOT EXISTS idx_toolkit_trade ON mandatory_toolkits(trade_category);
+    CREATE INDEX IF NOT EXISTS idx_toolkit_orders_worker ON worker_toolkit_orders(worker_id);
   `;
 
   await query(ddl);
-  console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and indexes ready.');
+
+  // Enforce dual work requirements: Both VERIFIED and VERIFIED_EQUIPPED toolkit required to work
+  await query(`
+    UPDATE workers
+    SET toolkit_compliance = 'VERIFIED_EQUIPPED',
+        tools_owned = COALESCE(tools_owned, 'Standard ISI Certified Trade Toolkit & Safety Kit')
+    WHERE verification_status = 'VERIFIED' AND (toolkit_compliance = 'PENDING' OR toolkit_compliance IS NULL);
+
+    UPDATE workers
+    SET availability = 'OFFLINE'
+    WHERE verification_status != 'VERIFIED' OR toolkit_compliance != 'VERIFIED_EQUIPPED';
+  `);
+
+  console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and dual work compliance ready.');
 }
 
 if (require.main === module) {

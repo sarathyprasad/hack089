@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function HomeReviews() {
-  const { speakText, stopSpeaking, isSpeaking } = useAccessibility();
+  const { speakText, stopSpeaking, isSpeaking, activeSpeakingId } = useAccessibility();
 
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'customer' | 'worker'
   const [selectedTrade, setSelectedTrade] = useState('all'); // 'all' | 'electrical' | 'plumbing' | 'home'
@@ -25,7 +25,6 @@ export default function HomeReviews() {
     activeArtisans: 50,
     livingWageCompliance: '93% Direct Payout (93-2-5 Model)',
   });
-  const [currentlySpeakingId, setCurrentlySpeakingId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -46,17 +45,15 @@ export default function HomeReviews() {
 
     return () => {
       isMounted = false;
+      stopSpeaking();
     };
-  }, []);
+  }, [stopSpeaking]);
 
   const handleSpeakReview = (id, textToRead) => {
-    if (currentlySpeakingId === id && isSpeaking) {
+    if (activeSpeakingId === id && isSpeaking) {
       stopSpeaking();
-      setCurrentlySpeakingId(null);
     } else {
-      stopSpeaking();
-      setCurrentlySpeakingId(id);
-      speakText(textToRead);
+      speakText(textToRead, { id });
     }
   };
 
@@ -93,7 +90,7 @@ export default function HomeReviews() {
   return (
     <section className="py-16 bg-gradient-to-b from-white via-slate-50/60 to-white px-4 border-b border-slate-200/80">
       <div className="max-w-6xl mx-auto">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold mb-3 shadow-2xs">
@@ -155,23 +152,22 @@ export default function HomeReviews() {
             <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider mt-1">
               Verified & Guaranteed
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">ITI certified + 30-day free warranty</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Skill certified + 30-day free warranty</p>
           </div>
         </div>
 
         {/* Dual-Perspective Filter Controls */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
-          
+
           {/* Main Perspective Selector */}
           <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setActiveTab('all')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${
-                activeTab === 'all'
+              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${activeTab === 'all'
                   ? 'bg-blue-950 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+                }`}
             >
               <Sparkles size={14} className={activeTab === 'all' ? 'text-amber-400' : 'text-slate-400'} />
               <span>All Reviews</span>
@@ -183,11 +179,10 @@ export default function HomeReviews() {
             <button
               type="button"
               onClick={() => setActiveTab('customer')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${
-                activeTab === 'customer'
+              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${activeTab === 'customer'
                   ? 'bg-blue-950 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+                }`}
             >
               <User size={14} className={activeTab === 'customer' ? 'text-blue-300' : 'text-slate-400'} />
               <span>Customer Reviews</span>
@@ -199,11 +194,10 @@ export default function HomeReviews() {
             <button
               type="button"
               onClick={() => setActiveTab('worker')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${
-                activeTab === 'worker'
+              className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${activeTab === 'worker'
                   ? 'bg-blue-950 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+                }`}
             >
               <Wrench size={14} className={activeTab === 'worker' ? 'text-amber-400' : 'text-slate-400'} />
               <span>Worker Reviews</span>
@@ -225,11 +219,10 @@ export default function HomeReviews() {
                 key={trade.id}
                 type="button"
                 onClick={() => setSelectedTrade(trade.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition ${
-                  selectedTrade === trade.id
+                className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition ${selectedTrade === trade.id
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80'
-                }`}
+                  }`}
               >
                 {trade.label}
               </button>
@@ -249,11 +242,10 @@ export default function HomeReviews() {
             return (
               <div
                 key={item.id}
-                className={`flex flex-col justify-between rounded-2xl p-5 sm:p-6 transition-all duration-200 border shadow-2xs hover:shadow-md ${
-                  isWorker
+                className={`scroll-reveal-card home-interactive-card flex flex-col justify-between rounded-2xl p-5 sm:p-6 transition-all duration-200 border shadow-2xs hover:shadow-md ${isWorker
                     ? 'bg-gradient-to-b from-amber-50/40 via-white to-white border-amber-200/90 hover:border-amber-400'
                     : 'bg-white border-slate-200 hover:border-blue-900'
-                }`}
+                  }`}
               >
                 <div>
                   {/* Card Header */}
@@ -261,11 +253,10 @@ export default function HomeReviews() {
                     <div className="flex items-center gap-3">
                       {/* Avatar */}
                       <div
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs border ${
-                          isWorker
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs border ${isWorker
                             ? 'bg-amber-500 text-slate-950 border-amber-300'
                             : 'bg-blue-900 text-white border-blue-800'
-                        }`}
+                          }`}
                       >
                         {item.name
                           .split(' ')
@@ -282,11 +273,10 @@ export default function HomeReviews() {
                           {item.verified && (
                             <span
                               title="Verified by Labour Cooperative"
-                              className={`inline-flex items-center gap-0.5 text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${
-                                isWorker
+                              className={`inline-flex items-center gap-0.5 text-[10px] font-extrabold px-2 py-0.2 rounded-full border ${isWorker
                                   ? 'bg-amber-100 text-amber-900 border-amber-300'
                                   : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                              }`}
+                                }`}
                             >
                               <Check size={10} className="stroke-[3]" />
                               <span>{isWorker ? 'Artisan Member' : 'Verified Booking'}</span>
@@ -311,14 +301,13 @@ export default function HomeReviews() {
                     <button
                       type="button"
                       onClick={() => handleSpeakReview(item.id, speakTextContent)}
-                      title={currentlySpeakingId === item.id && isSpeaking ? 'Stop voice' : 'Listen to this review'}
-                      className={`p-1.5 rounded-lg border transition shrink-0 ${
-                        currentlySpeakingId === item.id && isSpeaking
-                          ? 'bg-amber-500 text-white border-amber-600 animate-pulse'
-                          : 'bg-slate-50 text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
-                      }`}
+                      title={activeSpeakingId === item.id && isSpeaking ? 'Stop voice' : 'Listen to this review'}
+                      className={`p-1.5 rounded-lg border transition shrink-0 ${activeSpeakingId === item.id && isSpeaking
+                          ? 'bg-amber-500 text-white border-amber-600 animate-pulse font-bold'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700'
+                        }`}
                     >
-                      {currentlySpeakingId === item.id && isSpeaking ? (
+                      {activeSpeakingId === item.id && isSpeaking ? (
                         <VolumeX size={15} />
                       ) : (
                         <Volume2 size={15} />
@@ -358,7 +347,7 @@ export default function HomeReviews() {
                   )}
 
                   {/* Review Text */}
-                  <p className="text-xs text-slate-700 leading-relaxed font-normal mb-4">
+                  <p className="text-xs text-slate-700 leading-relaxed font-normal mb-4 line-clamp-3">
                     "{item.comment}"
                   </p>
 
@@ -429,7 +418,7 @@ export default function HomeReviews() {
                         <span className="truncate">{item.cooperative}</span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
-                        <span>Affiliation: NLCF Certified Member</span>
+                        <span>Affiliation: LCF Certified Member</span>
                         <span>Member since {item.joinedYear}</span>
                       </div>
                     </div>
@@ -451,7 +440,7 @@ export default function HomeReviews() {
               Fair for Citizens. Life-Changing for Workers.
             </h3>
             <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-              When you book through Shram Setu, 93% of the payment reaches the technician’s hands with 5% credited toward their social security fund. Zero corporate middlemen, 100% community upliftment.
+              When you book through Prithvi Fix, 93% of the payment reaches the technician’s hands with 5% credited toward their social security fund. Zero corporate middlemen, 100% community upliftment.
             </p>
           </div>
 

@@ -1,4 +1,6 @@
 const { query } = require('../db/connection');
+const { getBookingAccess } = require('../utils/bookingAccess');
+const { logAuditEvent } = require('../services/auditLog');
 
 /**
  * POST /api/payments/process
@@ -7,7 +9,6 @@ const { query } = require('../db/connection');
 async function processPayment(req, res) {
   try {
     const { bookingId, paymentMethod, upiId, cardNumber } = req.body;
-    const userId = req.user ? req.user.id : 1;
 
     if (!bookingId) {
       return res.status(400).json({ error: 'Validation Error', message: 'Booking ID is required.' });
@@ -17,6 +18,15 @@ async function processPayment(req, res) {
     const booking = bookingRes.rows[0];
     if (!booking) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
+    }
+
+    // Ownership Authorization Guard: Only the citizen who raised the order or admin can pay
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isOwner) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access denied: You can only process payments for your own bookings.',
+      });
     }
 
     const amount = Number(booking.total_amount) || Number(booking.amount) || 299;
@@ -56,6 +66,17 @@ async function processPayment(req, res) {
     // Retrieve updated records
     const updatedBookingRes = await query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
     const invoiceRes = await query('SELECT * FROM invoices WHERE booking_id = $1', [bookingId]);
+
+    // Record financial audit ledger entry
+    await logAuditEvent({
+      userId: req.user?.id,
+      userRole: req.user?.role,
+      action: 'PAYMENT_PROCESSED',
+      entityType: 'PAYMENT',
+      entityId: transactionId,
+      ipAddress: req.ip,
+      details: { bookingId, amount, paymentMethod: method },
+    });
 
     res.json({
       message: 'Payment processed successfully! Form IV Tax Invoice updated to PAID.',
@@ -105,6 +126,17 @@ async function getInvoiceByBookingId(req, res) {
 
     if (!invoice) {
       return res.status(404).json({ error: 'Not Found', message: 'Invoice not found.' });
+    }
+
+    // Authorization Guard: Only the customer, assigned worker, or admin can view this invoice
+    const bookingRes = await query('SELECT customer_id, worker_id, paired_master_worker_id FROM bookings WHERE id = $1', [bookingId]);
+    const booking = bookingRes.rows[0];
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isOwner && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access denied: You can only view invoices for your own bookings or assignments.',
+      });
     }
 
     res.json({ invoice });

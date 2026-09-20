@@ -1,21 +1,37 @@
 import React, { useState } from 'react';
 import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Menu, X, Building2, User, LogOut, LayoutDashboard,
-  ShieldCheck, PhoneCall, Volume2, VolumeX, Sun, Moon,
-  Landmark, Sparkles, ChevronRight, HelpCircle, ExternalLink
+  Menu, X, LogOut, LayoutDashboard,
+  ShieldCheck, Volume2, VolumeX, Sun, Moon, MapPin, LocateFixed
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { useLocationContext } from '../context/LocationContext';
 
 export default function GovLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, isAuthenticated, isCustomer, isWorker, isAdmin } = useAuth();
   const { lang, setLang, t } = useLanguage();
-  const { fontSize, setFontSize, highContrast, toggleHighContrast, isSpeaking, speakText, stopSpeaking } = useAccessibility();
+  const { fontSize, setFontSize, isDarkMode, toggleDarkMode, highContrast, toggleHighContrast, isSpeaking, stopSpeaking } = useAccessibility();
+  const {
+    locations,
+    selectedLocation,
+    selectedAreaId,
+    changeLocation,
+    isUsingCurrentLocation,
+    isDetectingLocation,
+    detectCurrentLocation,
+    locationNotice,
+    unsupportedLocation
+  } = useLocationContext();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Cancel any running speech synthesis whenever the page changes
+  React.useEffect(() => {
+    stopSpeaking();
+  }, [location.pathname, stopSpeaking]);
 
   const handleLogout = () => {
     logout();
@@ -48,82 +64,367 @@ export default function GovLayout() {
       return;
     }
     const currentLangText = {
-      EN: "Welcome to Shram Setu, the official National Cooperative Labour Services Federation Portal. Verified skills, fair wages, zero surge pricing, and direct social security for all artisans. You can book an electrical, plumbing, carpentry or appliance service directly online or dial toll free 1800-345-7788.",
-      HI: "श्रम सेतु में आपका स्वागत है। यह राष्ट्रीय श्रम सहकारी सेवा पोर्टल है। प्रमाणित कारीगर, उचित सहकारी दरें, शून्य अतिरिक्त शुल्क और 100% सामाजिक सुरक्षा। आप ऑनलाइन सेवा बुक कर सकते हैं या टोल-फ्री 1800-345-7788 पर कॉल करें।",
-      OR: "ଶ୍ରମ ସେତୁ ପୋର୍ଟାଲକୁ ସ୍ୱାଗତ। ଏହା ଶ୍ରମ ସମବାୟ ମହାସଂଘର ଏକ ପ୍ରୟାସ। ପ୍ରମାଣିତ ଶ୍ରମିକ, ସମବାୟ ଦର ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା। ସେବା ବୁକ୍ କରିବା ପାଇଁ ଟୋଲ୍ ଫ୍ରି ୧୮୦୦-୩୪୫-୭୭୮୮ ଡାଏଲ କରନ୍ତୁ।",
-      BN: "শ্রম সেতুতে স্বাগতম। এটি সমবায় শ্রম সেবা পোর্টাল। যাচাইকৃত কর্মী, ন্যায্য সমবায় মূল্য এবং সামাজিক সুরক্ষা। সেবা বুক করতে ১৮০০-৩৪৫-৭৭৮৮ নম্বরে কল করুন।",
-      TE: "శ్రమ్ సేతుకు స్వాగతం. ఇది సహకార కార్మిక సేవల పోర్టల్. ధృవీకరించబడిన నైపుణ్యాలు మరియు సామాజిక భద్రత. సేవను బుక్ చేయడానికి టోల్ ఫ్రీ 1800-345-7788 కు కాల్ చేయండి."
+      EN: "Welcome to Prithvi Fix, the official Cooperative Labour Services Federation Portal. Verified skills, fair wages, zero surge pricing, and direct social security for all artisans. You can book an electrical, plumbing, carpentry or appliance service directly online or dial toll free 1800-345-7788.",
+      HI: "पृथ्वी फिक्स में आपका स्वागत है। यह श्रम सहकारी सेवा पोर्टल है। प्रमाणित कारीगर, उचित सहकारी दरें, शून्य अतिरिक्त शुल्क और 100% सामाजिक सुरक्षा। आप ऑनलाइन सेवा बुक कर सकते हैं या टोल-फ्री 1800-345-7788 पर कॉल करें।",
+      OR: "ପୃଥିବୀ ଫିକ୍ସ ପୋର୍ଟାଲକୁ ସ୍ୱାଗତ। ଏହା ଶ୍ରମ ସମବାୟ ମହାସଂଘର ଏକ ପ୍ରୟାସ। ପ୍ରମାଣିତ ଶ୍ରମିକ, ସମବାୟ ଦର ଏବଂ ସାମାଜିକ ସୁରକ୍ଷା। ସେବା ବୁକ୍ କରିବା ପାଇଁ ଟୋଲ୍ ଫ୍ରି ୧୮୦୦-୩୪୫-୭୭୮୮ ଡାଏଲ କରନ୍ତୁ।",
+      BN: "পৃথ্বী ফিক্সে স্বাগতম। এটি সমবায় শ্রম সেবা পোর্টাল। যাচাইকৃত কর্মী, ন্যায্য সমবায় মূল্য এবং সামাজিক সুরক্ষা। সেবা বুক করতে ১৮০০-৩৪৫-৭৭৮৮ নম্বরে কল করুন।",
+      TE: "పృథ్వీ ఫిక్స్ కు స్వాగతం. ఇది సహకార కార్మిక సేవల పోర్టల్. ధృవీకరించబడిన నైపుణ్యాలు మరియు సామాజిక భద్రత. సేవను బుక్ చేయడానికి టోల్ ఫ్రీ 1800-345-7788 కు కాల్ చేయండి."
     };
     speakText(currentLangText[lang] || currentLangText.EN);
   };
 
   const navLinks = [
-    { to: '/', label: t('navHome') },
-    { to: '/services', label: t('navServices') },
-    { to: '/book-service', label: t('navBookService') },
-    { to: '/rate-card', label: 'Rate Card' },
+    { to: '/', label: t('navHome'), end: true },
+    { to: '/services', label: t('navServicesBooking') || 'Services & Booking', isServices: true },
+    { to: '/rate-card', label: t('navRateCard', 'Rate Card') },
     { to: '/about', label: t('navAbout') },
     { to: '/help', label: t('navHelp') },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-      {/* ── 1. National Tricolor Ribbon ── */}
-      <div className="tricolor-ribbon" />
+      {/* ── Single Unified Header ── */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50" role="banner">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-3 group" aria-label="Homepage">
+            <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center p-0.5 group-hover:shadow transition">
+              <img
+                src="/logo-emblem.png"
+                alt="Prithvi Fix"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="leading-none">
+              <span className="text-[17px] font-black tracking-tight text-[#0e5c3e]">
+                PRITHVI<span className="text-[#0274b3] ml-1">FIX</span>
+              </span>
+            </div>
+          </Link>
 
-      {/* ── 2. Top Accessibility & Multi-Lingual Public Bar ── */}
-      <div className="gov-top-bar py-1.5 px-3 md:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 text-xs">
-          {/* Left: Official Cooperative Federation Statement */}
-          <div className="flex items-center gap-2 font-medium">
-            <span className="inline-flex items-center gap-1.5 text-amber-300 font-bold text-[11px] tracking-wide">
-              <Building2 size={13} className="text-amber-400 shrink-0" />
-              <span>{t('govSupportTag')}</span>
-            </span>
-          </div>
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Public Navigation">
+            {navLinks.map(({ to, label, end, isServices }) => {
+              const isActive = isServices
+                ? location.pathname.startsWith('/services') || location.pathname.startsWith('/book-service')
+                : end
+                ? location.pathname === '/'
+                : location.pathname.startsWith(to);
 
-          {/* Right: Accessibility Controls & Language Switcher */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Quick Helpline Link */}
-            <a
-              href="tel:18003457788"
-              className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-emerald-300 hover:text-emerald-200 font-bold bg-emerald-950/50 hover:bg-emerald-900/60 px-2.5 py-0.5 rounded-full border border-emerald-700/50 transition"
-              title="Toll-Free Citizen Assistance"
-            >
-              <PhoneCall size={11} />
-              <span>1800-345-7788</span>
-            </a>
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-150 ${
+                    isActive
+                      ? 'text-slate-900 bg-slate-100 font-bold shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
 
-            {/* Font Size Adjusters: A- / A+ */}
-            <div className="flex items-center gap-0.5 bg-white/10 p-0.5 rounded-lg border border-white/15">
+          {/* Right Controls */}
+          <div className="flex items-center gap-2">
+            {/* Global Location Selector with 1-Click GPS Button */}
+            <div className={`hidden sm:flex items-center rounded-xl border transition text-xs shadow-2xs pl-1.5 pr-2 py-1 gap-1 ${
+              unsupportedLocation
+                ? 'bg-amber-50 hover:bg-amber-100/80 border-amber-300'
+                : 'bg-slate-100 hover:bg-slate-200/70 border-slate-200/80'
+            }`}>
               <button
-                onClick={() => setFontSize('normal')}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${fontSize === 'normal' ? 'bg-amber-400 text-slate-950' : 'text-slate-200 hover:text-white'}`}
-                title="Normal Font Size"
+                type="button"
+                id="header-gps-detect-btn"
+                onClick={() => detectCurrentLocation()}
+                disabled={isDetectingLocation}
+                title={
+                  unsupportedLocation
+                    ? `${unsupportedLocation.name} (Coming Soon) - Click to re-detect`
+                    : isUsingCurrentLocation
+                    ? "GPS Active - Click to re-detect location"
+                    : "Auto-detect current GPS location"
+                }
+                className={`p-1 rounded-lg transition flex items-center justify-center cursor-pointer ${
+                  unsupportedLocation
+                    ? 'text-amber-800 bg-amber-200/90 hover:bg-amber-300'
+                    : isUsingCurrentLocation
+                    ? 'text-emerald-700 bg-emerald-100/90 hover:bg-emerald-200'
+                    : 'text-slate-600 hover:text-blue-900 hover:bg-slate-200'
+                }`}
               >
-                A
+                <LocateFixed
+                  size={14}
+                  className={isDetectingLocation ? 'animate-spin text-blue-700' : ''}
+                />
               </button>
-              <button
-                onClick={() => setFontSize(fontSize === 'large' ? 'xlarge' : 'large')}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${fontSize !== 'normal' ? 'bg-amber-400 text-slate-950' : 'text-slate-200 hover:text-white'}`}
-                title="Larger Font Size"
+              <select
+                id="header-location-select"
+                value={
+                  isDetectingLocation
+                    ? 'detecting'
+                    : unsupportedLocation
+                    ? 'unsupported'
+                    : isUsingCurrentLocation
+                    ? 'current'
+                    : selectedAreaId
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'current' || val === 'detect_current') {
+                    detectCurrentLocation();
+                  } else if (val !== 'detecting' && val !== 'unsupported') {
+                    changeLocation(Number(val));
+                  }
+                }}
+                className={`bg-transparent font-bold text-xs border-0 outline-none cursor-pointer pr-1 ${
+                  unsupportedLocation ? 'text-amber-950' : 'text-slate-900'
+                }`}
+                title="Select your area to view localized tariffs across the platform"
               >
-                A+
-              </button>
+                {isDetectingLocation ? (
+                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting Location...')}</option>
+                ) : unsupportedLocation ? (
+                  <>
+                    <option value="unsupported">
+                      📍 {unsupportedLocation.name} (Coming Soon)
+                    </option>
+                    <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="current">
+                      📍 {isUsingCurrentLocation
+                        ? `${selectedLocation.name.split('/')[0].trim()} (GPS)`
+                        : t('currentLocation', 'Current Location')}
+                    </option>
+                    {isUsingCurrentLocation && (
+                      <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
+                    )}
+                  </>
+                )}
+                <optgroup label="Khordha (Bhubaneswar)">
+                  {locations.filter(l => l.district === 'Khordha').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Cuttack">
+                  {locations.filter(l => l.district === 'Cuttack').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Puri">
+                  {locations.filter(l => l.district === 'Puri').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
             </div>
 
-            {/* High Contrast Toggle */}
+            {/* Language (compact) */}
+            <div className="hidden md:flex items-center gap-0.5 bg-slate-50 rounded-lg p-0.5 border border-slate-100">
+              {[
+                { code: 'EN', label: 'EN' },
+                { code: 'HI', label: 'हि' },
+                { code: 'OR', label: 'ଓ' },
+              ].map((item) => (
+                <button
+                  key={item.code}
+                  onClick={() => setLang(item.code)}
+                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                    lang === item.code
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Dark mode */}
             <button
-              onClick={toggleHighContrast}
-              className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border ${highContrast ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-white/10 text-slate-200 border-white/15 hover:text-white'}`}
-              title="Toggle High Contrast"
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+              title={isDarkMode ? 'Light mode' : 'Dark mode'}
             >
-              {highContrast ? <Sun size={11} /> : <Moon size={11} />}
-              <span className="hidden sm:inline">{t('contrastBtn')}</span>
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            {/* Indic Language Switcher */}
-            <div className="flex items-center gap-0.5 pl-1.5 border-l border-white/20 text-[11px] font-semibold">
+            {/* Divider */}
+            <div className="hidden sm:block w-px h-6 bg-slate-200" />
+
+            {/* Auth Actions */}
+            <div className="hidden sm:flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to={getDashboardRoute()}
+                    className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                  >
+                    <LayoutDashboard size={14} />
+                    {t('dashboardBtn')}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title={t('signOutBtn')}
+                  >
+                    <LogOut size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-colors"
+                  >
+                    {t('loginBtn')}
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors"
+                  >
+                    {t('registerBtn')}
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-slate-700 rounded-lg hover:bg-slate-50"
+              aria-expanded={mobileMenuOpen}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-5 space-y-3">
+            <nav className="flex flex-col gap-0.5">
+              {navLinks.map(({ to, label, end, isServices }) => {
+                const isActive = isServices
+                  ? location.pathname.startsWith('/services') || location.pathname.startsWith('/book-service')
+                  : end
+                  ? location.pathname === '/'
+                  : location.pathname.startsWith(to);
+
+                return (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                      isActive ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Mobile Location Selector */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} className="text-blue-900" />
+                  <span>Active Cooperative Area:</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => detectCurrentLocation()}
+                  disabled={isDetectingLocation}
+                  className="text-[11px] text-blue-900 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                >
+                  <LocateFixed size={11} className={isDetectingLocation ? 'animate-spin' : ''} />
+                  <span>{isDetectingLocation ? 'Locating...' : 'Detect GPS'}</span>
+                </button>
+              </div>
+              <select
+                value={
+                  isDetectingLocation
+                    ? 'detecting'
+                    : unsupportedLocation
+                    ? 'unsupported'
+                    : isUsingCurrentLocation
+                    ? 'current'
+                    : selectedAreaId
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'current' || val === 'detect_current') {
+                    detectCurrentLocation();
+                  } else if (val !== 'detecting' && val !== 'unsupported') {
+                    changeLocation(Number(val));
+                  }
+                }}
+                className={`w-full p-2 rounded-xl text-xs font-bold border ${
+                  unsupportedLocation
+                    ? 'bg-amber-50 border-amber-300 text-amber-950'
+                    : 'bg-slate-50 border-slate-200 text-slate-900'
+                }`}
+              >
+                {isDetectingLocation ? (
+                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting Location...')}</option>
+                ) : unsupportedLocation ? (
+                  <>
+                    <option value="unsupported">
+                      📍 {unsupportedLocation.name} (Coming Soon)
+                    </option>
+                    <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="current">
+                      📍 {isUsingCurrentLocation
+                        ? `${selectedLocation.name.split('/')[0].trim()} (GPS)`
+                        : t('currentLocation', 'Current Location')}
+                    </option>
+                    {isUsingCurrentLocation && (
+                      <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
+                    )}
+                  </>
+                )}
+                <optgroup label="Khordha (Bhubaneswar)">
+                  {locations.filter(l => l.district === 'Khordha').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Cuttack">
+                  {locations.filter(l => l.district === 'Cuttack').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Puri">
+                  {locations.filter(l => l.district === 'Puri').map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name.split('/')[0].trim()}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Mobile Language */}
+            <div className="flex items-center gap-1 pt-2 border-t border-slate-100">
               {[
                 { code: 'EN', label: 'English' },
                 { code: 'HI', label: 'हिंदी' },
@@ -134,161 +435,51 @@ export default function GovLayout() {
                 <button
                   key={item.code}
                   onClick={() => setLang(item.code)}
-                  className={`px-1.5 py-0.5 rounded transition text-[11px] ${lang === item.code ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-300 hover:text-white'}`}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    lang === item.code
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* ── 3. Official Public Navigation Header ── */}
-      <header className="gov-header" role="banner">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-[72px]">
-          <Link to="/" className="gov-brand flex items-center gap-3.5 group" aria-label="Homepage">
-            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center justify-center p-1 group-hover:shadow-md group-hover:scale-105 transition-all">
-              <img
-                src="/logo-emblem.png"
-                alt="Shram Setu Brand Emblem"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 leading-none">
-                <span className="text-xl font-black tracking-tight text-[#0F294A]">
-                  SHRAM<span className="text-[#2E7D32]">setu</span>
-                </span>
-                <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300/80 rounded-md tracking-wider">COOP</span>
-              </div>
-              <div className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider mt-1">
-                {t('brandSubtitle')}
-              </div>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1" aria-label="Public Navigation">
-            {navLinks.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) => `gov-nav-item ${isActive ? 'active' : ''}`}
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Auth Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2.5">
-                <div className="text-right hidden md:block leading-tight">
-                  <div className="text-xs font-bold text-gray-800">{user?.name}</div>
-                  <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.2 rounded border ${getRoleBadge().style}`}>
-                    {getRoleBadge().label}
-                  </span>
-                </div>
-
-                <Link
-                  to={getDashboardRoute()}
-                  className="btn btn-primary btn-sm flex items-center gap-1.5 shadow-sm text-xs font-bold"
-                >
-                  <LayoutDashboard size={15} />
-                  <span>{t('dashboardBtn')}</span>
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-500 hover:text-red-700 hover:bg-gray-100 rounded-lg transition"
-                  title={t('signOutBtn')}
-                  aria-label={t('signOutBtn')}
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:text-blue-950 hover:bg-slate-50 font-bold text-xs transition"
-                >
-                  {t('loginBtn')}
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm hover:shadow transition"
-                >
-                  {t('registerBtn')}
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-blue-950 rounded-lg hover:bg-gray-100"
-            aria-expanded={mobileMenuOpen}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg">
-            <nav className="flex flex-col space-y-1">
-              {navLinks.map(({ to, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) => `px-3 py-2 rounded-lg text-sm font-semibold ${isActive ? 'bg-amber-100 text-blue-950 font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
-                >
-                  {label}
-                </NavLink>
-              ))}
-            </nav>
-
-            <div className="pt-3 border-t border-gray-100 flex flex-col gap-2">
+            {/* Mobile Auth */}
+            <div className="pt-2 border-t border-slate-100">
               {isAuthenticated ? (
-                <>
-                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-xs font-semibold text-gray-700">
-                    Signed in as: <strong className="text-blue-950">{user?.name}</strong> ({user?.role})
+                <div className="space-y-2">
+                  <div className="px-3 py-2 bg-slate-50 rounded-lg text-xs text-slate-600">
+                    Signed in as <strong className="text-slate-900">{user?.name}</strong>
                   </div>
                   <Link
                     to={getDashboardRoute()}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="btn btn-primary w-full text-xs font-bold"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-slate-900 text-white text-xs font-semibold"
                   >
-                    <LayoutDashboard size={16} /> {t('dashboardBtn')}
+                    <LayoutDashboard size={14} /> {t('dashboardBtn')}
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="btn btn-secondary w-full text-xs text-red-700"
+                    className="w-full py-2.5 rounded-lg border border-slate-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
                   >
-                    <LogOut size={16} /> {t('signOutBtn')}
+                    {t('signOutBtn')}
                   </button>
-                </>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="btn btn-secondary text-xs font-bold text-center"
+                    className="py-2.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold text-center hover:bg-slate-50 transition-colors"
                   >
                     {t('loginBtn')}
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="btn btn-saffron text-xs font-bold text-center"
+                    className="py-2.5 rounded-lg bg-slate-900 text-white text-xs font-semibold text-center hover:bg-slate-800 transition-colors"
                   >
                     {t('registerBtn')}
                   </Link>
@@ -313,7 +504,7 @@ export default function GovLayout() {
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src="/logo-emblem.png"
-                  alt="Shram Setu Logo"
+                  alt="Prithvi Fix Logo"
                   className="w-12 h-12 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-700/50"
                 />
                 <div>
@@ -326,7 +517,7 @@ export default function GovLayout() {
               </p>
               <div className="flex items-center gap-2 text-xs text-green-300 font-bold bg-white/5 p-2 rounded-lg border border-white/10">
                 <ShieldCheck size={16} className="text-green-400 shrink-0" />
-                <span>100% ITI / NSDC Certified Trades</span>
+                <span>100% Verified Skilled Trades</span>
               </div>
             </div>
 
@@ -383,6 +574,46 @@ export default function GovLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Global Floating Voice Assistant Bar with 1-Tap Stop */}
+      {isSpeaking && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/95 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 backdrop-blur-md"
+        >
+          <span className="flex h-2.5 w-2.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <Volume2 size={16} className="text-emerald-400 animate-pulse" />
+          <span className="text-xs font-medium text-slate-200">Voice Playing</span>
+          <button
+            onClick={stopSpeaking}
+            className="ml-1 px-3 py-1 text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            title="Immediately Stop Voice Playback"
+          >
+            <VolumeX size={13} />
+            <span>Stop</span>
+          </button>
+        </div>
+      )}
+
+      {/* Floating GPS Location Notification Toast */}
+      {locationNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-2xl border backdrop-blur-md text-xs font-semibold animate-bounce ${
+            unsupportedLocation
+              ? 'bg-amber-950/95 text-amber-100 border-amber-700 shadow-amber-500/20'
+              : 'bg-slate-900/95 text-white border-slate-700 shadow-emerald-500/10'
+          }`}
+        >
+          <LocateFixed size={15} className={unsupportedLocation ? 'text-amber-400 shrink-0' : 'text-emerald-400 shrink-0'} />
+          <span>{locationNotice}</span>
+        </div>
+      )}
     </div>
   );
 }

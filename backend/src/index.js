@@ -16,16 +16,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ---------------------
-// Middleware
+// Security Middleware & Rate Limiting
 // ---------------------
+const { generalLimiter } = require('./middleware/rateLimiter');
+
 app.use(helmet({
-  contentSecurityPolicy: false, // Allows external maps (Google Maps / Leaflet tiles) to load without CSP blocking
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*", "http://127.0.0.1:*", "https:", "http:"],
+      frameAncestors: ["'none'"], // Mitigate Clickjacking
+    },
+  },
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  crossOriginOpenerPolicy: false,
-  crossOriginEmbedderPolicy: false,
+  frameguard: { action: 'deny' },
+  noSniff: true,
 }));
 
-// CORS configured for Localhost, LAN IP, and ngrok tunnels
+// CORS configured with explicit origin validation
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -35,6 +47,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow non-browser agents (mobile app, curl, backend services) with null origin
     if (!origin) return callback(null, true);
     
     if (
@@ -44,17 +57,22 @@ app.use(cors({
       origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:') ||
       origin.startsWith('http://192.168.') ||
+      origin.startsWith('http://10.0.2.2:') || // Android Emulator loopback
+      process.env.NODE_ENV !== 'production' ||
       process.env.CORS_ALLOW_ALL === 'true'
     ) {
       return callback(null, true);
     }
     
-    callback(null, true);
+    return callback(new Error(`CORS Security Violation: Origin ${origin} is not allowed`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning', 'x-requested-with'],
 }));
+
+// General API Rate Limiting to prevent DoS
+app.use('/api', generalLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -103,7 +121,7 @@ app.use('/api/federation', federationRoutes);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Shram Setu API is running on PostgreSQL',
+    message: 'Prithvi Fix API is running on PostgreSQL',
     database: 'PostgreSQL',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
@@ -116,7 +134,7 @@ app.get('/api/health', (req, res) => {
 // ---------------------
 app.get('/api', (req, res) => {
   res.json({
-    name: 'Shram Setu API',
+    name: 'Prithvi Fix API',
     description: 'Cooperative Gig Services Platform — Backend API (PostgreSQL + Live Server ready)',
     version: '1.0.0',
     endpoints: {
@@ -192,15 +210,19 @@ app.use((err, req, res, next) => {
 // ---------------------
 // Start Server
 // ---------------------
+const { startLifecycleCron } = require('./services/bookingLifecycle');
+
 async function startServer() {
   try {
     await migrate();
+    // Start automated booking lifecycle monitor (10m/30m acceptance timeout & next-day completion)
+    startLifecycleCron(30000);
   } catch (err) {
     console.error('⚠️ Database initialization notice:', err.message);
   }
 
-  app.listen(PORT, () => {
-    console.log(`\n🏛️  Shram Setu API Server`);
+  const server = app.listen(PORT, () => {
+    console.log(`\n🏛️  Prithvi Fix API Server`);
     console.log(`   Database: PostgreSQL`);
     console.log(`   Port: ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health`);
@@ -208,6 +230,21 @@ async function startServer() {
     console.log(`   Static SPA: ${fs.existsSync(frontendDistPath) ? 'Enabled (dist found)' : 'Disabled (run npm run build in frontend)'}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
   });
+
+  const shutdown = async () => {
+    console.log('\n🛑 Gracefully shutting down Prithvi Fix API server...');
+    server.close(async () => {
+      try {
+        const { getPool } = require('./db/connection');
+        await getPool().end();
+        console.log('📦 PostgreSQL connection pool drained cleanly.');
+      } catch (_) {}
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 startServer();

@@ -80,7 +80,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (_) {}
     localStorage.removeItem('token');
     setUser(null);
     setWorkerProfile(null);

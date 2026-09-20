@@ -123,7 +123,7 @@ async function recommendWorkers(req, res) {
         FROM workers w
         JOIN users u ON w.user_id = u.id
         JOIN cooperatives c ON w.cooperative_id = c.id
-        WHERE (w.verification_status = 'VERIFIED' OR w.verification_status IS NULL)
+        WHERE w.verification_status = 'VERIFIED' AND w.toolkit_compliance = 'VERIFIED_EQUIPPED'
         AND (u.is_active = 1 OR u.is_active IS NULL)
         AND EXISTS (
           SELECT 1 FROM worker_skills ws
@@ -145,7 +145,7 @@ async function recommendWorkers(req, res) {
         FROM workers w
         JOIN users u ON w.user_id = u.id
         JOIN cooperatives c ON w.cooperative_id = c.id
-        WHERE (w.verification_status = 'VERIFIED' OR w.verification_status IS NULL)
+        WHERE w.verification_status = 'VERIFIED' AND w.toolkit_compliance = 'VERIFIED_EQUIPPED'
         AND (u.is_active = 1 OR u.is_active IS NULL)
         AND EXISTS (
           SELECT 1 FROM worker_skills ws
@@ -167,7 +167,7 @@ async function recommendWorkers(req, res) {
         FROM workers w
         JOIN users u ON w.user_id = u.id
         JOIN cooperatives c ON w.cooperative_id = c.id
-        WHERE (w.verification_status = 'VERIFIED' OR w.verification_status IS NULL)
+        WHERE w.verification_status = 'VERIFIED' AND w.toolkit_compliance = 'VERIFIED_EQUIPPED'
         AND (u.is_active = 1 OR u.is_active IS NULL)
         ORDER BY w.rating DESC, w.experience_years DESC
       `);
@@ -222,16 +222,36 @@ async function recommendWorkers(req, res) {
       }
     }
 
+    // Fetch 7-day workload distribution for cooperative rotational fairness
+    const recentJobsRes = await query(`
+      SELECT worker_id, COUNT(*) as recent_jobs
+      FROM bookings
+      WHERE status IN ('ACCEPTED', 'IN_PROGRESS', 'COMPLETED')
+        AND created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY worker_id
+    `);
+    const recentJobsMap = {};
+    let totalRecentJobs = 0;
+    for (const row of recentJobsRes.rows) {
+      recentJobsMap[row.worker_id] = parseInt(row.recent_jobs, 10);
+      totalRecentJobs += parseInt(row.recent_jobs, 10);
+    }
+    const avgRecentJobs = workers.length > 0 ? (totalRecentJobs / workers.length) : 0;
+
     // Find top Master/Gold Artisan in the SAME trade for pairing
     let tradeMaster = workers.find(w => w.tier === 'MASTER') || workers.find(w => w.tier === 'GOLD') || null;
+
+    const squadSize = Math.max(1, Math.min(10, parseInt(req.body.squadSize || req.body.numberOfWorkers || 1, 10)));
 
     // Compute explainable scores & Geo-Location Proximity
     const scoredWorkers = workers.map((worker) => {
       const skills = worker.skills || [];
+      const workerRecentJobs = recentJobsMap[worker.id] || 0;
 
       let skillScore = 0;
       let locationScore = 0;
       let availabilityScore = 0;
+      let fairnessScore = 0;
       let trustScore = 0;
       const matchReasons = [];
 
@@ -281,18 +301,30 @@ async function recommendWorkers(req, res) {
         matchReasons.push(`Cross-District Transfer (${distKm} km)`);
       }
 
-      // 3. Availability & Schedule Slot Match (Max 20 points)
+      // 3. Cooperative Rotational Fairness Match (Max 25 points)
+      // Boosts artisans who have had fewer assignments recently to ensure democratic livelihood distribution
+      if (workerRecentJobs <= Math.floor(avgRecentJobs)) {
+        fairnessScore = 25;
+        matchReasons.push(`Fair Guild Rotation: Priority Dispatch (${workerRecentJobs} jobs in 7d)`);
+      } else if (workerRecentJobs <= Math.ceil(avgRecentJobs) + 1) {
+        fairnessScore = 18;
+      } else {
+        fairnessScore = 10;
+        matchReasons.push(`Workload Balancing (${workerRecentJobs} jobs in 7d)`);
+      }
+
+      // 4. Availability & Schedule Slot Match (Max 10 points)
       if (worker.isSlotOccupied) {
         availabilityScore = 0;
         matchReasons.push(`Slot Occupied (${worker.slotConflictReason || 'Busy'})`);
       } else if (worker.availability === 'AVAILABLE') {
-        availabilityScore = 20;
+        availabilityScore = 10;
         matchReasons.push('Slot Free & Available for Dispatch');
       } else {
-        availabilityScore = 5;
+        availabilityScore = 4;
       }
 
-      // 4. Tier & Trust Score (Max 10 points)
+      // 5. Tier & Trust Score (Max 10 points)
       const tierBonus = {
         MASTER: 10,
         GOLD: 8,
@@ -300,17 +332,22 @@ async function recommendWorkers(req, res) {
         BRONZE: 3,
       }[worker.tier || 'BRONZE'] || 3;
 
-      trustScore = tierBonus + Math.min(3, Math.round(((worker.rating || 4.5) - 3.5) * 2));
+      trustScore = tierBonus + Math.min(2, Math.round(((worker.rating || 4.5) - 3.5) * 2));
 
-      let totalScore = skillScore + locationScore + availabilityScore + trustScore;
-      if (totalScore > 98) totalScore = 98;
+      // Skill scaled to 30, Location to 25, Fairness 25, Availability 10, Trust 10 -> Total 100
+      const scaledSkill = Math.round(skillScore * 0.75); // 40 -> 30
+      const scaledLocation = Math.round(locationScore * 0.83); // 30 -> 25
+
+      let totalScore = scaledSkill + scaledLocation + fairnessScore + availabilityScore + trustScore;
+      if (totalScore > 99) totalScore = 99;
       if (totalScore < 30) totalScore = 30;
 
       // Badges
       const badges = [];
       if (worker.tier === 'MASTER') badges.push('Master Artisan');
       if (worker.tier === 'GOLD') badges.push('Gold Tier');
-      if (!worker.isSlotOccupied && totalScore >= 80) badges.push('Best Match');
+      if (fairnessScore >= 20) badges.push('Guild Rotation Priority');
+      if (!worker.isSlotOccupied && totalScore >= 75) badges.push('Best Match');
       if (distKm <= 4.0) badges.push('Nearby (<4km)');
       if (worker.isSlotOccupied) badges.push('Slot Occupied');
 
@@ -338,6 +375,7 @@ async function recommendWorkers(req, res) {
         distanceKm: distKm,
         etaMinutes: etaMins,
         isNearby: distKm <= 6.0,
+        recentJobsCount: workerRecentJobs,
         workerCoords: {
           lat: worker.latitude || customerLat + 0.015,
           lng: worker.longitude || customerLng + 0.015,
@@ -349,8 +387,9 @@ async function recommendWorkers(req, res) {
         routeWaypoints,
         matchScore: Math.round(totalScore),
         scoreBreakdown: {
-          skill: skillScore,
-          location: locationScore,
+          skill: scaledSkill,
+          location: scaledLocation,
+          rotationalFairness: fairnessScore,
           availability: availabilityScore,
           trust: trustScore,
         },
@@ -369,10 +408,9 @@ async function recommendWorkers(req, res) {
     });
 
     // ─────────────────────────────────────────────────────────────
-    // PROXIMITY & AVAILABILITY PREFERENCE SORTING:
+    // ROTATIONAL FAIRNESS & PROXIMITY PREFERENCE SORTING:
     // 1. Available workers come FIRST (isSlotOccupied = false)
-    // 2. Within available workers, strictly PREFER CLOSEST DISTANCE (distanceKm ASC)
-    // 3. Score tiebreaker
+    // 2. Score with rotational fairness tiebreaker
     // ─────────────────────────────────────────────────────────────
     scoredWorkers.sort((a, b) => {
       const aOccupied = a.isSlotOccupied ? 1 : 0;
@@ -380,22 +418,30 @@ async function recommendWorkers(req, res) {
       if (aOccupied !== bOccupied) {
         return aOccupied - bOccupied;
       }
-      
-      // Proximity preference: if distance difference > 1.0 km, closest artisan wins
+
+      // Proximity preference: if distance difference > 1.5 km, closer artisan preferred
       const distDiff = (a.distanceKm || 99) - (b.distanceKm || 99);
-      if (Math.abs(distDiff) >= 1.0) {
+      if (Math.abs(distDiff) >= 1.5) {
         return distDiff;
       }
 
       return b.matchScore - a.matchScore;
     });
 
+    // Resolve squad of N workers if requested
+    const availableWorkers = scoredWorkers.filter(w => !w.isSlotOccupied);
+    const squadWorkers = (availableWorkers.length >= squadSize ? availableWorkers : scoredWorkers).slice(0, squadSize);
+
     res.json({
       service,
       customerCoords: { lat: customerLat, lng: customerLng },
       recommendedWorkers: scoredWorkers.slice(0, 8),
+      primaryWorker: squadWorkers[0] || scoredWorkers[0] || null,
+      squadWorkers,
+      squadSize,
+      isSquadBooking: squadSize > 1,
       totalMatches: scoredWorkers.length,
-      engine: 'Sahakari-GeoProximity-Smart-Dispatcher v2.5',
+      engine: 'Sahakari-FairRotation-Smart-Dispatcher v3.0',
     });
   } catch (err) {
     console.error('Matching engine error:', err);

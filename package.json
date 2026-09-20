@@ -1,7 +1,7 @@
 {
-  "name": "shram-setu",
+  "name": "prithvi-fix",
   "version": "1.0.0",
-  "description": "Shram Setu — National Cooperative Gig Services Platform",
+  "description": "Prithvi Fix — National Cooperative Gig Services Platform",
   "private": true,
   "scripts": {
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
@@ -9,7 +9,6 @@
     "seed": "npm --prefix backend run seed",
     "start": "node backend/src/index.js",
     "dev:backend": "npm --prefix backend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "test": "node test_features.js"
+    "dev:frontend": "npm --prefix frontend run dev"
   }
 }

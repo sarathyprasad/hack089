@@ -14,6 +14,7 @@ import ReviewModal from '../components/ReviewModal';
 import ApplianceLineageModal from '../components/ApplianceLineageModal';
 import DisputeHelpdeskModal from '../components/DisputeHelpdeskModal';
 import LiveRouteMap from '../components/LiveRouteMap';
+import CivicLoader from '../components/CivicLoader';
 
 const TIMELINE_STEPS = [
   { status: 'REQUESTED', label: 'Requested', desc: 'Order submitted' },
@@ -108,10 +109,11 @@ export default function BookingDetail() {
 
   if (loading) {
     return (
-      <div className="container py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent mb-3"></div>
-        <p className="text-xs text-gray-500">Loading booking timeline and security handshake status...</p>
-      </div>
+      <CivicLoader
+        variant="fullscreen"
+        title="Synchronizing Booking Handshake..."
+        subtitle="Retrieving escrow state, GIS live tracking and security OTP hash"
+      />
     );
   }
 
@@ -152,16 +154,20 @@ export default function BookingDetail() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-bold text-gray-900 font-mono">{booking.booking_code}</h1>
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                  isCompleted
+                className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${isCompleted
                     ? 'bg-emerald-100 text-emerald-800'
                     : isCancelled
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-blue-100 text-blue-900'
-                }`}
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-blue-100 text-blue-900'
+                  }`}
               >
                 {booking.status}
               </span>
+              {Number(booking.squad_size) > 1 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-200">
+                  👥 {booking.squad_size}-Artisan Squad
+                </span>
+              )}
               {booking.is_emergency ? (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-600 text-white animate-pulse">
                   24/7 EMERGENCY
@@ -169,7 +175,7 @@ export default function BookingDetail() {
               ) : null}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Service: <strong className="text-blue-900">{booking.service_name}</strong> • Scheduled for {booking.scheduled_date} at {booking.scheduled_time}
+              Service: <strong className="text-blue-900">{booking.service_name}</strong> {Number(booking.squad_size) > 1 ? `(${booking.squad_size} Artisans)` : ''} • Scheduled for {booking.scheduled_date} at {booking.scheduled_time}
             </p>
           </div>
         </div>
@@ -219,11 +225,10 @@ export default function BookingDetail() {
          ───────────────────────────────────────────────────────────── */}
       {!isCompleted && !isCancelled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className={`p-4 rounded-xl border transition ${
-            booking.status === 'IN_PROGRESS'
+          <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
               ? 'bg-emerald-50/60 border-emerald-300'
               : 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-900/10'
-          }`}>
+            }`}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase text-blue-900 flex items-center gap-1">
                 <ShieldCheck size={14} /> 1. Arrival OTP Handshake
@@ -248,11 +253,10 @@ export default function BookingDetail() {
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl border transition ${
-            booking.status === 'IN_PROGRESS'
+          <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
               ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/10'
               : 'bg-gray-50 border-gray-200 opacity-60'
-          }`}>
+            }`}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase text-emerald-900 flex items-center gap-1">
                 <ShieldCheck size={14} /> 2. Completion OTP Handshake
@@ -304,7 +308,7 @@ export default function BookingDetail() {
               Claim Free Re-dispatch →
             </button>
           ) : (
-            <span className="text-xs font-bold text-amber-300 bg-amber-950/60 px-3 py-1.5 rounded-lg border border-amber-500/40">
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
               ✓ Guarantee Re-dispatch Dispatched
             </span>
           )}
@@ -329,21 +333,19 @@ export default function BookingDetail() {
               return (
                 <div key={step.status} className="flex sm:flex-col items-center gap-3 sm:gap-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition ${
-                      isPast
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition ${isPast
                         ? 'bg-emerald-600 text-white'
                         : isCurrent
-                        ? 'bg-blue-950 text-white ring-4 ring-blue-100'
-                        : 'bg-gray-100 text-gray-400 border border-gray-300'
-                    }`}
+                          ? 'bg-blue-950 text-white ring-4 ring-blue-100'
+                          : 'bg-gray-100 text-gray-400 border border-gray-300'
+                      }`}
                   >
                     {isPast ? <CheckCircle2 size={16} /> : idx + 1}
                   </div>
                   <div className="sm:text-center">
                     <div
-                      className={`text-xs font-bold ${
-                        isCurrent ? 'text-blue-950' : isPast ? 'text-emerald-800' : 'text-gray-400'
-                      }`}
+                      className={`text-xs font-bold ${isCurrent ? 'text-blue-950' : isPast ? 'text-emerald-800' : 'text-gray-400'
+                        }`}
                     >
                       {step.label}
                     </div>
@@ -366,12 +368,20 @@ export default function BookingDetail() {
             tier: booking.worker_tier || 'MASTER',
             worker_code: booking.worker_code,
             service_area: booking.worker_service_area || booking.location_city,
-            distanceKm: booking.tracking?.distanceKm || 3.2,
-            etaMinutes: booking.tracking?.etaMinutes || 12,
-            workerCoords: booking.tracking?.workerCoords,
+            distanceKm: booking.tracking?.distanceKm || booking.distance_km || 2.4,
+            etaMinutes: booking.tracking?.etaMinutes || booking.eta_minutes || 10,
+            workerCoords: booking.tracking?.workerCoords || (booking.worker_latitude ? {
+              lat: Number(booking.worker_latitude),
+              lng: Number(booking.worker_longitude)
+            } : null),
+            latitude: Number(booking.worker_latitude),
+            longitude: Number(booking.worker_longitude),
           }}
           customerAddress={`${booking.location_address}, ${booking.location_city}`}
-          customerCoords={booking.tracking?.customerCoords}
+          customerCoords={booking.tracking?.customerCoords || (booking.latitude ? {
+            lat: Number(booking.latitude),
+            lng: Number(booking.longitude)
+          } : null)}
           title={isCompleted ? 'Service Execution Route & Location Record' : `Live Artisan Transit to Customer Place (${booking.tracking?.dispatchStatus || 'En Route'})`}
         />
       )}
@@ -429,6 +439,16 @@ export default function BookingDetail() {
                     </div>
                   </div>
                 )}
+
+                {/* Squad Deployment Details */}
+                {Number(booking.squad_size) > 1 && (
+                  <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200 text-xs text-indigo-950 flex items-start gap-2">
+                    <User size={16} className="text-indigo-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Multi-Worker Squad Mobilized:</strong> {booking.squad_size} certified cooperative artisans assigned with fair rotational wage parity. Lead artisan: <strong>{booking.worker_name}</strong>.
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-amber-50/80 rounded-xl border border-amber-300 text-xs text-amber-950 space-y-2">
@@ -439,6 +459,11 @@ export default function BookingDetail() {
                 <p className="text-amber-800 leading-relaxed">
                   Your work order is currently broadcasted to all nearby certified cooperative artisans in <strong>{booking.location_city || 'your area'}</strong>. The first artisan who accepts will receive this assignment immediately.
                 </p>
+                {Number(booking.squad_size) > 1 && (
+                  <p className="text-indigo-900 font-bold text-[11px]">
+                    👥 Squad Request: Synchronized allocation of {booking.squad_size} guild artisans.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -495,12 +520,15 @@ export default function BookingDetail() {
         <div className="space-y-6">
           <div className="bg-blue-950 text-white p-5 rounded-2xl shadow-md space-y-4 text-xs">
             <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-              <ShieldCheck size={14} /> Transparent 93-2-5 Split
+              <ShieldCheck size={14} /> Transparent Cooperative Tariff Split
             </div>
 
             <div className="space-y-2.5 border-b border-white/15 pb-3">
               <div className="flex justify-between">
-                <span className="text-blue-200">Labour Base Charge (Worker 93%):</span>
+                <span className="text-blue-200">
+                  Labour Base Charge ({booking.worker_wage_share_pct || 93}%):
+                  {Number(booking.squad_size) > 1 ? ` (${booking.squad_size} Artisans)` : ''}
+                </span>
                 <span className="font-bold">₹{Number(booking.amount || 299).toFixed(2)}</span>
               </div>
               {Number(booking.parts_cost) > 0 && (
@@ -515,12 +543,18 @@ export default function BookingDetail() {
                   <span className="font-bold">-₹{Number(booking.bulk_discount_amount || 0).toFixed(2)}</span>
                 </div>
               ) : null}
+              {Number(booking.transit_compensation_fee) > 0 && (
+                <div className="flex justify-between text-orange-300">
+                  <span>Transit Compensation Credit:</span>
+                  <span className="font-bold">₹{Number(booking.transit_compensation_fee).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
-                <span className="text-blue-200">PF & Insurance (5%):</span>
+                <span className="text-blue-200">Local Society Reserve ({booking.welfare_fund_share_pct || 5}%):</span>
                 <span className="font-bold">₹{Number(booking.cooperative_fee || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-200">Platform Fee (2%):</span>
+                <span className="text-blue-200">Welfare & Social Security ({booking.platform_upkeep_share_pct || 2}%):</span>
                 <span className="font-bold">₹{Number(booking.platform_fee || 0).toFixed(2)}</span>
               </div>
             </div>

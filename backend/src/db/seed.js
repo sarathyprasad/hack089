@@ -2,24 +2,18 @@ const bcrypt = require('bcryptjs');
 const { query, closeDb } = require('./connection');
 const { migrate } = require('./migrate');
 
-/**
- * Enhanced Database Seed:
- * - 25 Diverse Customers across Bhubaneswar, Cuttack, Puri, Rourkela, Sambalpur, Berhampur
- * - 38 Skilled Artisans with specialized trades (AC installation, gas refilling, PCB, plumbing, electrical, carpentry, painting, etc.)
- * - 47 Granular Services (including comprehensive AC & Appliance options)
- * - 45+ Skills mapped to artisans
- * - 25 Locked Spare Parts with warranty and regulated prices
- * - 24 Real-World Bookings (REQUESTED, ACCEPTED, IN_PROGRESS, COMPLETED with Form IV invoices, 93-2-5 escrow breakdown, and OTP handshakes)
- * - Full Society & Federation governance, NCCT training, and welfare data
- */
 async function seed() {
+  console.log('🚀 Ensuring database schema is fully migrated...');
   await migrate();
 
-  const salt = await bcrypt.hash('demo123', 10);
+  const salt = bcrypt.hashSync('password123', 10);
 
   console.log('🧹 Clearing all existing tables...');
   await query(`
     TRUNCATE TABLE 
+      worker_toolkit_orders,
+      mandatory_toolkits,
+      society_regulatory_inquiries,
       sos_logs,
       dispute_tickets,
       appliance_lineage,
@@ -46,615 +40,407 @@ async function seed() {
     RESTART IDENTITY CASCADE;
   `);
 
-  console.log('🌱 Populating expanded cooperative database...');
+  console.log('🌱 Populating expanded cooperative database across 3 Districts (Khordha, Cuttack, Puri)...');
 
   // =============================================
-  // 1. Cooperatives (3 Federations)
+  // 1. Cooperatives (12 Decentralized Regional Federations - 4 per District)
   // =============================================
   const cooperatives = [
-    ['Bhubaneswar Labour Cooperative Federation', 'COOP-OD-2024-001', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Unit-8, Bhubaneswar', '0674-2540001', 'contact@bbsrlabourcoop.od.in', 'Premier labour cooperative federation serving Bhubaneswar metro area.'],
-    ['Cuttack District Labour Cooperative Society', 'COOP-OD-2024-002', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '0671-2310002', 'contact@cuttacklabourcoop.od.in', 'Labour cooperative society providing skilled artisans across Cuttack district.'],
-    ['Puri Coastal Labour Cooperative', 'COOP-OD-2024-003', 'Puri', 'Puri', 'Grand Road, Puri', '06752-220003', 'contact@purilabourcoop.od.in', 'Coastal cooperative focusing on maintenance, tourism support, and domestic trades.'],
+    // ── Khordha District (Federations 1 - 4) ──
+    [
+      'Central Bhubaneswar Regional Labour Cooperative Federation',
+      'FED-KHD-2024-001',
+      'Khordha',
+      'Bhubaneswar',
+      'Plot 45, Master Canteen Square, Saheed Nagar, Bhubaneswar',
+      '0674-2540001',
+      'central.bbsr@coop.od.in',
+      'Decentralized regional federation overseeing central urban municipal wards, commercial hubs, and retail clusters.',
+      'Saheed Nagar / Master Canteen / Rasulgarh / Unit-8',
+      'BBSR Central Urban Zone (Wards 21-45)',
+      'ACTIVE',
+      'Khordha District Cooperative Office',
+      'Shri Debendra Nayak (DCO)',
+      'APPROVED',
+      '2024-02-10T10:30:00Z',
+      'DCO/KHD/REG-2024/0014',
+      'Statutory audit completed under Sec 62 of OCS Act 1962. Financial solvency and member quorum verified.',
+      'REGIONAL_FEDERATION',
+      6,
+      1250000.0,
+      'Apex State Cooperative Bank, Bhubaneswar Main',
+      'OSCB-KHD-001290',
+      'OSCB0001002'
+    ],
+    [
+      'West Khordha Regional Artisan & Maintenance Federation',
+      'FED-KHD-2026-002',
+      'Khordha',
+      'Bhubaneswar',
+      'Khandagiri Square, Near Monument Gate, Bhubaneswar',
+      '0674-2589100',
+      'west.khordha@coop.od.in',
+      'Regional cooperative federation coordinating residential repair, masonry, carpentry, and electrical guilds across western suburban corridors.',
+      'Khandagiri / Aiginia / Baramunda / Ghatikia',
+      'Khordha West Residential & Industrial Corridor (Wards 46-67)',
+      'PENDING_DCO_APPROVAL',
+      'Khordha District Cooperative Office',
+      'Shri Debendra Nayak (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-KHD-002',
+      'Initial share capital audited. Awaiting on-site inspection of tool bank facility by Assistant Registrar.',
+      'REGIONAL_FEDERATION',
+      4,
+      450000.0,
+      'Khordha Central Cooperative Bank, Khandagiri Branch',
+      'KCCB-KHD-004419',
+      'KCCB0001005'
+    ],
+    [
+      'Ekamra Heritage & South Khordha Regional Cooperative Federation',
+      'FED-KHD-2024-003',
+      'Khordha',
+      'Bhubaneswar',
+      'Ratha Danda, Old Town, Near Lingaraj Temple, Bhubaneswar',
+      '0674-2591210',
+      'ekamra.south@coop.od.in',
+      'Specialized regional federation uniting stone restoration masons, temple conservation artisans, plumbing, and domestic maintenance societies.',
+      'Old Town / Sundarpada / Pokhariput / Samantarapur',
+      'South Khordha Heritage & Urban Extension (Wards 50-65)',
+      'ACTIVE',
+      'Khordha District Cooperative Office',
+      'Shri Debendra Nayak (DCO)',
+      'APPROVED',
+      '2024-05-18T11:00:00Z',
+      'DCO/KHD/REG-2024/0088',
+      'Compliance verified under Odisha Cooperative Societies Rules 1965. By-laws ratified in AGM.',
+      'REGIONAL_FEDERATION',
+      5,
+      980000.0,
+      'Apex State Cooperative Bank, Old Town Branch',
+      'OSCB-KHD-009941',
+      'OSCB0001002'
+    ],
+    [
+      'North Bhubaneswar Tech-Artisan Regional Federation',
+      'FED-KHD-2026-004',
+      'Khordha',
+      'Bhubaneswar',
+      'Infocity Avenue, Near KIIT Square, Patia, Bhubaneswar',
+      '0674-2742000',
+      'north.patia@coop.od.in',
+      'High-tech skilled artisan federation managing inverter AC, smart automation, EV charging, and precision electro-mechanical maintenance.',
+      'Patia / Chandaka / Infocity / Chandrasekharpur',
+      'North Khordha IT & Innovation Hub (Wards 1-20)',
+      'PENDING_DCO_APPROVAL',
+      'Khordha District Cooperative Office',
+      'Shri Debendra Nayak (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-KHD-004',
+      'Digital submission verified. DCO field scrutiny scheduled for NCCT training certification of founding members.',
+      'REGIONAL_FEDERATION',
+      5,
+      620000.0,
+      'Khordha Central Cooperative Bank, Patia',
+      'KCCB-KHD-006612',
+      'KCCB0001005'
+    ],
+
+    // ── Cuttack District (Federations 5 - 8) ──
+    [
+      'Central Cuttack Commercial Regional Cooperative Federation',
+      'FED-CTC-2024-005',
+      'Cuttack',
+      'Cuttack',
+      'Badambadi Bus Stand Road, Cuttack',
+      '0671-2316700',
+      'central.cuttack@coop.od.in',
+      'Decentralized commercial trade federation organizing heavy domestic sanitation, electrical distribution, and commercial repairs.',
+      'Badambadi / Ranihat / College Square',
+      'Cuttack Central Trade & Commercial Corridor (Wards 15-35)',
+      'ACTIVE',
+      'Cuttack District Cooperative Office',
+      'Smt. Laxmi Devi (DCO)',
+      'APPROVED',
+      '2024-03-25T14:15:00Z',
+      'DCO/CTC/REG-2024/0022',
+      'Passed Section 65 inquiry with zero discrepancies. Grade A compliance rating awarded.',
+      'REGIONAL_FEDERATION',
+      7,
+      1450000.0,
+      'Cuttack Central Cooperative Bank, Badambadi',
+      'CCCB-CTC-002214',
+      'CCCB0002004'
+    ],
+    [
+      'East Cuttack Industrial & Fabrication Regional Federation',
+      'FED-CTC-2026-006',
+      'Cuttack',
+      'Cuttack',
+      'Madhupatna Square, OMP Line, Cuttack',
+      '0671-2449100',
+      'east.industrial@coop.od.in',
+      'Industrial artisan federation representing metal fabrication, welding, masonry, and heavy warehouse infrastructure maintenance.',
+      'Madhupatna / OMP / Jagatpur Industrial Estate',
+      'East Cuttack Heavy Craft & Industrial Hub (Wards 36-55)',
+      'PENDING_DCO_APPROVAL',
+      'Cuttack District Cooperative Office',
+      'Smt. Laxmi Devi (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-CTC-006',
+      'Gazette notification pending for jurisdiction demarcation adjacent to Jagatpur industrial zone.',
+      'REGIONAL_FEDERATION',
+      3,
+      510000.0,
+      'Cuttack Central Cooperative Bank, Madhupatna',
+      'CCCB-CTC-005519',
+      'CCCB0002004'
+    ],
+    [
+      'Barabati-CDA Riverine Regional Cooperative Federation',
+      'FED-CTC-2024-007',
+      'Cuttack',
+      'Cuttack',
+      'CDA Sector 9, Plot 108, Near Judicial Academy, Cuttack',
+      '0671-2501220',
+      'cda.barabati@coop.od.in',
+      'Modern residential planned-zone federation servicing gated societies, judicial quarters, and multi-story apartment complexes.',
+      'CDA Sectors 1-14 / Tulsipur / Cantonment',
+      'North-West Cuttack Planned Urban Zone (Wards 1-14)',
+      'ACTIVE',
+      'Cuttack District Cooperative Office',
+      'Smt. Laxmi Devi (DCO)',
+      'APPROVED',
+      '2024-05-02T09:45:00Z',
+      'DCO/CTC/REG-2024/0067',
+      'Statutory reserve balance exceeded mandated threshold. Fully verified under OCS Section 62.',
+      'REGIONAL_FEDERATION',
+      6,
+      1100000.0,
+      'Cuttack Central Cooperative Bank, CDA',
+      'CCCB-CTC-003388',
+      'CCCB0002004'
+    ],
+    [
+      'Silver City Heritage Artisan Guild Regional Federation',
+      'FED-CTC-2026-008',
+      'Cuttack',
+      'Cuttack',
+      'Buxi Bazar Heritage Lane, Cuttack',
+      '0671-2612330',
+      'silvercity.guild@coop.od.in',
+      'Heritage filigree guild federation, ornamental metal restoration, domestic rewiring, and antique timber woodworking.',
+      'Buxi Bazar / Nayasarak / Choudhury Bazar',
+      'Cuttack Heritage Filigree & Artisan Zone (Wards 16-28)',
+      'PENDING_DCO_APPROVAL',
+      'Cuttack District Cooperative Office',
+      'Smt. Laxmi Devi (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-CTC-008',
+      'Submitted by-laws undergoing DCO scrutiny. Public objection period ending in 14 days.',
+      'REGIONAL_FEDERATION',
+      4,
+      480000.0,
+      'Cuttack Central Cooperative Bank, Buxi Bazar',
+      'CCCB-CTC-001144',
+      'CCCB0002004'
+    ],
+
+    // ── Puri District (Federations 9 - 12) ──
+    [
+      'Srikshetra Pilgrim Corridor Regional Cooperative Federation',
+      'FED-PRI-2026-009',
+      'Puri',
+      'Puri',
+      'VIP Road, Near Bus Stand, Puri',
+      '06752-224420',
+      'srikshetra.pilgrim@coop.od.in',
+      'Specialized pilgrim corridor federation managing high-density tourist facility plumbing, crowd barrier fabrication, and emergency electrical systems.',
+      'Grand Road / Bada Danda / VIP Road / Gundicha',
+      'Puri Sacred Temple & Heritage Precinct (Wards 1-12)',
+      'PENDING_DCO_APPROVAL',
+      'Puri District Cooperative Office',
+      'Shri Alok Mohapatra (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-PRI-009',
+      'Special audit mandated due to proximity to heritage monument zone. Provisional license issued for festival season.',
+      'REGIONAL_FEDERATION',
+      4,
+      550000.0,
+      'Puri Urban Cooperative Bank, VIP Road',
+      'PUCB-PRI-001188',
+      'PUCB0003001'
+    ],
+    [
+      'Konark Sun Coast Regional Cooperative Federation',
+      'FED-PRI-2024-010',
+      'Puri',
+      'Konark',
+      'Marine Drive Road, Konark, Puri',
+      '06752-235520',
+      'konark.coast@coop.od.in',
+      'Eco-tourism and heritage stonework federation coordinating solar electrification, resort water treatment, and artisan handicrafts.',
+      'Marine Drive / Konark Temple Perimeter / Chandrabhaga',
+      'Coastal Heritage & Eco-Tourism Belt (Konark NAC)',
+      'ACTIVE',
+      'Puri District Cooperative Office',
+      'Shri Alok Mohapatra (DCO)',
+      'APPROVED',
+      '2024-04-14T12:30:00Z',
+      'DCO/PRI/REG-2024/0045',
+      'Approved under Special Maritime Cooperative Framework. NCCT training fully completed for executive committee.',
+      'REGIONAL_FEDERATION',
+      5,
+      1300000.0,
+      'Puri Urban Cooperative Bank, Konark',
+      'PUCB-PRI-003344',
+      'PUCB0003001'
+    ],
+    [
+      'Puri Sea Beach Hospitality & Facility Regional Federation',
+      'FED-PRI-2024-011',
+      'Puri',
+      'Puri',
+      'Sea Beach Road, Blue Wave Enclave, Baliapanda, Puri',
+      '06752-221155',
+      'seabeach.hospitality@coop.od.in',
+      'Coastal hospitality and municipal sanitation federation serving hotels, holiday homes, and beachfront infrastructure.',
+      'Sea Beach Road / Baliapanda / Chakra Tirtha Road',
+      'Puri South Coastal Tourism Belt (Wards 13-25)',
+      'ACTIVE',
+      'Puri District Cooperative Office',
+      'Shri Alok Mohapatra (DCO)',
+      'APPROVED',
+      '2024-06-08T16:00:00Z',
+      'DCO/PRI/REG-2024/0073',
+      'Full statutory audit cleared. Saltwater corrosion mitigation toolkit certification verified.',
+      'REGIONAL_FEDERATION',
+      6,
+      1050000.0,
+      'Puri Urban Cooperative Bank, Sea Beach',
+      'PUCB-PRI-002233',
+      'PUCB0003001'
+    ],
+    [
+      'Chilika-Brahmagiri Western Regional Cooperative Federation',
+      'FED-PRI-2026-012',
+      'Puri',
+      'Brahmagiri',
+      'Loknath Temple Road, West Enclave, Brahmagiri, Puri',
+      '06752-248820',
+      'chilika.brahmagiri@coop.od.in',
+      'Decentralized rural & coastal federation organizing solar irrigation mechanics, boat engine maintenance, carpentry, and domestic wiring.',
+      'Brahmagiri / Satapada / Loknath Perimeter',
+      'South-Western Agro-Maritime Artisan Belt (Blocks Brahmagiri & Krushnaprasad)',
+      'PENDING_DCO_APPROVAL',
+      'Puri District Cooperative Office',
+      'Shri Alok Mohapatra (DCO)',
+      'DCO_REVIEW',
+      null,
+      'ORD-PENDING-PRI-012',
+      'Verification of 12 founding members underway. DCO joint inspection with Fishery & Cooperative Inspector scheduled.',
+      'REGIONAL_FEDERATION',
+      3,
+      420000.0,
+      'Puri Urban Cooperative Bank, Loknath',
+      'PUCB-PRI-008899',
+      'PUCB0003001'
+    ],
   ];
 
   for (const c of cooperatives) {
     await query(
-      `INSERT INTO cooperatives (name, registration_number, district, city, address, contact_phone, contact_email, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      `INSERT INTO cooperatives (
+        name, registration_number, district, city, address, contact_phone, contact_email, description,
+        local_area, jurisdiction_zone, status, dco_office_name, dco_officer_name, dco_approval_status,
+        dco_approved_at, dco_order_number, dco_audit_notes, federation_type, total_member_societies,
+        capital_reserve, cooperative_bank_name, bank_account_no, bank_ifsc
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
       c
     );
   }
 
   // =============================================
-  // 2. Users (25 Customers + 38 Workers + 3 Admins = 66 Users)
+  // 2. Cooperative Societies (12 Societies: 4 per District)
   // =============================================
-  const users = [
-    // ── 25 Customers (User IDs 1-25) ──
-    ['Ananya Patel', 'customer@demo.local', '9876543210', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Patia, Plot 42, Near KIIT Campus', '751024', 20.3540, 85.8170, 1],
-    ['Priya Mohanty', 'priya@demo.local', '9876543211', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Flat 302', '751013', 20.2961, 85.8245, 1],
-    ['Sanjay Das', 'sanjay@demo.local', '9876543212', salt, 'CUSTOMER', 'Cuttack', 'Cuttack', 'College Square, Buxi Lane', '753003', 20.4625, 85.8830, 1],
-    ['Meera Rath', 'meera@demo.local', '9876543213', salt, 'CUSTOMER', 'Puri', 'Puri', 'VIP Road, Puri', '752001', 19.8135, 85.8312, 1],
-    ['Vikram Sahoo', 'vikram@demo.local', '9876543214', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Nayapalli, Niladri Vihar Society', '751012', 20.2850, 85.8020, 1],
-    ['Sunita Tripathy', 'sunita@demo.local', '9876543215', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Plot 110', '751007', 20.2870, 85.8450, 1],
-    ['Rohit Patnaik', 'rohit@demo.local', '9876543216', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, HIG-44', '751016', 20.3350, 85.8100, 1],
-    ['Sneha Mishra', 'sneha@demo.local', '9876543217', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Khandagiri Enclave, Plot 18', '751030', 20.2570, 85.7750, 1],
-    ['Manas Ranjan Behera', 'manas@demo.local', '9876543218', salt, 'CUSTOMER', 'Cuttack', 'Cuttack', 'Badambadi Colony, House 14', '753012', 20.4550, 85.8750, 1],
-    ['Swati Samantaray', 'swati@demo.local', '9876543219', salt, 'CUSTOMER', 'Cuttack', 'Cuttack', 'CDA Sector 9, Plot 520', '753014', 20.4890, 85.8600, 1],
-    ['Arvind Panigrahi', 'arvind@demo.local', '9876543220', salt, 'CUSTOMER', 'Puri', 'Puri', 'Grand Road, Near Temple Gate', '752001', 19.8050, 85.8200, 1],
-    ['Deepa Acharya', 'deepa@demo.local', '9876543221', salt, 'CUSTOMER', 'Puri', 'Puri', 'Sea Beach Road, Blue Wave Apt', '752002', 19.7950, 85.8250, 1],
-    ['Rajesh Mohapatra', 'rajesh@demo.local', '9876543222', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Infocity Avenue, Cyber City', '751024', 20.3580, 85.8150, 1],
-    ['Pooja Nayak', 'pooja@demo.local', '9876543223', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Rasulgarh Square, Krishna Tower', '751010', 20.3090, 85.8520, 1],
-    ['Alok Sundaray', 'alok@demo.local', '9876543224', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'VSS Nagar, Phase-2', '751007', 20.2950, 85.8360, 1],
-    ['Kavita Jena', 'kavita@demo.local', '9876543225', salt, 'CUSTOMER', 'Cuttack', 'Cuttack', 'Buxi Bazar, Muslim Sahi', '753001', 20.4610, 85.8810, 1],
-    ['Subhashree Rout', 'subhashree@demo.local', '9876543226', salt, 'CUSTOMER', 'Cuttack', 'Cuttack', 'Cantonment Road, Officer Colony', '753001', 20.4730, 85.8920, 1],
-    ['Vandana Das', 'vandana@demo.local', '9876543227', salt, 'CUSTOMER', 'Sundargarh', 'Rourkela', 'Civil Township, Area 7', '769004', 22.2492, 84.8828, 1],
-    ['Pradeep Kumar Sahu', 'pradeep@demo.local', '9876543228', salt, 'CUSTOMER', 'Sundargarh', 'Rourkela', 'Sector 4, Market Complex', '769002', 22.2580, 84.8650, 1],
-    ['Geetanjali Swain', 'geetanjali@demo.local', '9876543229', salt, 'CUSTOMER', 'Sundargarh', 'Rourkela', 'Koel Nagar, C Block', '769014', 22.2610, 84.8950, 1],
-    ['Ashish Barik', 'ashish@demo.local', '9876543230', salt, 'CUSTOMER', 'Sambalpur', 'Sambalpur', 'Budharaja, Main Road', '768004', 21.4669, 83.9812, 1],
-    ['Madhumita Padhi', 'madhumita@demo.local', '9876543231', salt, 'CUSTOMER', 'Sambalpur', 'Sambalpur', 'Khetrajpur Station Area', '768003', 21.4820, 83.9650, 1],
-    ['Debasis Pradhan', 'debasis@demo.local', '9876543232', salt, 'CUSTOMER', 'Ganjam', 'Berhampur', 'Gopalpur Road, Lotus Enclave', '760010', 19.3150, 84.7941, 1],
-    ['Trupti Mayee Sahoo', 'trupti@demo.local', '9876543233', salt, 'CUSTOMER', 'Ganjam', 'Berhampur', 'Gandhi Nagar, 3rd Lane', '760001', 19.3110, 84.7890, 1],
-    ['Tanmay Rath', 'tanmay@demo.local', '9876543234', salt, 'CUSTOMER', 'Khordha', 'Bhubaneswar', 'Sundarpada, Hi-Tech Plaza', '751002', 20.2450, 85.8200, 1],
-
-    // ── 38 Workers (User IDs 26-63) ──
-    // AC & Appliance Technicians (IDs 26-31)
-    ['Rajendra Mohapatra (Master HVAC & Inverter Specialist)', 'rajendra.w@demo.local', '9876543301', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Baramunda, Bhubaneswar', '751003', 20.2750, 85.8100, 1],
-    ['Dilip Barik (AC Installation & Ducting Tech)', 'dilip.w@demo.local', '9876543302', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Aiginia, Bhubaneswar', '751019', 20.2650, 85.8450, 1],
-    ['Kailash Sahoo (Certified AC Gas Refill & Leak Expert)', 'kailash.w@demo.local', '9876543303', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, Bhubaneswar', '751016', 20.3370, 85.8150, 1],
-    ['Bhabani Shankar (Appliance & Refrigerator Repairer)', 'bhabani.w@demo.local', '9876543304', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Mahanadi Vihar, Cuttack', '753004', 20.4720, 85.9050, 1],
-    ['Hemant Swain (Window & Split AC Servicing)', 'hemant.w@demo.local', '9876543305', salt, 'WORKER', 'Puri', 'Puri', 'Penthakata, Puri', '752002', 19.8020, 85.8350, 1],
-    ['Satyajit Mohanty (Microwave & Kitchen Appliance Tech)', 'satyajit.w@demo.local', '9876543306', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3520, 85.8190, 1],
-
-    // Electrical Artisans (IDs 32-37)
-    ['Ramesh Kumar (Master Electrician)', 'ramesh.w@demo.local', '9876543307', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Rasulgarh, Bhubaneswar', '751010', 20.3095, 85.8530, 1],
-    ['Suresh Behera (Gold Electrician - Inverter & Solar)', 'suresh.w@demo.local', '9876543308', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Mancheswar, Bhubaneswar', '751017', 20.3240, 85.8380, 1],
-    ['Prakash Jena (Apprentice Electrician)', 'prakash.w@demo.local', '9876543309', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Madhupatna, Bhubaneswar', '751024', 20.3540, 85.8170, 1],
-    ['Akshaya Muduli (Smart Home & Lighting Electrician)', 'akshaya.w@demo.local', '9876543310', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4630, 85.8820, 1],
-    ['Naveen Jena (EV Charger & 3-Phase Panel Tech)', 'naveen.w@demo.local', '9876543311', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Bhubaneswar', '751013', 20.2980, 85.8230, 1],
-    ['Bishnu Charan Das (Senior Industrial Electrician)', 'bishnu.w@demo.local', '9876543312', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Infocity, Bhubaneswar', '751024', 20.3490, 85.8210, 1],
-
-    // Plumbing Artisans (IDs 38-43)
-    ['Ganesh Pradhan (Master Plumber - Pumps & Concealed)', 'ganesh.w@demo.local', '9876543313', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, Bhubaneswar', '751016', 20.3350, 85.8100, 1],
-    ['Santosh Mishra (Master Plumber - Drainage & Sewerage)', 'santosh.w@demo.local', '9876543314', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Bidanasi, Cuttack', '753014', 20.4890, 85.8770, 1],
-    ['Kishore Mahapatra (Sanitary Ware & Geyser Plumber)', 'kishore.w@demo.local', '9876543315', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Link Road, Cuttack', '753012', 20.4700, 85.8800, 1],
-    ['Ajay Sahu (Water Tank & Tap Leak Specialist)', 'ajay.w@demo.local', '9876543316', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1],
-    ['Biswajit Das (High-Pressure Piping & Irrigation)', 'biswajit.w@demo.local', '9876543317', salt, 'WORKER', 'Puri', 'Puri', 'Grand Road, Puri', '752001', 19.8080, 85.8240, 1],
-    ['Purna Chandra Palei (Emergency Burst Containment)', 'purna.w@demo.local', '9876543318', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Nayapalli, Bhubaneswar', '751012', 20.2840, 85.8050, 1],
-
-    // Carpentry Artisans (IDs 44-48)
-    ['Mohan Nayak (Silver Carpenter - Modular Kitchens)', 'mohan.w@demo.local', '9876543319', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2870, 85.8450, 1],
-    ['Tapan Sethi (Carpenter & Flatpack Furniture Pro)', 'tapan.w@demo.local', '9876543320', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Tulsipur, Cuttack', '753008', 20.4650, 85.8880, 1],
-    ['Dipti Ranjan (Locksmith & Security Door Specialist)', 'dipti.w@demo.local', '9876543321', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2590, 85.7780, 1],
-    ['Pradipta Rout (Wood Finishing & PU Polish Master)', 'pradipta.w@demo.local', '9876543322', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'VSS Nagar, Bhubaneswar', '751007', 20.2930, 85.8340, 1],
-    ['Kartik Nayak (Window Mesh & Frame Carpenter)', 'kartik.w@demo.local', '9876543323', salt, 'WORKER', 'Puri', 'Puri', 'Loknath Road, Puri', '752001', 19.7990, 85.8150, 1],
-
-    // Painting & Waterproofing (IDs 49-52)
-    ['Biju Sahu (Gold Painter - Interior Emulsion)', 'biju.w@demo.local', '9876543324', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2570, 85.7750, 1],
-    ['Subash Naik (Waterproofing & Terrace Coating Expert)', 'subash.w@demo.local', '9876543325', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Dumduma, Bhubaneswar', '751019', 20.2730, 85.8380, 1],
-    ['Ranjan Khatua (Exterior Weathercoat & Texture Artist)', 'ranjan.w@demo.local', '9876543326', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4580, 85.8720, 1],
-    ['Bijay Das (Wall Putty & Primer Finishing Pro)', 'bijay.w@demo.local', '9876543327', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3550, 85.8160, 1],
-
-    // Cleaning & Pest Control (IDs 53-56)
-    ['Narayan Rout (Deep Cleaning & Sanitization Pro)', 'narayan.w@demo.local', '9876543328', salt, 'WORKER', 'Puri', 'Puri', 'Sipasarubali, Puri', '752002', 19.8100, 85.8380, 1],
-    ['Laxman Biswal (Kitchen & Bathroom Descaling Pro)', 'laxman.w@demo.local', '9876543329', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Unit-4, Bhubaneswar', '751001', 20.2710, 85.8320, 1],
-    ['Minati Barik (Sofa & Upholstery Deep Cleaner)', 'minati.w@demo.local', '9876543330', salt, 'WORKER', 'Cuttack', 'Cuttack', 'Chhatra Bazar, Cuttack', '753003', 20.4660, 85.8910, 1],
-    ['Sudarshan Jena (Certified Pest & Termite Controller)', 'sudarshan.w@demo.local', '9876543331', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Nayapalli, Bhubaneswar', '751012', 20.2860, 85.8030, 1],
-
-    // Gardening, Caregiving, Driving & Domestic (IDs 57-63)
-    ['Raju Parida (Senior Landscape Gardener & Horticulturist)', 'raju.w@demo.local', '9876543332', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Nuapatna, Bhubaneswar', '751012', 20.2850, 85.8020, 1],
-    ['Sanatan Behera (Terrace Garden & Drip Irrigation)', 'sanatan.w@demo.local', '9876543333', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3560, 85.8190, 1],
-    ['Deepak Swain (Certified Geriatric Caregiver)', 'deepak.w@demo.local', '9876543334', salt, 'WORKER', 'Puri', 'Puri', 'Balighai, Puri', '752002', 19.8250, 85.8450, 1],
-    ['Geeta Samal (Post-Operative Patient Nursing)', 'geeta.w@demo.local', '9876543335', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Bhubaneswar', '751013', 20.2970, 85.8260, 1],
-    ['Manoj Dalai (Licensed City Chauffeur)', 'manoj.w@demo.local', '9876543336', salt, 'WORKER', 'Puri', 'Puri', 'Penthakata, Puri', '752001', 19.7980, 85.8210, 1],
-    ['Pramod Mohanty (Highway & Outstation Chauffeur)', 'pramod.w@demo.local', '9876543337', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'Baramunda Bus Stand, Bhubaneswar', '751003', 20.2760, 85.8090, 1],
-    ['Ashok Lenka (Domestic Assistant & Home Cleaner)', 'ashok.w@demo.local', '9876543338', salt, 'WORKER', 'Khordha', 'Bhubaneswar', 'VSS Nagar, Bhubaneswar', '751007', 20.2920, 85.8350, 1],
-
-    // ── 3 Admins (User IDs 64-66) ──
-    ['Arun Kumar Pattnaik (Federation Secretary)', 'admin@demo.local', '9876543401', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Unit-8, Bhubaneswar', '751012', 20.2900, 85.8200, 1],
-    ['Smt. Laxmi Devi (Cuttack Arbitrator)', 'admin2@demo.local', '9876543402', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 1],
-    ['Shri Alok Mohapatra (Puri DCO & Registrar)', 'admin3@demo.local', '9876543403', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8120, 85.8320, 1],
-  ];
-
-  for (const u of users) {
-    await query(
-      `INSERT INTO users (name, email, phone, password, role, district, city, address, pincode, latitude, longitude, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-      u
-    );
-  }
-
-  // =============================================
-  // 3. Worker Profiles (38 Workers)
-  // =============================================
-  // [userId, workerCode, coopId, expYears, area, lat, lng, verStatus, avail, rating, totalReviews, jobsDone, earnings, bio, tier, merit, strikes, sos, primaryTrade]
-  const workerProfiles = [
-    // AC & Appliance (Workers 1-6, user_ids 26-31)
-    [26, 'WKR-OD-1001', 1, 12, 'Bhubaneswar', 20.2750, 85.8100, 'VERIFIED', 'AVAILABLE', 4.9, 68, 64, 235000, 'Senior HVAC master technician specializing in VRF, dual inverter ACs, PCB diagnostics & chillers.', 'MASTER', 960, 0, 0, 'Appliance Repair'],
-    [27, 'WKR-OD-1002', 1, 7,  'Bhubaneswar', 20.2650, 85.8450, 'VERIFIED', 'AVAILABLE', 4.8, 44, 40, 138000, 'Expert in split AC installation, copper line brazing, vacuumization and safe uninstallation.', 'GOLD', 740, 0, 0, 'Appliance Repair'],
-    [28, 'WKR-OD-1003', 1, 10, 'Bhubaneswar', 20.3370, 85.8150, 'VERIFIED', 'AVAILABLE', 4.9, 58, 55, 198000, 'Certified refrigeration expert for high-pressure nitrogen leak detection, flare nut repair & R32/R410A charging.', 'MASTER', 910, 0, 0, 'Appliance Repair'],
-    [29, 'WKR-OD-1004', 2, 8,  'Cuttack',     20.4720, 85.9050, 'VERIFIED', 'AVAILABLE', 4.7, 39, 36, 112000, 'Refrigerator compressor replacement, defrost timers, washing machine drum repair & motors.', 'GOLD', 690, 0, 0, 'Appliance Repair'],
-    [30, 'WKR-OD-1005', 3, 5,  'Puri',        19.8020, 85.8350, 'VERIFIED', 'AVAILABLE', 4.6, 31, 28, 78000,  'Specialist in high-pressure jet cleaning, anti-bacterial coil wash & window AC overhaul.', 'SILVER', 530, 0, 0, 'Appliance Repair'],
-    [31, 'WKR-OD-1006', 1, 3,  'Bhubaneswar', 20.3520, 85.8190, 'VERIFIED', 'AVAILABLE', 4.4, 19, 17, 41000,  'Microwave magnetron replacement, kitchen chimneys, water purifiers & domestic mixer repairs.', 'BRONZE', 320, 0, 0, 'Appliance Repair'],
-
-    // Electrical (Workers 7-12, user_ids 32-37)
-    [32, 'WKR-OD-1007', 1, 10, 'Bhubaneswar', 20.3095, 85.8530, 'VERIFIED', 'AVAILABLE', 4.9, 58, 54, 185000, 'Master electrician specializing in 3-phase lines, MCB distribution panels & short circuit troubleshooting.', 'MASTER', 950, 0, 0, 'Electrical'],
-    [33, 'WKR-OD-1008', 1, 6,  'Bhubaneswar', 20.3240, 85.8380, 'VERIFIED', 'AVAILABLE', 4.7, 42, 38, 115000, 'Skilled in inverter-battery setup, bypass wiring, solar rooftop connections & ceiling fan overhaul.', 'GOLD', 680, 0, 0, 'Electrical'],
-    [34, 'WKR-OD-1009', 1, 2,  'Bhubaneswar', 20.3540, 85.8170, 'VERIFIED', 'AVAILABLE', 4.4, 18, 16, 38000,  'Apprentice electrician trained under ITI; switchboard fixing, modular plugs & fan installations.', 'BRONZE', 220, 0, 0, 'Electrical'],
-    [35, 'WKR-OD-1010', 2, 7,  'Cuttack',     20.4630, 85.8820, 'VERIFIED', 'AVAILABLE', 4.8, 45, 42, 134000, 'Smart home automation, LED profile lighting, chandelier anchor fitting & concealed wiring.', 'GOLD', 710, 0, 0, 'Electrical'],
-    [36, 'WKR-OD-1011', 1, 5,  'Bhubaneswar', 20.2980, 85.8230, 'VERIFIED', 'AVAILABLE', 4.6, 34, 31, 88000,  'EV home charging point setup, industrial plug installation & earth pit resistance optimization.', 'SILVER', 560, 0, 0, 'Electrical'],
-    [37, 'WKR-OD-1012', 1, 14, 'Bhubaneswar', 20.3490, 85.8210, 'VERIFIED', 'AVAILABLE', 5.0, 72, 69, 260000, 'Senior industrial wiring master, generator changeover switch panels & transformer maintenance.', 'MASTER', 980, 0, 0, 'Electrical'],
-
-    // Plumbing (Workers 13-18, user_ids 38-43)
-    [38, 'WKR-OD-1013', 1, 12, 'Bhubaneswar', 20.3350, 85.8100, 'VERIFIED', 'AVAILABLE', 4.9, 64, 60, 210000, 'Senior master plumber with deep experience in CPVC waterlines, pressure booster pumps & diverters.', 'MASTER', 980, 0, 0, 'Plumbing'],
-    [39, 'WKR-OD-1014', 2, 9,  'Cuttack',     20.4890, 85.8770, 'VERIFIED', 'AVAILABLE', 4.8, 48, 46, 161000, 'Master plumber in Cuttack specializing in underground drainage, sewer lines & acoustic leak detection.', 'MASTER', 890, 0, 0, 'Plumbing'],
-    [40, 'WKR-OD-1015', 2, 6,  'Cuttack',     20.4700, 85.8800, 'VERIFIED', 'AVAILABLE', 4.6, 35, 32, 95000,  'Bathroom sanitary ware installation, EWC commodes, flush valves & storage geyser plumbing.', 'SILVER', 580, 0, 0, 'Plumbing'],
-    [41, 'WKR-OD-1016', 1, 8,  'Bhubaneswar', 20.2880, 85.8420, 'VERIFIED', 'AVAILABLE', 4.8, 47, 44, 145000, 'Overhead water tank high-pressure disinfection, sludge removal & tap cartridge fixing.', 'GOLD', 750, 0, 0, 'Plumbing'],
-    [42, 'WKR-OD-1017', 3, 5,  'Puri',        19.8080, 85.8240, 'VERIFIED', 'AVAILABLE', 4.5, 29, 27, 72000,  'Coastal corrosion-resistant plumbing, bathroom waterline fittings & hotel maintenance.', 'SILVER', 490, 0, 0, 'Plumbing'],
-    [43, 'WKR-OD-1018', 1, 7,  'Bhubaneswar', 20.2840, 85.8050, 'VERIFIED', 'AVAILABLE', 4.8, 43, 40, 131000, 'Emergency high-pressure main line burst repair, rapid cutoff clamps & bypass waterlines.', 'GOLD', 720, 0, 0, 'Plumbing'],
-
-    // Carpentry (Workers 19-23, user_ids 44-48)
-    [44, 'WKR-OD-1019', 1, 5,  'Bhubaneswar', 20.2870, 85.8450, 'VERIFIED', 'AVAILABLE', 4.6, 32, 30, 84000,  'Professional carpenter specializing in modular kitchen cabinets, hydraulic hinges & drawers.', 'SILVER', 480, 0, 0, 'Carpentry'],
-    [45, 'WKR-OD-1020', 2, 7,  'Cuttack',     20.4650, 85.8880, 'VERIFIED', 'AVAILABLE', 4.7, 41, 38, 122000, 'Flatpack furniture assembly (IKEA/Pepperfry beds, wardrobes, desks) & wood joinery.', 'GOLD', 670, 0, 0, 'Carpentry'],
-    [46, 'WKR-OD-1021', 1, 8,  'Bhubaneswar', 20.2590, 85.7780, 'VERIFIED', 'AVAILABLE', 4.8, 46, 43, 139000, 'Security door mortise locks, keyless digital locks & teakwood door frame repair.', 'GOLD', 740, 0, 0, 'Carpentry'],
-    [47, 'WKR-OD-1022', 1, 11, 'Bhubaneswar', 20.2930, 85.8340, 'VERIFIED', 'AVAILABLE', 4.9, 57, 53, 187000, 'Master wood finisher specializing in French spirit polish, PU clear coat & furniture antique restoration.', 'MASTER', 920, 0, 0, 'Carpentry'],
-    [48, 'WKR-OD-1023', 3, 3,  'Puri',        19.7990, 85.8150, 'VERIFIED', 'AVAILABLE', 4.4, 21, 19, 44000,  'Window aluminium sliding frames, stainless steel mosquito mesh & roller wheel replacement.', 'BRONZE', 310, 0, 0, 'Carpentry'],
-
-    // Painting & Waterproofing (Workers 24-27, user_ids 49-52)
-    [49, 'WKR-OD-1024', 1, 8,  'Bhubaneswar', 20.2570, 85.7750, 'VERIFIED', 'AVAILABLE', 4.8, 46, 44, 142000, 'Expert painter for interior luxury emulsion, putty sanding & wall damp-proof coatings.', 'GOLD', 720, 0, 0, 'Painting'],
-    [50, 'WKR-OD-1025', 1, 10, 'Bhubaneswar', 20.2730, 85.8380, 'VERIFIED', 'AVAILABLE', 4.9, 59, 56, 194000, 'Terrace chemical waterproofing, elastomeric membrane coating & structural crack sealing.', 'MASTER', 930, 0, 0, 'Painting'],
-    [51, 'WKR-OD-1026', 2, 6,  'Cuttack',     20.4580, 85.8720, 'VERIFIED', 'AVAILABLE', 4.6, 36, 33, 98000,  'Exterior weathercoat anti-fungal painting & residential society bulk contracts.', 'SILVER', 540, 0, 0, 'Painting'],
-    [52, 'WKR-OD-1027', 1, 2,  'Bhubaneswar', 20.3550, 85.8160, 'VERIFIED', 'AVAILABLE', 4.3, 15, 13, 31000,  'Surface preparation, primer coating, smooth wall putty application & crack filling.', 'BRONZE', 250, 0, 0, 'Painting'],
-
-    // Cleaning & Pest Control (Workers 28-31, user_ids 53-56)
-    [53, 'WKR-OD-1028', 3, 7,  'Puri',        19.8100, 85.8380, 'VERIFIED', 'AVAILABLE', 4.7, 43, 40, 126000, 'Hospital-grade rotary floor deep cleaning, commercial sanitization & apartment turnover.', 'GOLD', 690, 0, 0, 'Cleaning'],
-    [54, 'WKR-OD-1029', 1, 5,  'Bhubaneswar', 20.2710, 85.8320, 'VERIFIED', 'AVAILABLE', 4.6, 33, 30, 86000,  'Intensive bathroom acid descaling, kitchen oil degreasing & ceramic tile buffing.', 'SILVER', 510, 0, 0, 'Cleaning'],
-    [55, 'WKR-OD-1030', 2, 4,  'Cuttack',     20.4660, 85.8910, 'VERIFIED', 'AVAILABLE', 4.5, 28, 26, 68000,  'Sofa, mattress & carpet injection-extraction foam wash & sanitization.', 'SILVER', 480, 0, 0, 'Cleaning'],
-    [56, 'WKR-OD-1031', 1, 9,  'Bhubaneswar', 20.2860, 85.8030, 'VERIFIED', 'AVAILABLE', 4.8, 52, 49, 162000, 'Eco-certified odorless herbal gel pest control & drill-fill termite barrier treatments.', 'MASTER', 880, 0, 0, 'Cleaning'],
-
-    // Gardening, Caregiving, Driving & Domestic (Workers 32-38, user_ids 57-63)
-    [57, 'WKR-OD-1032', 1, 7,  'Bhubaneswar', 20.2850, 85.8020, 'VERIFIED', 'AVAILABLE', 4.8, 38, 36, 94000,  'Senior landscape gardener, horticulturist & lawn maintenance specialist.', 'GOLD', 710, 0, 0, 'Gardening'],
-    [58, 'WKR-OD-1033', 1, 6,  'Bhubaneswar', 20.3560, 85.8190, 'VERIFIED', 'AVAILABLE', 4.6, 32, 29, 81000,  'Terrace garden landscaping, micro drip irrigation kits & organic plant feeding.', 'SILVER', 530, 0, 0, 'Gardening'],
-    [59, 'WKR-OD-1034', 3, 6,  'Puri',        19.8250, 85.8450, 'VERIFIED', 'AVAILABLE', 4.7, 36, 34, 92000,  'Certified geriatric caregiver with Red Cross first-aid credentials.', 'SILVER', 510, 0, 0, 'Caregiving'],
-    [60, 'WKR-OD-1035', 1, 8,  'Bhubaneswar', 20.2970, 85.8260, 'VERIFIED', 'AVAILABLE', 4.8, 49, 46, 148000, 'Post-operative patient care, bed mobility assistance, vitals monitoring & nursing support.', 'GOLD', 760, 0, 0, 'Caregiving'],
-    [61, 'WKR-OD-1036', 3, 8,  'Puri',        19.7980, 85.8210, 'VERIFIED', 'AVAILABLE', 4.6, 30, 28, 76000,  'Licensed commercial chauffeur with clean state driving record for luxury and manual cars.', 'SILVER', 460, 0, 0, 'Driving'],
-    [62, 'WKR-OD-1037', 1, 10, 'Bhubaneswar', 20.2760, 85.8090, 'VERIFIED', 'AVAILABLE', 4.8, 47, 44, 137000, 'Outstation long-distance highway chauffeur with night driving credentials & mechanic skills.', 'GOLD', 730, 0, 0, 'Driving'],
-    [63, 'WKR-OD-1038', 1, 5,  'Bhubaneswar', 20.2920, 85.8350, 'VERIFIED', 'AVAILABLE', 4.5, 26, 24, 60000,  'Domestic helper, home sanitation, and household management.', 'BRONZE', 290, 0, 0, 'Domestic Services'],
-  ];
-
-  for (const w of workerProfiles) {
-    await query(
-      `INSERT INTO workers (user_id, worker_code, cooperative_id, experience_years, service_area, latitude, longitude, verification_status, availability, rating, total_reviews, total_jobs_completed, total_earnings, bio, tier, merit_points, strike_count, sos_active, primary_trade)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
-      w
-    );
-  }
-
-  // =============================================
-  // 4. Skills Taxonomy (45 Granular Skills)
-  // =============================================
-  const skills = [
-    // AC & Appliance Repair (Skills 1-10)
-    ['Split AC Deep Jet Service', 'Appliance Repair', 'Indoor and outdoor unit pressure jet washing and disinfection'],
-    ['Split AC Installation', 'Appliance Repair', 'Mounting, copper piping, vacuuming and commissioning of split ACs'],
-    ['AC Gas Leak & Refilling', 'Appliance Repair', 'Nitrogen pressure leak detection and R32/R410A gas charging'],
-    ['Inverter AC PCB Diagnostics', 'Appliance Repair', 'Circuit board troubleshooting, IPM sensor and capacitor repair'],
-    ['Window AC Overhaul', 'Appliance Repair', 'Comprehensive chemical fin wash and blower motor maintenance'],
-    ['AC Uninstallation & Dismantling', 'Appliance Repair', 'Safe gas pump-down and dismantling of air conditioning units'],
-    ['Refrigerator Compressor & Gas', 'Appliance Repair', 'Thermostat, relay switch, capillary tube and gas top-up'],
-    ['Washing Machine Repair', 'Appliance Repair', 'Drum balance, inlet solenoid and drain pump maintenance'],
-    ['Microwave Oven Repair', 'Appliance Repair', 'High voltage diode, magnetron and touch membrane repair'],
-    ['Kitchen Chimney Degreasing', 'Appliance Repair', 'Blower wheel cleaning, oil collector and filter degreasing'],
-
-    // Electrical (Skills 11-18)
-    ['Switchboard & Socket Wiring', 'Electrical', 'Installation and repair of modular switches and power sockets'],
-    ['Ceiling Fan & Exhaust Fitting', 'Electrical', 'Ceiling fan mounting, downrod balancing and capacitor fix'],
-    ['MCB Distribution Board', 'Electrical', 'Distribution panel load balancing, MCB and isolator replacement'],
-    ['Inverter & Battery Wiring', 'Electrical', 'Inverter setup, heavy battery cable wiring and bypass switch'],
-    ['Concealed Home Wiring', 'Electrical', 'Conduit pipe pulling, earthing and complete circuit wiring'],
-    ['Chandelier & Light Fixtures', 'Electrical', 'Heavy chandelier ceiling anchor drilling and decorative lighting'],
-    ['EV Charger Installation', 'Electrical', 'Dedicated 16A/32A EV industrial socket and earthing line'],
-    ['Emergency Short Circuit Fix', 'Emergency Services', '24/7 rapid restoration of tripped or sparking electrical lines'],
-
-    // Plumbing (Skills 19-26)
-    ['Tap & Flush Valve Leak Repair', 'Plumbing', 'Spindle, ceramic disc cartridge and teflon washer leak fixing'],
-    ['Sanitary Ware & Commode Install', 'Plumbing', 'Wall-hung washbasin, EWC commode and CP fitting installation'],
-    ['Water Tank Deep Cleaning', 'Plumbing', 'Pressure jet scrubbing, sludge extraction and UV chlorination'],
-    ['Water Booster Pump Servicing', 'Plumbing', 'Automatic pressure switch, pump motor and impeller repair'],
-    ['Concealed Pipe Leak Detection', 'Plumbing', 'Acoustic pipe leak sensing and minimal intrusion CPVC repair'],
-    ['Drain & Sewer De-clogging', 'Plumbing', 'Rotary snake wire clearing and enzymatic line treatment'],
-    ['Geyser Water Heater Plumbing', 'Plumbing', 'Wall bracket mount, anode replacement and element descaling'],
-    ['Emergency Pipe Burst Containment', 'Emergency Services', 'High pressure burst cutoff and rapid clamp containment'],
-
-    // Carpentry (Skills 27-31)
-    ['Flatpack Furniture Assembly', 'Carpentry', 'Assembly of modular beds, wardrobes, study desks and dining sets'],
-    ['Mortise & Digital Door Lock', 'Carpentry', 'Godrej brass mortise lock and keyless digital lock installation'],
-    ['Modular Kitchen Hinge Align', 'Carpentry', 'Hydraulic soft-close hinge replacement and drawer track tune-up'],
-    ['Custom Wood & Wardrobe Repair', 'Carpentry', 'Plywood shelf reinforcement and wooden door repair'],
-    ['Window Mesh & Roller Fitting', 'Carpentry', 'Aluminium mosquito net sliding frame and roller replacement'],
-
-    // Painting & Waterproofing (Skills 32-36)
-    ['Interior Emulsion Painting', 'Painting', 'Putty sanding, primer coat and 2 coats luxury emulsion'],
-    ['Terrace Chemical Waterproofing', 'Painting', 'Elastomeric PU waterproof membrane and ponding test'],
-    ['Exterior Weathercoat Painting', 'Painting', 'Anti-algal weather-shield exterior coating for societies'],
-    ['Wall Putty & Crack Sealing', 'Painting', 'Polymer modified crack filling and ultra-smooth sanding'],
-    ['French Polish & PU Finish', 'Painting', 'Hand-rubbed spirit polish and clear polyurethane finish'],
-
-    // Cleaning & Pest (Skills 37-41)
-    ['Full Home Deep Cleaning', 'Cleaning', 'Rotary floor machine scrubbing, window and balcony wash'],
-    ['Bathroom Acid Descaling', 'Cleaning', 'Hard water stain removal, grout cleaning and fixture buffing'],
-    ['Kitchen Oil Degreasing', 'Cleaning', 'Caustic degreasing of tiles, platform, slab and chimney'],
-    ['Sofa & Carpet Shampooing', 'Cleaning', 'Deep injection foam extraction wash for fabric sofas and rugs'],
-    ['Pest & Termite Control', 'Cleaning', 'Odorless herbal gel baiting and anti-termite wall drilling'],
-
-    // Gardening, Caregiving, Driving (Skills 42-47)
-    ['Lawn Mowing & Horticulture', 'Gardening', 'Lawn aeration, hedge trimming and garden waste disposal'],
-    ['Terrace Drip Irrigation', 'Gardening', 'Micro-drip tube setup, potting mix and organic fertilizer'],
-    ['Geriatric Elderly Assistance', 'Caregiving', 'Bedside companionship, vitals check and mobility assistance'],
-    ['Post-Operative Nursing Support', 'Caregiving', 'Wound hygiene monitoring, recovery care and physiotherapy'],
-    ['Personal City Chauffeur', 'Driving', 'Licensed driving for luxury automatic and manual city cars'],
-    ['Highway & Outstation Driving', 'Driving', 'Long-distance highway driving with route knowledge'],
-  ];
-
-  for (const s of skills) {
-    await query(`INSERT INTO skills (name, category, description) VALUES ($1, $2, $3)`, s);
-  }
-
-  // =============================================
-  // 5. Worker Skills Mapping (Worker IDs 1-38)
-  // =============================================
-  const workerSkills = [
-    // AC & Appliance (Workers 1-6)
-    [1, 1, 'EXPERT'], [1, 2, 'EXPERT'], [1, 3, 'EXPERT'], [1, 4, 'EXPERT'],
-    [2, 2, 'EXPERT'], [2, 6, 'EXPERT'], [2, 1, 'INTERMEDIATE'],
-    [3, 3, 'EXPERT'], [3, 1, 'EXPERT'], [3, 5, 'EXPERT'],
-    [4, 7, 'EXPERT'], [4, 8, 'EXPERT'], [4, 9, 'EXPERT'],
-    [5, 5, 'EXPERT'], [5, 1, 'EXPERT'], [5, 6, 'INTERMEDIATE'],
-    [6, 9, 'EXPERT'], [6, 10, 'EXPERT'], [6, 8, 'INTERMEDIATE'],
-
-    // Electrical (Workers 7-12)
-    [7, 13, 'EXPERT'], [7, 11, 'EXPERT'], [7, 18, 'EXPERT'],
-    [8, 14, 'EXPERT'], [8, 12, 'EXPERT'], [8, 11, 'INTERMEDIATE'],
-    [9, 11, 'INTERMEDIATE'], [9, 12, 'INTERMEDIATE'],
-    [10, 16, 'EXPERT'], [10, 15, 'EXPERT'], [10, 11, 'EXPERT'],
-    [11, 17, 'EXPERT'], [11, 13, 'EXPERT'], [11, 14, 'INTERMEDIATE'],
-    [12, 13, 'EXPERT'], [12, 15, 'EXPERT'], [12, 18, 'EXPERT'],
-
-    // Plumbing (Workers 13-18)
-    [13, 20, 'EXPERT'], [13, 22, 'EXPERT'], [13, 23, 'EXPERT'],
-    [14, 24, 'EXPERT'], [14, 23, 'EXPERT'], [14, 26, 'EXPERT'],
-    [15, 20, 'EXPERT'], [15, 25, 'EXPERT'], [15, 19, 'EXPERT'],
-    [16, 21, 'EXPERT'], [16, 19, 'EXPERT'], [16, 20, 'INTERMEDIATE'],
-    [17, 22, 'EXPERT'], [17, 20, 'EXPERT'],
-    [18, 26, 'EXPERT'], [18, 19, 'EXPERT'], [18, 24, 'INTERMEDIATE'],
-
-    // Carpentry (Workers 19-23)
-    [19, 29, 'EXPERT'], [19, 30, 'EXPERT'], [19, 27, 'INTERMEDIATE'],
-    [20, 27, 'EXPERT'], [20, 28, 'EXPERT'], [20, 30, 'EXPERT'],
-    [21, 28, 'EXPERT'], [21, 30, 'EXPERT'],
-    [22, 36, 'EXPERT'], [22, 30, 'EXPERT'],
-    [23, 31, 'EXPERT'], [23, 27, 'INTERMEDIATE'],
-
-    // Painting & Waterproofing (Workers 24-27)
-    [24, 32, 'EXPERT'], [24, 35, 'EXPERT'],
-    [25, 33, 'EXPERT'], [25, 34, 'EXPERT'], [25, 35, 'EXPERT'],
-    [26, 34, 'EXPERT'], [26, 32, 'EXPERT'],
-    [27, 35, 'INTERMEDIATE'], [27, 32, 'BEGINNER'],
-
-    // Cleaning & Pest (Workers 28-31)
-    [28, 37, 'EXPERT'], [28, 38, 'EXPERT'],
-    [29, 38, 'EXPERT'], [29, 39, 'EXPERT'],
-    [30, 40, 'EXPERT'], [30, 37, 'EXPERT'],
-    [31, 41, 'EXPERT'], [31, 37, 'INTERMEDIATE'],
-
-    // Gardening, Caregiving, Driving & Domestic (Workers 32-38)
-    [32, 42, 'EXPERT'], [32, 43, 'INTERMEDIATE'],
-    [33, 43, 'EXPERT'], [33, 42, 'EXPERT'],
-    [34, 44, 'EXPERT'], [34, 45, 'INTERMEDIATE'],
-    [35, 45, 'EXPERT'], [35, 44, 'EXPERT'],
-    [36, 46, 'EXPERT'], [36, 47, 'INTERMEDIATE'],
-    [37, 47, 'EXPERT'], [37, 46, 'EXPERT'],
-    [38, 37, 'INTERMEDIATE'], [38, 39, 'INTERMEDIATE'],
-  ];
-
-  for (const ws of workerSkills) {
-    await query(`INSERT INTO worker_skills (worker_id, skill_id, proficiency_level) VALUES ($1, $2, $3)`, ws);
-  }
-
-  // =============================================
-  // 6. Services Catalog (47 Granular Services)
-  // =============================================
-  const services = [
-    // ── Appliance Repair (AC & Major Appliances) (Services 1-10) ──
-    ['Split AC Deep Jet Service', 'Appliance Repair', 'Indoor & outdoor coil high-pressure foam wash, fin straightening & blower antibacterial cleaning', 499, 'per_visit', 'Snowflake', 0],
-    ['Split AC Installation & Mounting', 'Appliance Repair', 'Heavy-duty wall bracket mounting, precision copper line fitting, vacuuming & gas balance test', 1299, 'per_visit', 'Wrench', 1],
-    ['Split AC Uninstallation & Dismantling', 'Appliance Repair', 'Refrigerant gas pump-down recovery into compressor, bracket removal & copper packing', 499, 'per_visit', 'Wrench', 0],
-    ['AC Gas Leak Repair & Refilling', 'Appliance Repair', 'Nitrogen high-pressure leak testing, brazing, system vacuumization & R32/R410A gas top-up', 1899, 'per_visit', 'Wind', 1],
-    ['Inverter AC PCB Diagnostics & Repair', 'Appliance Repair', 'Inverter circuit board troubleshooting, IPM sensor, capacitor & microcontroller diagnosis', 799, 'per_visit', 'Settings', 1],
-    ['Window AC Comprehensive Service & Overhaul', 'Appliance Repair', 'Chemical fin spray wash, fan motor lubrication, tray descaling & filter disinfection', 449, 'per_visit', 'Snowflake', 0],
-    ['Double-Door Refrigerator Cooling & Gas Charge', 'Appliance Repair', 'Compressor relay, defrost thermostat replacement, capillary tube & eco refrigerant charging', 899, 'per_visit', 'Wrench', 1],
-    ['Fully-Automatic Washing Machine Repair', 'Appliance Repair', 'Drum bearing balancing, inlet water solenoid & electronic drain pump overhaul', 549, 'per_visit', 'Wrench', 0],
-    ['Microwave Oven Magnetron & Touchpad Service', 'Appliance Repair', 'Magnetron emission testing, high-voltage diode replacement & membrane touch switch repair', 499, 'per_visit', 'Wrench', 0],
-    ['Kitchen Chimney & Hob Deep Degreasing', 'Appliance Repair', 'Baffle filter caustic degreasing, motor carbon cleaning, blower rotor & suction check', 699, 'per_visit', 'Wrench', 0],
-
-    // ── Electrical Services (Services 11-18) ──
-    ['Switchboard & Modular Socket Repair', 'Electrical', 'Replacement of burnt switches, 16A power sockets, indicator & earthing impedance check', 199, 'per_visit', 'Zap', 0],
-    ['Ceiling Fan & Exhaust Fan Installation', 'Electrical', 'Downrod anchor fitting, blade angle balancing, capacitor & bearing noise elimination', 249, 'per_visit', 'Zap', 0],
-    ['Main MCB & Distribution Board Replacement', 'Electrical', 'Single/3-phase isolator upgrade, load balancing & short-circuit trip testing', 499, 'per_visit', 'Zap', 1],
-    ['Inverter & Dual-Battery Setup Wiring', 'Electrical', 'Heavy gauge battery terminal cabling, changeover switch & bypass wiring', 649, 'per_visit', 'Zap', 1],
-    ['Complete Room Concealed Re-wiring', 'Electrical', 'PVC conduit pipe pulling, multi-strand FRLS wire & circuit load testing', 1499, 'per_visit', 'Zap', 1],
-    ['Chandelier & Decorative Lighting Fixture', 'Electrical', 'Heavy ceiling hook anchor drilling, chandelier assembly & multi-mode wiring', 599, 'per_visit', 'Zap', 0],
-    ['EV Home Charger Point Installation', 'Electrical', 'Dedicated 16A/32A industrial socket, MCB protection & earthing rod install', 899, 'per_visit', 'Zap', 1],
-    ['Emergency 60-Min Short-Circuit Restoration', 'Emergency Services', '24/7 priority fire-hazard short-circuit isolation & main supply restoration', 599, 'per_visit', 'AlertTriangle', 1],
-
-    // ── Plumbing Services (Services 19-26) ──
-    ['Tap, Spout & Flush Valve Leak Repair', 'Plumbing', 'Ceramic disc cartridge, spindle replacement, washer & teflon leak stop', 249, 'per_visit', 'Droplets', 0],
-    ['Bathroom Sanitary Ware & Fitting Install', 'Plumbing', 'Wall-hung washbasin, EWC commode seat & diverter shower installation', 699, 'per_visit', 'Droplets', 1],
-    ['Overhead Water Tank Deep Disinfection', 'Plumbing', 'Mechanical high-pressure jet wash, sediment removal & UV chlorination', 799, 'per_visit', 'Droplets', 0],
-    ['Water Pressure Booster Pump Repair & Setup', 'Plumbing', 'Automatic pressure sensor switch, motor capacitor & impeller servicing', 649, 'per_visit', 'Droplets', 1],
-    ['Concealed Wall Pipe Leakage Detection', 'Plumbing', 'Acoustic pipe leak detection with minimal wall intrusion & CPVC repair', 849, 'per_visit', 'Droplets', 1],
-    ['Blocked Drain & Sewer Pipe De-clogging', 'Plumbing', 'Rotary mechanical snake rod clearing, grease removal & flow restoration', 499, 'per_visit', 'Droplets', 0],
-    ['Geyser / Water Heater Installation & Descaling', 'Plumbing', 'Geyser wall bracket mounting, anode rod check & heating element descale', 549, 'per_visit', 'Droplets', 1],
-    ['Emergency 60-Min Main Pipe Burst Containment', 'Emergency Services', 'High-pressure municipal/overhead main line burst cutoff & bypass clamp', 599, 'per_visit', 'AlertTriangle', 1],
-
-    // ── Carpentry Services (Services 27-31) ──
-    ['Flatpack Furniture Assembly', 'Carpentry', 'Bed frame, 3-door wardrobe, study desk & dining table assembly', 599, 'per_visit', 'Hammer', 0],
-    ['Door Lock & Brass Mortise Handle Fitting', 'Carpentry', 'Godrej mortise lock mortising, cylinder fitting & striker plate alignment', 399, 'per_visit', 'Hammer', 0],
-    ['Modular Kitchen Cabinet Hinge Alignment', 'Carpentry', 'Soft-close hydraulic hinge installation, drawer channel & shutter tuning', 349, 'per_visit', 'Hammer', 0],
-    ['Custom Wooden Wardrobe / Almirah Repair', 'Carpentry', 'Plywood shelf reinforcement, slider door track & laminate re-pasting', 699, 'per_visit', 'Hammer', 1],
-    ['Window Glass & Mosquito Mesh Screen Fitting', 'Carpentry', 'Aluminium sliding frame, SS wire mesh fixing & track roller replacement', 449, 'per_visit', 'Hammer', 0],
-
-    // ── Painting & Waterproofing (Services 32-36) ──
-    ['Full Interior Home Painting (Per Room)', 'Painting', 'Surface sanding, 2 coats acrylic putty, 1 coat primer & 2 coats luxury emulsion', 2499, 'per_visit', 'Paintbrush', 1],
-    ['Exterior Weathercoat Anti-Fungal Painting', 'Painting', 'Power wash, anti-algal primer & silicon-enhanced exterior weather protection', 3999, 'per_visit', 'Paintbrush', 1],
-    ['Terrace & Roof Chemical Waterproofing', 'Painting', 'Polyurethane fiber-reinforced waterproof elastomeric coating with 5-yr guarantee', 1999, 'per_visit', 'Paintbrush', 1],
-    ['Wall Putty, Primer & Deep Crack Sealing', 'Painting', 'Crack widening, polymer seal sealant fill, fiber tape & smooth sanding', 699, 'per_visit', 'Paintbrush', 0],
-    ['Wood Polish & PU Finish for Furniture', 'Painting', 'Hand-rubbed french spirit polish, PU clear coat & teak finish', 899, 'per_visit', 'Paintbrush', 1],
-
-    // ── Cleaning & Pest Control (Services 37-41) ──
-    ['Full Home Deep Cleaning (1BHK / 2BHK)', 'Cleaning', 'Hospital-grade rotary floor machine scrub, kitchen, balcony & window clean', 1499, 'per_visit', 'SprayCan', 0],
-    ['Bathroom Intensive Descaling & Acid Wash', 'Cleaning', 'Hard-water scale removal, grout scrubbing, exhaust & tile shine buffing', 499, 'per_visit', 'SprayCan', 0],
-    ['Kitchen Intensive Degreasing & Tile Scrub', 'Cleaning', 'Food oil splatter removal, platform polishing & chimney surface cleaning', 699, 'per_visit', 'SprayCan', 0],
-    ['Sofa, Mattress & Carpet Shampooing', 'Cleaning', 'Injection-extraction deep foam wash, stain lift & hot air quick drying', 649, 'per_visit', 'SprayCan', 0],
-    ['Eco-Certified Pest & Termite Control', 'Cleaning', 'Odorless herbal gel baiting, anti-termite wall perimeter barrier spray', 899, 'per_visit', 'SprayCan', 0],
-
-    // ── Gardening, Caregiving, Driving & Domestic (Services 42-47) ──
-    ['Garden Maintenance & Lawn Mowing', 'Gardening', 'Lawn edging, bush trimming, organic manure dressing & leaf disposal', 399, 'per_visit', 'Flower2', 0],
-    ['Terrace Garden Setup & Drip Irrigation', 'Gardening', 'Planter box potting mix, nutrient feed & automatic micro-drip kit install', 999, 'per_visit', 'Flower2', 1],
-    ['Elderly Patient Care & Daily Assistance', 'Caregiving', 'Geriatric mobility aid, vitals logging, feeding & medication assistance', 599, 'per_day', 'HeartPulse', 0],
-    ['Post-Operative Patient Care & Nursing', 'Caregiving', 'Wound hygiene supervision, recovery exercises & physiotherapy coordination', 799, 'per_day', 'HeartPulse', 1],
-    ['Verified Chauffeur On-Demand (8-Hour Shift)', 'Driving', 'Police-verified uniformed chauffeur for automatic and manual city vehicles', 649, 'per_day', 'Car', 0],
-    ['Outstation Highway Chauffeur Service', 'Driving', 'Experienced highway driver for long-distance roundtrips with night allowance', 999, 'per_day', 'Car', 0],
-  ];
-
-  for (const s of services) {
-    await query(`INSERT INTO services (name, category, description, base_price, price_unit, icon, is_complex) VALUES ($1, $2, $3, $4, $5, $6, $7)`, s);
-  }
-
-  // =============================================
-  // 7. Locked Spare Parts Matrix (25 Regulated Items)
-  // =============================================
-  const parts = [
-    // AC & Appliance
-    ['Appliance Repair', 'R32 Eco-friendly AC Gas Canister (500g)', 850, 'can', 6],
-    ['Appliance Repair', 'Universal AC Run Capacitor (45uF)', 380, 'piece', 6],
-    ['Appliance Repair', 'Heavy Duty AC Outdoor Wall Bracket Set', 650, 'set', 24],
-    ['Appliance Repair', '1/4" & 3/8" Insulated Copper Pipe Set (3m)', 950, 'set', 12],
-    ['Appliance Repair', 'Universal Electronic AC Inverter PCB Board', 1450, 'piece', 12],
-    ['Appliance Repair', 'Heavy Duty Refrigerator Relay & Overload Kit', 290, 'piece', 6],
-    ['Appliance Repair', 'Washing Machine Heavy Duty Drain Pump Motor', 580, 'piece', 12],
-
-    // Electrical
-    ['Electrical', '16A Havells Modular MCB', 220, 'piece', 12],
-    ['Electrical', 'Anchor 6A 2-Way Switch', 65, 'piece', 24],
-    ['Electrical', 'Finolex 2.5 sqmm Copper Wire (10m)', 340, 'bundle', 12],
-    ['Electrical', 'Orient 2.5uF Fan Capacitor', 110, 'piece', 6],
-    ['Electrical', '16A Heavy Duty Industrial 3-Pin Power Plug', 180, 'piece', 12],
-    ['Electrical', 'Schneider Electric 40A 30mA RCCB Shock Protector', 1250, 'piece', 24],
-
-    // Plumbing
-    ['Plumbing', 'Astral 1/2" Brass Ball Valve', 185, 'piece', 12],
-    ['Plumbing', 'Supreme CPVC 1" Elbow Joint', 45, 'piece', 24],
-    ['Plumbing', 'Teflon Sealing Tape (Pack of 3)', 60, 'pack', 6],
-    ['Plumbing', 'SS Flexible Waste Pipe (Braided)', 160, 'piece', 12],
-    ['Plumbing', 'Jaquar Half-Turn Ceramic Disc Spindle', 280, 'piece', 12],
-    ['Plumbing', 'Supreme 1" Non-Return Valve (NRV)', 320, 'piece', 12],
-
-    // Carpentry
-    ['Carpentry', 'Godrej Stainless Steel Mortise Lock Set', 750, 'set', 36],
-    ['Carpentry', 'Hettich Soft-Close Hydraulic Hinges (Pair)', 240, 'pair', 24],
-    ['Carpentry', 'Ebco Heavy-Duty Telescopic Drawer Channel (18")', 380, 'pair', 24],
-
-    // Painting & Waterproofing
-    ['Painting', 'Asian Paints Damp-Proof Acrylic Primer (1L)', 320, 'litre', 12],
-    ['Painting', 'Waterproof Wall Putty (5kg Bag)', 190, 'bag', 6],
-    ['Painting', 'Dr. Fixit Fastflex 2K Waterproof Membrane (5kg)', 880, 'pack', 36],
-  ];
-
-  for (const p of parts) {
-    await query(`INSERT INTO parts_catalog (trade_category, part_name, standard_price, unit, warranty_months) VALUES ($1, $2, $3, $4, $5)`, p);
-  }
-
-  // =============================================
-  // 8. Certifications
-  // =============================================
-  const certifications = [
-    [1, 'HVAC Master Technician Certificate', 'CESL India', 'CESL-ME-2013-11002', '2013-12-01', 'VERIFIED'],
-    [1, 'Daikin Variable Refrigerant Certified Specialist', 'Daikin Institute', 'DKN-VRF-2019-902', '2019-04-10', 'VERIFIED'],
-    [2, 'AC Installation & Pipe Brazing Safety License', 'NSDC Skill India', 'NSDC-HVAC-2018-441', '2018-06-15', 'VERIFIED'],
-    [3, 'Refrigerant Handling & Environmental Safety', 'National Ozone Safety Council', 'OZN-IND-2020-112', '2020-02-20', 'VERIFIED'],
-    [7, 'ITI Master Electrician Certificate', 'National ITI Bhubaneswar', 'ITI-BBSR-2014-E1024', '2014-06-15', 'VERIFIED'],
-    [7, 'Electrical Safety Standard Training', 'OSEB Training Centre', 'OSEB-ST-2020-442', '2020-03-10', 'VERIFIED'],
-    [8, 'Solar Rooftop & Inverter Technician', 'National Solar Energy Federation', 'MNRE-SLR-2021-309', '2021-08-11', 'VERIFIED'],
-    [13, 'Master Plumber License', 'NSDC Skill India', 'NSDC-PLB-2013-3201', '2013-11-05', 'VERIFIED'],
-    [14, 'Senior Underground Sewer & Drainage License', 'Cuttack Municipal Corp.', 'CMC-MPL-2015-7088', '2015-01-15', 'VERIFIED'],
-    [19, 'Carpentry NTC Certification', 'NCVT', 'NCVT-CRP-2019-4102', '2019-05-12', 'VERIFIED'],
-    [24, 'Painting & Weather Coating Cert.', 'NSDC Skill India', 'NSDC-PNT-2017-5034', '2017-08-22', 'VERIFIED'],
-    [25, 'Structural Waterproofing & Membrane Specialist', 'Dr. Fixit Institute', 'DFX-WPR-2016-881', '2016-10-18', 'VERIFIED'],
-  ];
-
-  for (const c of certifications) {
-    await query(`INSERT INTO certifications (worker_id, certification_name, issuing_organization, certificate_number, issue_date, verification_status) VALUES ($1, $2, $3, $4, $5, $6)`, c);
-  }
-
-  // =============================================
-  // 9. Real-World Bookings (24 Bookings with 93-2-5 Model)
-  // =============================================
-  // Helper for 93-2-5 calculation
-  // labour amount, partsCost, cooperativeFee (5%), platformFee (2%), totalAmount
-  const testBookings = [
-    // ── CASE 1: Split AC Deep Jet Service (Worker Rajendra Mohapatra & Customer Ananya Patel)
-    ['BKG-2026-0001', 1, 1, null, 1, 'Khordha', 'Bhubaneswar', 'Patia, Plot 42, Near KIIT Campus', '751024', 20.3540, 85.8170, '2026-08-28', '10:00 AM', 0, 0, 0, 'ACCEPTED', 499, 0, null, 24.95, 9.98, 533.93, 'Living room AC cooling slow; arrival OTP ready.', '4821', '7193', null, null, null, 0, null, '2026-08-28T07:00:00Z'],
-
-    // ── CASE 2: Emergency Short Circuit (Worker Ramesh Kumar)
-    ['BKG-2026-0002', 2, 7, null, 18, 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Flat 302', '751013', 20.2961, 85.8245, '2026-08-28', '02:00 PM', 1, 0, 0, 'IN_PROGRESS', 599, 220, '16A Havells Modular MCB', 29.95, 11.98, 860.93, 'Emergency short-circuit restoration contained. Ready for Completion OTP.', '5932', '8401', 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400', null, null, 0, null, '2026-08-28T07:30:00Z'],
-
-    // ── CASE 3: Master-Apprentice Pairing (Apprentice Prakash Jena with Master Ramesh Kumar)
-    ['BKG-2026-0003', 1, 9, 7, 15, 'Khordha', 'Bhubaneswar', 'Patia, Tower B-402', '751024', 20.3540, 85.8170, '2026-08-28', '04:00 PM', 0, 0, 0, 'MATCHED', 1499, 340, 'Finolex 2.5 sqmm Copper Wire', 74.95, 29.98, 1943.93, 'Heavy complete room concealed rewiring. Apprentice paired with Master Ramesh.', '6319', '2847', null, null, null, 0, null, '2026-08-28T08:00:00Z'],
-
-    // ── CASE 4: Split AC Installation & Commissioning (Worker Dilip Barik)
-    ['BKG-2026-0004', 5, 2, null, 2, 'Khordha', 'Bhubaneswar', 'Nayapalli, Niladri Vihar Society', '751012', 20.2850, 85.8020, '2026-08-29', '09:00 AM', 0, 0, 0, 'ACCEPTED', 1299, 650, 'Heavy Duty AC Outdoor Wall Bracket Set', 64.95, 25.98, 2039.93, 'New 1.5 Ton Inverter AC installation with bracket mounting.', '7741', '1952', null, null, null, 0, null, '2026-08-28T08:30:00Z'],
-
-    // ── CASE 5: AC Gas Leak Repair & Refilling (Completed, 30-Day Guarantee Active)
-    ['BKG-2026-0005', 2, 3, null, 4, 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, House 12', '751013', 20.2961, 85.8245, '2026-08-27', '11:00 AM', 0, 0, 0, 'COMPLETED', 1899, 850, 'R32 Eco-friendly AC Gas Canister (500g)', 94.95, 37.98, 2881.93, 'Nitrogen leak test performed and R32 refilled. Standard 30-Day Guarantee armed.', '3842', '9156', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400', 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400', '2026-09-03T11:00:00Z', 0, '2026-08-27T12:30:00Z', '2026-08-27T08:00:00Z'],
-
-    // ── CASE 6: Overhead Water Tank Deep Disinfection (Worker Ajay Sahu)
-    ['BKG-2026-0006', 7, 16, null, 21, 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, HIG-44', '751016', 20.3350, 85.8100, '2026-08-26', '10:00 AM', 0, 0, 0, 'COMPLETED', 799, 0, null, 39.95, 15.98, 854.93, '1000L Sintex overhead tank pressure cleaned with UV disinfection.', '5129', '6384', 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400', 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400', '2026-09-02T10:00:00Z', 0, '2026-08-26T12:00:00Z', '2026-08-26T07:00:00Z'],
-
-    // ── CASE 7: Flatpack Furniture Assembly (Worker Tapan Sethi)
-    ['BKG-2026-0007', 3, 20, null, 27, 'Cuttack', 'Cuttack', 'College Square, Buxi Lane', '753003', 20.4625, 85.8830, '2026-08-26', '03:00 PM', 0, 0, 0, 'COMPLETED', 599, 0, null, 29.95, 11.98, 640.93, 'King-size engineered wood bed & 3-door wardrobe assembled.', '8204', '4719', null, null, '2026-09-02T15:00:00Z', 0, '2026-08-26T17:00:00Z', '2026-08-26T11:00:00Z'],
-
-    // ── CASE 8: Inverter AC PCB Diagnostics & Board Repair (Worker Rajendra Mohapatra)
-    ['BKG-2026-0008', 6, 1, null, 5, 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Plot 110', '751007', 20.2870, 85.8450, '2026-08-28', '08:00 AM', 0, 0, 0, 'IN_PROGRESS', 799, 380, 'Universal AC Run Capacitor (45uF)', 39.95, 15.98, 1234.93, 'Inverter AC E6 error code PCB repair in progress.', '1928', '3746', null, null, null, 0, null, '2026-08-28T07:15:00Z'],
-
-    // ── CASE 9: Full Home Deep Cleaning (Worker Narayan Rout)
-    ['BKG-2026-0009', 4, 28, null, 37, 'Puri', 'Puri', 'VIP Road, Puri', '752001', 19.8135, 85.8312, '2026-08-25', '01:00 PM', 0, 0, 0, 'COMPLETED', 1499, 0, null, 74.95, 29.98, 1603.93, '2BHK vacation home deep sanitization and floor scrub completed.', '9012', '4581', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400', 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400', '2026-09-01T13:00:00Z', 0, '2026-08-25T15:00:00Z', '2026-08-25T09:00:00Z'],
-
-    // ── CASE 10: Broadcast Dispatch Pool - AC Deep Jet Service (First-to-Accept)
-    ['BKG-2026-0010', 8, null, null, 1, 'Khordha', 'Bhubaneswar', 'Khandagiri Enclave, Plot 18', '751030', 20.2570, 85.7750, '2026-08-28', '05:00 PM', 0, 0, 0, 'REQUESTED', 499, 0, null, 24.95, 9.98, 533.93, 'Split AC jet cleaning requested by citizen. Broadcast alert active.', '3491', '8120', null, null, null, 0, null, '2026-08-28T09:00:00Z'],
-
-    // ── CASE 11: Broadcast Dispatch Pool - AC Gas Refill & Leak Test (First-to-Accept)
-    ['BKG-2026-0011', 13, null, null, 4, 'Khordha', 'Bhubaneswar', 'Infocity Avenue, Cyber City', '751024', 20.3580, 85.8150, '2026-08-28', '06:30 PM', 0, 0, 0, 'REQUESTED', 1899, 0, null, 94.95, 37.98, 2031.93, 'AC not cooling at all, suspected gas leakage. Broadcast dispatch alert.', '4192', '7731', null, null, null, 0, null, '2026-08-28T09:15:00Z'],
-
-    // ── CASE 12: Broadcast Dispatch Pool - Emergency 60-Min Plumbing Pipe Burst
-    ['BKG-2026-0012', 10, null, null, 26, 'Cuttack', 'Cuttack', 'CDA Sector 9, Plot 520', '753014', 20.4890, 85.8600, '2026-08-28', '07:00 PM', 1, 0, 0, 'REQUESTED', 599, 0, null, 29.95, 11.98, 640.93, '🚨 Emergency high-pressure bathroom main pipe burst. Immediate response needed.', '9941', '1284', null, null, null, 0, null, '2026-08-28T09:20:00Z'],
-  ];
-
-  for (const b of testBookings) {
-    await query(
-      `INSERT INTO bookings (
-        booking_code, customer_id, worker_id, paired_master_worker_id, service_id, location_district, location_city, location_address, location_pincode,
-        latitude, longitude, scheduled_date, scheduled_time, is_emergency, is_bulk_order, bulk_discount_amount, status,
-        amount, parts_cost, parts_details, cooperative_fee, platform_fee, total_amount, notes,
-        arrival_otp, completion_otp, pre_job_photo_url, post_job_photo_url, guarantee_armed_until, guarantee_claimed,
-        completed_at, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)`,
-      b
-    );
-  }
-
-  // =============================================
-  // 10. Payments & Form IV Invoices
-  // =============================================
-  const payments = [
-    [5, 'TXN-DEMO-20260827-005', 2881.93, 'UPI', 'SUCCESS', '2026-08-27T12:35:00Z'],
-    [6, 'TXN-DEMO-20260826-006', 854.93, 'UPI', 'SUCCESS', '2026-08-26T12:05:00Z'],
-    [7, 'TXN-DEMO-20260826-007', 640.93, 'NET_BANKING', 'SUCCESS', '2026-08-26T17:10:00Z'],
-    [9, 'TXN-DEMO-20260825-009', 1603.93, 'UPI', 'SUCCESS', '2026-08-25T15:10:00Z'],
-  ];
-
-  for (const p of payments) {
-    await query(`INSERT INTO payments (booking_id, transaction_id, amount, payment_method, status, paid_at) VALUES ($1, $2, $3, $4, $5, $6)`, p);
-  }
-
-  const invoices = [
-    [1, 'INV-2026-0001', 'Bhubaneswar Labour Cooperative Federation', 'Ananya Patel', 'Rajendra Mohapatra (Master)', 'Split AC Deep Jet Service', '2026-08-28', 499, 0, 24.95, 9.98, 533.93, 'UNPAID'],
-    [2, 'INV-2026-0002', 'Bhubaneswar Labour Cooperative Federation', 'Priya Mohanty', 'Ramesh Kumar (Master)', 'Emergency 60-Min Short-Circuit', '2026-08-28', 599, 220, 29.95, 11.98, 860.93, 'UNPAID'],
-    [3, 'INV-2026-0003', 'Bhubaneswar Labour Cooperative Federation', 'Ananya Patel', 'Prakash Jena (w/ Master Ramesh)', 'Complete Room Concealed Re-wiring', '2026-08-28', 1499, 340, 74.95, 29.98, 1943.93, 'UNPAID'],
-    [4, 'INV-2026-0004', 'Bhubaneswar Labour Cooperative Federation', 'Vikram Sahoo', 'Dilip Barik (Gold)', 'Split AC Installation & Mounting', '2026-08-29', 1299, 650, 64.95, 25.98, 2039.93, 'UNPAID'],
-    [5, 'INV-2026-0005', 'Bhubaneswar Labour Cooperative Federation', 'Priya Mohanty', 'Kailash Sahoo (Master)', 'AC Gas Leak Repair & Refilling', '2026-08-27', 1899, 850, 94.95, 37.98, 2881.93, 'PAID'],
-    [6, 'INV-2026-0006', 'Bhubaneswar Labour Cooperative Federation', 'Rohit Patnaik', 'Ajay Sahu (Gold)', 'Overhead Water Tank Deep Disinfection', '2026-08-26', 799, 0, 39.95, 15.98, 854.93, 'PAID'],
-    [7, 'INV-2026-0007', 'Cuttack District Labour Cooperative Society', 'Sanjay Das', 'Tapan Sethi (Gold)', 'Flatpack Furniture Assembly', '2026-08-26', 599, 0, 29.95, 11.98, 640.93, 'PAID'],
-    [8, 'INV-2026-0008', 'Bhubaneswar Labour Cooperative Federation', 'Sunita Tripathy', 'Rajendra Mohapatra (Master)', 'Inverter AC PCB Diagnostics', '2026-08-28', 799, 380, 39.95, 15.98, 1234.93, 'UNPAID'],
-    [9, 'INV-2026-0009', 'Puri Coastal Labour Cooperative', 'Meera Rath', 'Narayan Rout (Gold)', 'Full Home Deep Cleaning', '2026-08-25', 1499, 0, 74.95, 29.98, 1603.93, 'PAID'],
-    [10, 'INV-2026-0010', 'Bhubaneswar Labour Cooperative Federation', 'Sneha Mishra', 'Assigned Cooperative Artisan', 'Split AC Deep Jet Service', '2026-08-28', 499, 0, 24.95, 9.98, 533.93, 'UNPAID'],
-  ];
-
-  for (const inv of invoices) {
-    await query(`INSERT INTO invoices (booking_id, invoice_number, cooperative_name, customer_name, worker_name, service_name, service_date, amount, parts_cost, cooperative_fee, platform_fee, total_amount, payment_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`, inv);
-  }
-
-  // =============================================
-  // 11. Reviews & Appliance Lineages
-  // =============================================
-  const reviews = [
-    [5, 2, 3, 5, 'Kailash bhai detected the micro flare leak with nitrogen and recharged R32 gas. AC cooling like brand new!', 5, 5, 5, 'Thank you! Remember to keep the outdoor unit unobstructed.'],
-    [6, 7, 16, 5, 'Ajay cleared all the sedimentation and disinfected our 1000L tank. Water pressure is superb now.', 5, 5, 5, 'Always glad to serve Chandrasekharpur.'],
-    [7, 3, 20, 5, 'Tapan arrived right on time and assembled the 3-door wardrobe with high precision.', 5, 5, 5, 'Thank you sir for supporting cooperative artisans.'],
-    [9, 4, 28, 5, 'Narayan and his team made the sea-facing apartment spotless before our family vacation.', 5, 5, 5, 'Puri Coastal Labour Cooperative is at your service.'],
-  ];
-
-  for (const r of reviews) {
-    await query(`INSERT INTO reviews (booking_id, customer_id, worker_id, rating, comment, punctuality_score, quality_score, safety_score, worker_reply) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, r);
-  }
-
-  const lineage = [
-    [2, 'Split Air Conditioner (Living Room)', 'Daikin 1.5 Ton Inverter', 'SN-DK-2022-4410', '2026-08-27', 'Nitrogen leak test, flare nut brazed & R32 refrigerant refilled.', 'Kailash Sahoo (Certified AC Gas Expert)', 5, '2027-02-27'],
-    [7, 'Overhead Water Storage Tank', 'Sintex Triple Layer 1000L', 'SN-SN-2021-9921', '2026-08-26', 'Mechanical high-pressure wash and UV chlorination completed.', 'Ajay Sahu (Water Tank Specialist)', 6, '2027-02-26'],
-    [1, 'Main Electrical Distribution Board', 'Havells 8-Way Modular Box', 'SN-HV-2023-8821', '2026-08-26', 'Installed 16A C-Curve MCB with earthing test.', 'Ramesh Kumar (Master Artisan)', 2, '2027-08-26'],
-  ];
-
-  for (const l of lineage) {
-    await query(`INSERT INTO appliance_lineage (customer_id, appliance_type, brand_model, serial_number, last_service_date, service_summary, technician_name, booking_id, warranty_until) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, l);
-  }
-
-  // =============================================
-  // 12. Welfare Records
-  // =============================================
-  const welfare = [
-    [1, 'Insurance', 'ESIC Group Accident Insurance', 'ESIC National Council', 'ENROLLED', '2024-01-15', '₹2,00,000 accidental coverage + disability income protection'],
-    [1, 'Health', 'Cooperative Health Support & Annual Checkup', 'Cooperative Labour Welfare Fund', 'ENROLLED', '2024-01-15', 'Annual full-body checkup + family diagnostics assistance'],
-    [1, 'Training', 'NSDC Advanced Inverter HVAC Refrigeration', 'NSDC / National ITI Network', 'ENROLLED', '2024-06-01', 'Certified advanced 2-week inverter AC diagnostics module'],
-    [7, 'Insurance', 'ESIC Group Accident Insurance', 'ESIC National Council', 'ENROLLED', '2024-02-10', 'Covered under ESIC accident insurance scheme'],
-    [7, 'Pension', 'EPFO Social Security & Pension Corpus', 'EPFO India', 'ENROLLED', '2024-02-10', 'Monthly cooperative retirement fund contribution active'],
-  ];
-
-  for (const w of welfare) {
-    await query(`INSERT INTO worker_welfare (worker_id, benefit_type, benefit_name, provider, status, enrollment_date, details) VALUES ($1, $2, $3, $4, $5, $6, $7)`, w);
-  }
-
-  // =============================================
-  // 13. Societies & Legal Formation Roster (Pages 1 & 2)
-  // =============================================
+  // 2 ACTIVE (Approved) and 2 DCO_REVIEW (Pending approval) in EACH of the 3 districts!
   const societiesSeed = [
+    // ── Khordha District (Societies 1 - 4) ──
     [
       'SOC-OD-2024-001',
-      'Shramik Kalyan National Labour Cooperative Samiti',
+      'Shramik Kalyan Labour Cooperative Samiti',
       'ACTIVE',
       'REG-NL-2024-8891',
       'shramik.kalyan@coop.gov.in',
       '0674-2548891',
       'Khordha',
       'Bhubaneswar',
-      'Plot 45, Master Canteen Square, Bhubaneswar',
+      'Plot 45, Master Canteen Square, Saheed Nagar, Bhubaneswar',
       '751001',
-      'Empowering multi-trade skilled artisans under national cooperative guidelines with fair wage distribution and health safety nets.',
-      1, // is_nlcf_affiliated = 1 (YES)
-      'NLCF-CERT-2024-4412',
-      '2024-03-15',
-      'Khordha District Cooperative Office',
-      'Shri Debendra Nayak (DCO)',
-      1, // dco_linked = 1
-      1, // ncct_training_completed = 1
-      1, // ministry_recognized = 1
-      850000.0, // initial_capital_balance
-      'COOP-9988112233',
-      'Apex State Cooperative Bank, Bhubaneswar Main',
-      'OSCB0001002',
-      'HALF_YEARLY',
-      9, // timeline_stage = 9 (Approved & Certified)
-      'SS-SOC-2024-001',
-      24,
+      'Central Bhubaneswar multi-trade cooperative federation chapter for electrical, plumbing, and HVAC maintenance.',
+      1, 'LCF-CERT-2024-4412', '2024-03-15',
+      'Khordha District Cooperative Office', 'Shri Debendra Nayak (DCO)', 1, 1, 1,
+      850000.0, 'COOP-9988112233', 'Apex State Cooperative Bank, Bhubaneswar Main', 'OSCB0001002',
+      'HALF_YEARLY', 9, 'SS-SOC-2024-001', 28, 1
     ],
+    [
+      'SOC-OD-2026-004',
+      'Kalinga Shramik Seva Sahakari Samiti',
+      'DCO_REVIEW',
+      null,
+      'kalinga.shramik@coop.gov.in',
+      '0674-2589001',
+      'Khordha',
+      'Bhubaneswar',
+      'Khandagiri Square, Near Monument Gate, Bhubaneswar',
+      '751030',
+      'Grassroots collective of electrical, plumbing, and carpentry artisans organizing for West Bhubaneswar residential clusters.',
+      0, null, null,
+      'Khordha District Cooperative Office', 'Shri Debendra Nayak (DCO)', 0, 0, 0,
+      35000.0, 'COOP-7788990011', 'Khordha Central Cooperative Bank', 'KCCB0001005',
+      'QUARTERLY', 7, 'SS-SOC-2026-8801', 14, 2
+    ],
+    [
+      'SOC-OD-2024-007',
+      'Ekamra Multi-Trade Artisan Cooperative',
+      'ACTIVE',
+      'REG-OD-2024-9914',
+      'ekamra.artisan@coop.gov.in',
+      '0674-2591200',
+      'Khordha',
+      'Bhubaneswar',
+      'Ratha Danda, Old Town, Near Lingaraj Temple, Bhubaneswar',
+      '751002',
+      'South Bhubaneswar artisan chapter specializing in masonry, heritage stone restoration, plumbing, and domestic maintenance.',
+      1, 'LCF-CERT-2024-7719', '2024-06-12',
+      'Khordha District Cooperative Office', 'Shri Debendra Nayak (DCO)', 1, 1, 1,
+      480000.0, 'COOP-9922334411', 'Apex State Cooperative Bank, Old Town Branch', 'OSCB0001002',
+      'HALF_YEARLY', 9, 'SS-SOC-2024-007', 22, 3
+    ],
+    [
+      'SOC-OD-2026-008',
+      'Chandaka-Patia Tech-Artisan Cooperative Samiti',
+      'DCO_REVIEW',
+      null,
+      'patia.techcraft@coop.gov.in',
+      '0674-2741990',
+      'Khordha',
+      'Bhubaneswar',
+      'Infocity Avenue, Near KIIT Square, Patia, Bhubaneswar',
+      '751024',
+      'Modern appliance, EV charger, HVAC inverter, and smart home maintenance cooperative serving the IT corridor.',
+      0, null, null,
+      'Khordha District Cooperative Office', 'Shri Debendra Nayak (DCO)', 0, 0, 0,
+      42000.0, 'COOP-6677889900', 'Khordha Central Cooperative Bank, Patia', 'KCCB0001005',
+      'QUARTERLY', 7, 'SS-SOC-2026-9012', 16, 4
+    ],
+
+    // ── Cuttack District (Societies 5 - 8) ──
     [
       'SOC-OD-2024-002',
       'Utkal Shilpi Seva Sahakari Samiti',
@@ -664,26 +450,67 @@ async function seed() {
       '0671-2316623',
       'Cuttack',
       'Cuttack',
-      'Badambadi Colony, Cuttack',
+      'Badambadi Bus Stand Road, Cuttack',
       '753012',
-      'Dedicated cooperative society representing plumbing, electrical, and carpentry artisans across Cuttack district.',
-      0, // is_nlcf_affiliated = 0
-      null,
-      null,
-      'Cuttack District Cooperative Office',
-      'Smt. Mamata Panda (DCO)',
-      1,
-      0,
-      1,
-      420000.0,
-      'COOP-4455667788',
-      'Cuttack Central Cooperative Bank',
-      'CCCB0002004',
-      'QUARTERLY',
-      9,
-      'SS-SOC-2024-002',
-      18,
+      'Dedicated cooperative society representing plumbing, electrical, and carpentry artisans across Central Cuttack.',
+      1, 'LCF-CERT-2024-5512', '2024-04-18',
+      'Cuttack District Cooperative Office', 'Smt. Laxmi Devi (DCO)', 1, 1, 1,
+      420000.0, 'COOP-4455667788', 'Cuttack Central Cooperative Bank, Badambadi', 'CCCB0002004',
+      'QUARTERLY', 9, 'SS-SOC-2024-002', 24, 5
     ],
+    [
+      'SOC-OD-2026-005',
+      'Mahanadi Shilpi Sahakari Samiti',
+      'DCO_REVIEW',
+      null,
+      'mahanadi.shilpi@coop.gov.in',
+      '0671-2449011',
+      'Cuttack',
+      'Cuttack',
+      'Madhupatna Square, OMP Line, Cuttack',
+      '753010',
+      'Artisan cooperative society for masonry, metal fabrication, and woodwork crafts in East Cuttack industrial hub.',
+      0, null, null,
+      'Cuttack District Cooperative Office', 'Smt. Laxmi Devi (DCO)', 0, 0, 0,
+      30000.0, 'COOP-5566778899', 'Cuttack Central Cooperative Bank, Madhupatna', 'CCCB0002004',
+      'QUARTERLY', 7, 'SS-SOC-2026-7721', 14, 6
+    ],
+    [
+      'SOC-OD-2024-009',
+      'Barabati Urban Crafts & Maintenance Cooperative',
+      'ACTIVE',
+      'REG-OD-2024-7781',
+      'barabati.crafts@coop.gov.in',
+      '0671-2501199',
+      'Cuttack',
+      'Cuttack',
+      'CDA Sector 9, Plot 108, Near Judicial Academy, Cuttack',
+      '753014',
+      'Specialized residential maintenance cooperative covering CDA phases, Tulsipur, and Cantonment apartments.',
+      1, 'LCF-CERT-2024-9912', '2024-05-14',
+      'Cuttack District Cooperative Office', 'Smt. Laxmi Devi (DCO)', 1, 1, 1,
+      510000.0, 'COOP-3322119988', 'Cuttack Central Cooperative Bank, CDA', 'CCCB0002004',
+      'HALF_YEARLY', 9, 'SS-SOC-2024-009', 20, 7
+    ],
+    [
+      'SOC-OD-2026-010',
+      'Silver City Artisan Guild Cooperative',
+      'DCO_REVIEW',
+      null,
+      'silvercity.guild@coop.gov.in',
+      '0671-2612200',
+      'Cuttack',
+      'Cuttack',
+      'Buxi Bazar Heritage Lane, Cuttack',
+      '753001',
+      'Traditional filigree, metalwork, electrical overhaul, and domestic sanitation cooperative guild in Old Cuttack.',
+      0, null, null,
+      'Cuttack District Cooperative Office', 'Smt. Laxmi Devi (DCO)', 0, 0, 0,
+      38000.0, 'COOP-1144778822', 'Cuttack Central Cooperative Bank, Buxi Bazar', 'CCCB0002004',
+      'QUARTERLY', 7, 'SS-SOC-2026-8819', 15, 8
+    ],
+
+    // ── Puri District (Societies 9 - 12) ──
     [
       'SOC-OD-2026-003',
       'Jagannath Nirman Sahakari Federation',
@@ -695,23 +522,62 @@ async function seed() {
       'Puri',
       'VIP Road, Near Bus Stand, Puri',
       '752002',
-      'Newly formed cooperative society for construction, electrical, and plumbing artisans in coastal pilgrimage areas.',
-      0,
+      'Newly formed cooperative society for construction, electrical, and plumbing artisans in coastal pilgrimage zones.',
+      0, null, null,
+      'Puri District Cooperative Office', 'Shri Alok Mohapatra (DCO)', 0, 0, 0,
+      25000.0, 'COOP-1122334455', 'Puri Urban Cooperative Bank, VIP Road', 'PUCB0003001',
+      'QUARTERLY', 7, 'SS-SOC-2026-9812', 15, 9
+    ],
+    [
+      'SOC-OD-2024-006',
+      'Konark Karigar Sahakari Samiti',
+      'ACTIVE',
+      'REG-OD-2024-5519',
+      'konark.karigar@coop.gov.in',
+      '06752-235519',
+      'Puri',
+      'Konark',
+      'Marine Drive Road, Konark, Puri',
+      '752111',
+      'Heritage stone carving, masonry, solar electrical works, and tourist facility maintenance cooperative.',
+      1, 'LCF-CERT-2024-8831', '2024-05-20',
+      'Puri District Cooperative Office', 'Shri Alok Mohapatra (DCO)', 1, 1, 1,
+      520000.0, 'COOP-3344556677', 'Puri Urban Cooperative Bank, Konark', 'PUCB0003001',
+      'HALF_YEARLY', 9, 'SS-SOC-2024-006', 22, 10
+    ],
+    [
+      'SOC-OD-2024-011',
+      'Srikshetra Coastal Facility Cooperative Samiti',
+      'ACTIVE',
+      'REG-OD-2024-4419',
+      'srikshetra.coastal@coop.gov.in',
+      '06752-221144',
+      'Puri',
+      'Puri',
+      'Sea Beach Road, Blue Wave Enclave, Baliapanda, Puri',
+      '752001',
+      'Hospitality, plumbing, corrosion-resistant electrical, and deep sanitation cooperative serving hotels and beachside residences.',
+      1, 'LCF-CERT-2024-3321', '2024-04-10',
+      'Puri District Cooperative Office', 'Shri Alok Mohapatra (DCO)', 1, 1, 1,
+      460000.0, 'COOP-2233445566', 'Puri Urban Cooperative Bank, Sea Beach', 'PUCB0003001',
+      'HALF_YEARLY', 9, 'SS-SOC-2024-011', 20, 11
+    ],
+    [
+      'SOC-OD-2026-012',
+      'Brahmagiri Rural Artisan & Craft Cooperative',
+      'DCO_REVIEW',
       null,
-      null,
-      'Puri District Cooperative Office',
-      'Shri Alok Mohapatra (DCO)',
-      0,
-      0,
-      0,
-      25000.0,
-      'COOP-1122334455',
-      'Puri Urban Cooperative Bank',
-      'PUCB0003001',
-      'QUARTERLY',
-      7,
-      'SS-SOC-2026-9812',
-      12,
+      'brahmagiri.rural@coop.gov.in',
+      '06752-248810',
+      'Puri',
+      'Brahmagiri',
+      'Loknath Temple Road, West Enclave, Puri',
+      '752001',
+      'Rural artisan collective for agro-maintenance, solar irrigation pump repair, carpentry, and electrical wiring.',
+      0, null, null,
+      'Puri District Cooperative Office', 'Shri Alok Mohapatra (DCO)', 0, 0, 0,
+      28000.0, 'COOP-8899001122', 'Puri Urban Cooperative Bank, Loknath', 'PUCB0003001',
+      'QUARTERLY', 7, 'SS-SOC-2026-4421', 12, 12
     ],
   ];
 
@@ -722,192 +588,698 @@ async function seed() {
         district, city, address, pincode, objectives, is_nlcf_affiliated, nlcf_certificate_no,
         nlcf_affiliation_date, dco_office_name, dco_officer_name, dco_linked, ncct_training_completed,
         ministry_recognized, initial_capital_balance, bank_account_no, cooperative_bank_name,
-        bank_ifsc, audit_frequency, timeline_stage, tracking_id, total_workers_count
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
+        bank_ifsc, audit_frequency, timeline_stage, tracking_id, total_workers_count, federation_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)`,
       s
     );
   }
 
   // =============================================
-  // 14. Society 10 Founding Members
+  // 3. Users: Customers (60), Workers (84), Admins (16)
   // =============================================
-  const foundingMembers = [
-    [3, 'Bibhuti Bhusan Sahoo', 'Master Electrician', 'Plot 12, VIP Road, Puri', '9861001101', '****-****-4411', 'PRESIDENT', 1],
-    [3, 'Subhashree Mohanty', 'Cooperative Accountancy Specialist', 'Lane 4, Grand Road, Puri', '9861001102', '****-****-4412', 'SECRETARY', 1],
-    [3, 'Prafulla Kumar Jena', 'Senior Master Plumber', 'Station Road, Puri', '9861001103', '****-****-4413', 'TREASURER', 1],
-    [3, 'Girish Chandra Dash', 'Senior Carpenter & Wood Art', 'Balighai, Puri', '9861001104', '****-****-4414', 'MEMBER', 1],
-    [3, 'Jayanti Pradhan', 'Appliance Technician', 'Kumarpada, Puri', '9861001105', '****-****-4415', 'MEMBER', 1],
-    [3, 'Manoranjan Behera', 'Industrial Mason & Builder', 'Talabania, Puri', '9861001106', '****-****-4416', 'MEMBER', 1],
-    [3, 'Sasmita Sahoo', 'Decorative Painter & Finisher', 'Chakratirtha Road, Puri', '9861001107', '****-****-4417', 'MEMBER', 1],
-    [3, 'Tuna Barik', 'Sanitary & Waste Pipe Specialist', 'Loknath Road, Puri', '9861001108', '****-****-4418', 'MEMBER', 1],
-    [3, 'Bikash Mohapatra', 'Solar & Battery Technician', 'Atharanala, Puri', '9861001109', '****-****-4419', 'MEMBER', 1],
-    [3, 'Hemant Kumar Swain', 'HVAC Air Conditioning Mechanic', 'Penthakata, Puri', '9861001110', '****-****-4420', 'MEMBER', 1],
+  const users = [];
+
+  // ── 60 Customers (User IDs 1-60) ──
+  const customerData = [
+    // Khordha / Bhubaneswar (25 Customers: 1 - 25)
+    ['Ananya Patel', 'customer@demo.local', '9876543210', 'Khordha', 'Bhubaneswar', 'Patia, Plot 42, Near KIIT Campus', '751024', 20.3540, 85.8170, 4],
+    ['Priya Mohanty', 'priya@demo.local', '9876543211', 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Flat 302', '751013', 20.2961, 85.8245, 1],
+    ['Vikram Sahoo', 'vikram@demo.local', '9876543214', 'Khordha', 'Bhubaneswar', 'Nayapalli, Niladri Vihar Society', '751012', 20.2850, 85.8020, 2],
+    ['Sunita Tripathy', 'sunita@demo.local', '9876543215', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Plot 110', '751007', 20.2870, 85.8450, 1],
+    ['Rohit Patnaik', 'rohit@demo.local', '9876543216', 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, HIG-44', '751016', 20.3350, 85.8100, 4],
+    ['Sneha Mishra', 'sneha@demo.local', '9876543217', 'Khordha', 'Bhubaneswar', 'Khandagiri Enclave, Plot 18', '751030', 20.2570, 85.7750, 2],
+    ['Rajesh Mohapatra', 'rajesh@demo.local', '9876543222', 'Khordha', 'Bhubaneswar', 'Infocity Avenue, Cyber City', '751024', 20.3580, 85.8150, 4],
+    ['Pooja Nayak', 'pooja@demo.local', '9876543223', 'Khordha', 'Bhubaneswar', 'Rasulgarh Square, Krishna Tower', '751010', 20.3090, 85.8520, 1],
+    ['Alok Sundaray', 'alok@demo.local', '9876543224', 'Khordha', 'Bhubaneswar', 'VSS Nagar, Phase-2', '751007', 20.2950, 85.8360, 1],
+    ['Tanmay Rath', 'tanmay@demo.local', '9876543234', 'Khordha', 'Bhubaneswar', 'Sundarpada, Hi-Tech Plaza', '751002', 20.2450, 85.8200, 3],
+    ['Smruti Rekha Jena', 'smruti@demo.local', '9876543235', 'Khordha', 'Bhubaneswar', 'Old Town, Mahatab Road', '751002', 20.2410, 85.8320, 3],
+    ['Debabrata Barik', 'debabrata@demo.local', '9876543236', 'Khordha', 'Bhubaneswar', 'Master Canteen, Station Square', '751001', 20.2670, 85.8430, 1],
+    ['Gitanjali Mohanty', 'gitanjali@demo.local', '9876543237', 'Khordha', 'Bhubaneswar', 'Baramunda Housing Board Colony', '751003', 20.2760, 85.8080, 2],
+    ['Subrat Kumar Sahu', 'subrat@demo.local', '9876543238', 'Khordha', 'Bhubaneswar', 'Aiginia, Near NH-16 Plaza', '751019', 20.2640, 85.7890, 2],
+    ['Monali Pradhan', 'monali@demo.local', '9876543239', 'Khordha', 'Bhubaneswar', 'Unit-4, MLA Colony, Bhubaneswar', '751001', 20.2720, 85.8340, 1],
+    ['Bibhu Prasad Das', 'bibhu@demo.local', '9876543240', 'Khordha', 'Bhubaneswar', 'Mancheswar Industrial Estate, Sec-A', '751017', 20.3220, 85.8410, 1],
+    ['Sarojini Tripathy', 'sarojini@demo.local', '9876543241', 'Khordha', 'Bhubaneswar', 'Kalinga Nagar, K-7 Complex', '751019', 20.2710, 85.7720, 2],
+    ['Ashok Kumar Behera', 'ashok.c@demo.local', '9876543242', 'Khordha', 'Bhubaneswar', 'Sailashree Vihar, Phase-7', '751021', 20.3390, 85.8080, 4],
+    ['Nirmala Panigrahi', 'nirmala@demo.local', '9876543243', 'Khordha', 'Bhubaneswar', 'Samantarapur, Puri Bypass', '751002', 20.2350, 85.8450, 3],
+    ['Deepak Mohanty', 'deepak.c@demo.local', '9876543244', 'Khordha', 'Bhubaneswar', 'Ghatikia, Near CET Campus', '751003', 20.2810, 85.7680, 2],
+    ['Archana Rout', 'archana@demo.local', '9876543245', 'Khordha', 'Bhubaneswar', 'Forest Park, Goutam Nagar', '751014', 20.2610, 85.8310, 1],
+    ['Prabhat Mishra', 'prabhat@demo.local', '9876543246', 'Khordha', 'Bhubaneswar', 'Kapilaprasad, Pokhariput', '751020', 20.2480, 85.8110, 3],
+    ['Rashmita Senapati', 'rashmita@demo.local', '9876543247', 'Khordha', 'Bhubaneswar', 'Dumuduma, Phase-3 Housing', '751019', 20.2520, 85.7820, 2],
+    ['Siddharth Verma', 'siddharth@demo.local', '9876543248', 'Khordha', 'Bhubaneswar', 'Kalarahanga, Near KIIT Law', '751024', 20.3680, 85.8210, 4],
+    ['Ipsita Pattnaik', 'ipsita@demo.local', '9876543249', 'Khordha', 'Bhubaneswar', 'Bapuji Nagar, Market Building', '751009', 20.2630, 85.8380, 1],
+
+    // Cuttack District (20 Customers: 26 - 45)
+    ['Sanjay Das', 'sanjay@demo.local', '9876543212', 'Cuttack', 'Cuttack', 'College Square, Buxi Lane', '753003', 20.4625, 85.8830, 8],
+    ['Manas Ranjan Behera', 'manas@demo.local', '9876543218', 'Cuttack', 'Cuttack', 'Badambadi Colony, House 14', '753012', 20.4550, 85.8750, 5],
+    ['Swati Samantaray', 'swati@demo.local', '9876543219', 'Cuttack', 'Cuttack', 'CDA Sector 9, Plot 520', '753014', 20.4890, 85.8600, 7],
+    ['Kavita Jena', 'kavita@demo.local', '9876543225', 'Cuttack', 'Cuttack', 'Buxi Bazar, Muslim Sahi', '753001', 20.4610, 85.8810, 8],
+    ['Subhashree Rout', 'subhashree@demo.local', '9876543226', 'Cuttack', 'Cuttack', 'Cantonment Road, Officer Colony', '753001', 20.4730, 85.8920, 7],
+    ['Dillip Kumar Nanda', 'dillip@demo.local', '9876543250', 'Cuttack', 'Cuttack', 'Madhupatna, OMP Colony', '753010', 20.4670, 85.9020, 6],
+    ['Jayashree Mahapatra', 'jayashree@demo.local', '9876543251', 'Cuttack', 'Cuttack', 'Tulsipur, Deer Park Enclave', '753008', 20.4780, 85.8650, 7],
+    ['Bikram Keshari Swain', 'bikram@demo.local', '9876543252', 'Cuttack', 'Cuttack', 'Link Road, Madhupatna Flyover', '753012', 20.4620, 85.8860, 5],
+    ['Rojalin Nayak', 'rojalin@demo.local', '9876543253', 'Cuttack', 'Cuttack', 'Chauliaganj, Railway Colony', '753004', 20.4710, 85.9120, 6],
+    ['Abinash Prusty', 'abinash@demo.local', '9876543254', 'Cuttack', 'Cuttack', 'Mahanadi Vihar, MIG-22', '753004', 20.4750, 85.9080, 6],
+    ['Minati Sahoo', 'minati.c@demo.local', '9876543255', 'Cuttack', 'Cuttack', 'Chhatra Bazar, Main Mandi', '753003', 20.4650, 85.8900, 8],
+    ['Pravat Kumar Das', 'pravat@demo.local', '9876543256', 'Cuttack', 'Cuttack', 'CDA Sector 6, HIG-10', '753014', 20.4920, 85.8540, 7],
+    ['Sonali Kar', 'sonali@demo.local', '9876543257', 'Cuttack', 'Cuttack', 'Mangalabag, SCB Medical Road', '753007', 20.4700, 85.8850, 8],
+    ['Chittaranjan Jena', 'chitta@demo.local', '9876543258', 'Cuttack', 'Cuttack', 'Ranihat, Medical Road', '753001', 20.4660, 85.8890, 8],
+    ['Lipsa Biswal', 'lipsa@demo.local', '9876543259', 'Cuttack', 'Cuttack', 'Jagatpur Industrial Estate, Cuttack', '754021', 20.5050, 85.9220, 6],
+    ['Narayan Chandra Sahoo', 'narayan.c@demo.local', '9876543260', 'Cuttack', 'Cuttack', 'Bidanasi, Near Barabati Fort', '753014', 20.4850, 85.8710, 7],
+    ['Madhumita Sethi', 'madhu@demo.local', '9876543261', 'Cuttack', 'Cuttack', 'Pithapur, High Court Lane', '753001', 20.4610, 85.8760, 8],
+    ['Soumya Ranjan Pal', 'soumya@demo.local', '9876543262', 'Cuttack', 'Cuttack', 'Badambadi, LIC Colony', '753012', 20.4580, 85.8730, 5],
+    ['Rita Padhi', 'rita@demo.local', '9876543263', 'Cuttack', 'Cuttack', 'CDA Sector 10, River View', '753014', 20.4950, 85.8620, 7],
+    ['Kamalakanta Barik', 'kamal@demo.local', '9876543264', 'Cuttack', 'Cuttack', 'Khannagar, Ring Road', '753012', 20.4510, 85.8810, 5],
+
+    // Puri District (15 Customers: 46 - 60)
+    ['Meera Rath', 'meera@demo.local', '9876543213', 'Puri', 'Puri', 'VIP Road, Puri', '752001', 19.8135, 85.8312, 9],
+    ['Arvind Panigrahi', 'arvind@demo.local', '9876543220', 'Puri', 'Puri', 'Grand Road, Near Temple Gate', '752001', 19.8050, 85.8200, 9],
+    ['Deepa Acharya', 'deepa@demo.local', '9876543221', 'Puri', 'Puri', 'Sea Beach Road, Blue Wave Apt', '752002', 19.7950, 85.8250, 11],
+    ['Jagannath Pradhan', 'jagannath@demo.local', '9876543265', 'Puri', 'Puri', 'Baliapanda, Golden Sands Enclave', '752001', 19.7890, 85.8120, 11],
+    ['Lopamudra Mishra', 'lopa@demo.local', '9876543266', 'Puri', 'Puri', 'Loknath Road, Near Temple Pond', '752001', 19.8020, 85.8140, 12],
+    ['Bhuban Mohan Sahu', 'bhuban@demo.local', '9876543267', 'Puri', 'Konark', 'Marine Drive, Surya Nagar, Konark', '752111', 19.8890, 86.0960, 10],
+    ['Namita Senapati', 'namita@demo.local', '9876543268', 'Puri', 'Puri', 'Chakratirtha Road, Holiday Inn Lane', '752002', 19.8140, 85.8450, 11],
+    ['Sashikanta Tripathy', 'sashi@demo.local', '9876543269', 'Puri', 'Puri', 'Brahmagiri Highway, West Ward', '752001', 19.8080, 85.8010, 12],
+    ['Goutam Mohapatra', 'goutam@demo.local', '9876543270', 'Puri', 'Puri', 'Penthakata, Fishery Jetty Road', '752002', 19.8060, 85.8410, 11],
+    ['Anusuya Panda', 'anusuya@demo.local', '9876543271', 'Puri', 'Puri', 'Grand Road, Badasankha Square', '752002', 19.8160, 85.8290, 9],
+    ['Hemant Kumar Rath', 'hemant.c@demo.local', '9876543272', 'Puri', 'Konark', 'Konark Sun Temple Heritage Zone', '752111', 19.8860, 86.0920, 10],
+    ['Bijayalaxmi Das', 'bijaya@demo.local', '9876543273', 'Puri', 'Puri', 'Sipasarubali, Lighthouse Road', '752001', 19.7910, 85.8190, 11],
+    ['Ramesh Chandra Panda', 'ramesh.p@demo.local', '9876543274', 'Puri', 'Puri', 'VIP Road, Police Line Colony', '752002', 19.8190, 85.8340, 9],
+    ['Kalyani Swain', 'kalyani@demo.local', '9876543275', 'Puri', 'Puri', 'Balighai, Puri-Konark Marine Road', '752002', 19.8320, 85.8620, 10],
+    ['Tapas Kumar Hota', 'tapas@demo.local', '9876543276', 'Puri', 'Puri', 'Brahmagiri Main Bazar, Puri', '752011', 19.7990, 85.7890, 12],
   ];
 
-  for (const m of foundingMembers) {
-    await query(
-      `INSERT INTO society_founding_members (society_id, full_name, occupation, address, phone, aadhaar_number, role_in_society, is_signatory)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      m
-    );
+  for (const c of customerData) {
+    users.push([
+      c[0], c[1], c[2], salt, 'CUSTOMER', c[3], c[4], c[5], c[6], c[7], c[8], 1, null, 'Citizen Member', c[9]
+    ]);
   }
 
-  // =============================================
-  // 15. Statutory Documents
-  // =============================================
-  const statutoryDocs = [
-    [3, 'APPLICATION_FORM', 'Signed Formation Application (10 Members)', 'https://gov.in/docs/app_form_signed.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
-    [3, 'MEMBER_LIST', 'Official Founding Member List & Identity Proofs', 'https://gov.in/docs/member_roster.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
-    [3, 'BYLAWS', 'Model Cooperative Bylaws (Multi-State Format)', 'https://gov.in/docs/society_bylaws.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
-    [3, 'RESOLUTION_OF_FORMATION', 'First General Body Meeting Minutes & Formation Resolution', 'https://gov.in/docs/resolution_minutes.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
-    [3, 'BANK_CERTIFICATE', 'Puri Urban Co-op Bank Balance Certificate (₹25,000)', 'https://gov.in/docs/bank_cert_25000.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
-    [3, 'AFFIDAVIT', 'Executive Non-Profit & Cooperative Principles Affidavit', 'https://gov.in/docs/affidavit_notary.pdf', 'VERIFIED', 'Shri Alok Mohapatra (DCO)'],
+  // ── 84 Multi-Trade Workers (User IDs 61-144) ──
+  // 32 in Khordha (Societies 1,2,3,4) + 26 in Cuttack (Societies 5,6,7,8) + 26 in Puri (Societies 9,10,11,12)
+  const workerData = [
+    // ── Khordha Workers (32 Artisans: IDs 61 - 92) ──
+    // HVAC & Appliances (8)
+    ['Rajendra Mohapatra (Master HVAC & Inverter Specialist)', 'rajendra.w@demo.local', '9876543301', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1],
+    ['Dilip Barik (AC Installation & Ducting Tech)', 'dilip.w@demo.local', '9876543302', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2570, 85.7750, 2],
+    ['Kailash Sahoo (Certified AC Gas Refill & Leak Expert)', 'kailash.w@demo.local', '9876543303', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3540, 85.8170, 4],
+    ['Satyajit Mohanty (Microwave & Kitchen Appliance Tech)', 'satyajit.w@demo.local', '9876543306', 'Khordha', 'Bhubaneswar', 'Old Town, Bhubaneswar', '751002', 20.2390, 85.8330, 3],
+    ['Ashutosh Das (Inverter AC PCB Diagnostics)', 'ashutosh.w@demo.local', '9876543339', 'Khordha', 'Bhubaneswar', 'Infocity, Patia, Bhubaneswar', '751024', 20.3580, 85.8150, 4],
+    ['Dhiren Nayak (Chiller & Heavy AC Specialist)', 'dhiren.w@demo.local', '9876543340', 'Khordha', 'Bhubaneswar', 'Rasulgarh, Bhubaneswar', '751010', 20.3090, 85.8520, 1],
+    ['Prasant Swain (Refrigerator & Deep Freezer Tech)', 'prasant.w@demo.local', '9876543341', 'Khordha', 'Bhubaneswar', 'Baramunda, Bhubaneswar', '751003', 20.2750, 85.8090, 2],
+    ['Girish Mohapatra (Front-Load Washing Machine Pro)', 'girish.w@demo.local', '9876543342', 'Khordha', 'Bhubaneswar', 'Sundarpada, Bhubaneswar', '751002', 20.2450, 85.8200, 3],
+
+    // Electrical (8)
+    ['Ramesh Kumar (Master Electrician)', 'ramesh.w@demo.local', '9876543307', 'Khordha', 'Bhubaneswar', 'Rasulgarh, Bhubaneswar', '751010', 20.3095, 85.8530, 1],
+    ['Suresh Behera (Gold Electrician - Inverter & Solar)', 'suresh.w@demo.local', '9876543308', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2870, 85.8450, 1],
+    ['Prakash Jena (Apprentice Electrician)', 'prakash.w@demo.local', '9876543309', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2590, 85.7780, 2],
+    ['Naveen Jena (EV Charger & 3-Phase Panel Tech)', 'naveen.w@demo.local', '9876543311', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3520, 85.8190, 4],
+    ['Bishnu Charan Das (Senior Industrial Electrician)', 'bishnu.w@demo.local', '9876543312', 'Khordha', 'Bhubaneswar', 'Chandrasekharpur, Bhubaneswar', '751016', 20.3350, 85.8100, 4],
+    ['Subhendu Nayak (Smart Lighting & Automation)', 'subhendu.w@demo.local', '9876543343', 'Khordha', 'Bhubaneswar', 'Nayapalli, Bhubaneswar', '751012', 20.2840, 85.8050, 2],
+    ['Tarun Kanti Sahoo (Underground Cable Fault Specialist)', 'tarun.w@demo.local', '9876543344', 'Khordha', 'Bhubaneswar', 'Old Town, Bhubaneswar', '751002', 20.2410, 85.8320, 3],
+    ['Manoj Kumar Tripathy (Earthing & Lightning Arrester Pro)', 'manoj.t@demo.local', '9876543345', 'Khordha', 'Bhubaneswar', 'Unit-4, Bhubaneswar', '751001', 20.2710, 85.8320, 1],
+
+    // Plumbing (8)
+    ['Ganesh Pradhan (Master Plumber - Pumps & Concealed)', 'ganesh.w@demo.local', '9876543313', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3540, 85.8170, 4],
+    ['Ajay Sahu (Water Tank & Tap Leak Specialist)', 'ajay.w@demo.local', '9876543316', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1],
+    ['Purna Chandra Palei (Emergency Burst Containment)', 'purna.w@demo.local', '9876543318', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2570, 85.7750, 2],
+    ['Bhabagrahi Barik (Bathroom Sanity Ware & Geyser Pro)', 'bhabagrahi.w@demo.local', '9876543346', 'Khordha', 'Bhubaneswar', 'Old Town, Bhubaneswar', '751002', 20.2390, 85.8330, 3],
+    ['Rupesh Mohanty (Hydrostatic Pressure Testing Tech)', 'rupesh.w@demo.local', '9876543347', 'Khordha', 'Bhubaneswar', 'Infocity, Bhubaneswar', '751024', 20.3580, 85.8150, 4],
+    ['Bibhuti Bhusan Pradhan (Sewerage & Trap De-clogging)', 'bibhuti.p@demo.local', '9876543348', 'Khordha', 'Bhubaneswar', 'Aiginia, Bhubaneswar', '751019', 20.2650, 85.8450, 2],
+    ['Trilochan Sethi (RO Purifier & Water Softener Tech)', 'trilochan.w@demo.local', '9876543349', 'Khordha', 'Bhubaneswar', 'Master Canteen, Bhubaneswar', '751001', 20.2650, 85.8450, 1],
+    ['Jayanta Rout (Solar Water Heater Line Plumber)', 'jayanta.w@demo.local', '9876543350', 'Khordha', 'Bhubaneswar', 'Sundarpada, Bhubaneswar', '751002', 20.2450, 85.8200, 3],
+
+    // Carpentry & Furniture (4)
+    ['Mohan Nayak (Silver Carpenter - Modular Kitchens)', 'mohan.w@demo.local', '9876543319', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2870, 85.8450, 1],
+    ['Dipti Ranjan (Locksmith & Security Door Specialist)', 'dipti.w@demo.local', '9876543321', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2590, 85.7780, 2],
+    ['Pradipta Rout (Wood Finishing & PU Polish Master)', 'pradipta.w@demo.local', '9876543322', 'Khordha', 'Bhubaneswar', 'Old Town, Bhubaneswar', '751002', 20.2410, 85.8320, 3],
+    ['Jagannath Sahoo (Flatpack & Wardrobe Specialist)', 'jagannath.w@demo.local', '9876543351', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3520, 85.8190, 4],
+
+    // Painting, Cleaning & Domestic (4)
+    ['Biju Sahu (Gold Painter - Interior Emulsion)', 'biju.w@demo.local', '9876543324', 'Khordha', 'Bhubaneswar', 'Khandagiri, Bhubaneswar', '751030', 20.2570, 85.7750, 2],
+    ['Subash Naik (Waterproofing & Terrace Coating Expert)', 'subash.w@demo.local', '9876543325', 'Khordha', 'Bhubaneswar', 'Old Town, Bhubaneswar', '751002', 20.2390, 85.8330, 3],
+    ['Laxman Biswal (Kitchen & Bathroom Descaling Pro)', 'laxman.w@demo.local', '9876543329', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1],
+    ['Sanatan Behera (Terrace Garden & Drip Irrigation)', 'sanatan.w@demo.local', '9876543333', 'Khordha', 'Bhubaneswar', 'Patia, Bhubaneswar', '751024', 20.3560, 85.8190, 4],
+
+    // ── Cuttack Workers (26 Artisans: IDs 93 - 118) ──
+    ['Bhabani Shankar (Appliance & Refrigerator Repairer)', 'bhabani.w@demo.local', '9876543304', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4550, 85.8750, 5],
+    ['Rabindra Nath Jena (AC Jet & Cooling Specialist)', 'rabindra.w@demo.local', '9876543352', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4680, 85.9010, 6],
+    ['Sarat Chandra Das (Washing Machine Overhaul Pro)', 'sarat.w@demo.local', '9876543353', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Akshaya Muduli (Smart Home & Lighting Electrician)', 'akshaya.w@demo.local', '9876543310', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4630, 85.8820, 8],
+    ['Gouranga Charan Sahu (Heavy Distribution Board Tech)', 'gouranga.w@demo.local', '9876543354', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4560, 85.8740, 5],
+    ['Debendra Behera (Solar Inverter & DG Panel Tech)', 'debendra.b@demo.local', '9876543355', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4690, 85.9020, 6],
+    ['Chittaranjan Sahoo (Domestic Wiring & Fan Repair)', 'chitta.w@demo.local', '9876543356', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4900, 85.8610, 7],
+    ['Santosh Mishra (Master Plumber - Drainage & Sewerage)', 'santosh.w@demo.local', '9876543314', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4550, 85.8750, 5],
+    ['Kishore Mahapatra (Sanitary Ware & Geyser Plumber)', 'kishore.w@demo.local', '9876543315', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Dhirendra Nath Barik (Cuttack Drain Acoustic Specialist)', 'dhirendra.w@demo.local', '9876543357', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4680, 85.9010, 6],
+    ['Prashanta Kumar Jena (Overhead Tank Disinfection Pro)', 'prashanta.w@demo.local', '9876543358', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 8],
+    ['Tapan Sethi (Carpenter & Flatpack Furniture Pro)', 'tapan.w@demo.local', '9876543320', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4550, 85.8750, 5],
+    ['Bulu Nayak (Teakwood Door & Frame Carpenter)', 'bulu.w@demo.local', '9876543359', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4680, 85.9010, 6],
+    ['Pabitra Rout (Modular Kitchen & Sliding Cabinet Maker)', 'pabitra.w@demo.local', '9876543360', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Niranjan Khatua (Heritage Wood Carving Specialist)', 'niranjan.k@demo.local', '9876543361', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 8],
+    ['Ranjan Khatua (Exterior Weathercoat & Texture Artist)', 'ranjan.w@demo.local', '9876543326', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4580, 85.8720, 5],
+    ['Bijay Kumar Das (Wall Putty & Primer Finishing Pro)', 'bijay.w@demo.local', '9876543327', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4680, 85.9010, 6],
+    ['Shankar Prasad Sahoo (Epoxy Grouting & Tile Repair)', 'shankar.w@demo.local', '9876543362', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Minati Barik (Sofa & Upholstery Deep Cleaner)', 'minati.w@demo.local', '9876543330', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4660, 85.8910, 8],
+    ['Sudarshan Jena (Certified Pest & Termite Controller)', 'sudarshan.w@demo.local', '9876543331', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4550, 85.8750, 5],
+    ['Surendra Nath Parida (Deep Floor Buffing Specialist)', 'surendra.w@demo.local', '9876543363', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Manoranjan Sahu (Senior Landscape Gardener)', 'manoranjan.w@demo.local', '9876543364', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 8],
+    ['Basanti Samal (Post-Operative Patient Nursing)', 'basanti.w@demo.local', '9876543365', 'Cuttack', 'Cuttack', 'Badambadi, Cuttack', '753012', 20.4550, 85.8750, 5],
+    ['Bhaskar Chandra Rout (Professional Chauffeur)', 'bhaskar.w@demo.local', '9876543366', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4890, 85.8600, 7],
+    ['Krupasindhu Biswal (Metal Fabrication & Grille Welder)', 'krupa.w@demo.local', '9876543367', 'Cuttack', 'Cuttack', 'Madhupatna, Cuttack', '753010', 20.4680, 85.9010, 6],
+    ['Dukhishyam Naik (Roof Damp Barrier & Crack Filler)', 'dukhishyam.w@demo.local', '9876543368', 'Cuttack', 'Cuttack', 'Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 8],
+
+    // ── Puri Workers (26 Artisans: IDs 119 - 144) ──
+    ['Hemant Swain (Window & Split AC Servicing)', 'hemant.w@demo.local', '9876543305', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8120, 85.8320, 9],
+    ['Kishore Chandra Panda (Coastal Corrosion AC Tech)', 'kishore.p@demo.local', '9876543369', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Ganeshwar Pradhan (Deep Freeze & Cold Room Tech)', 'ganeshwar.w@demo.local', '9876543370', 'Puri', 'Konark', 'Marine Drive, Konark', '752111', 19.8870, 86.0940, 10],
+    ['Anil Kumar Mohapatra (Hotel Kitchen Appliance Specialist)', 'anil.m@demo.local', '9876543371', 'Puri', 'Puri', 'Loknath Road, Puri', '752001', 19.8050, 85.8150, 12],
+    ['Biswajit Das (High-Pressure Piping & Coastal Plumbing)', 'biswajit.w@demo.local', '9876543317', 'Puri', 'Puri', 'Grand Road, Puri', '752001', 19.8080, 85.8240, 9],
+    ['Kashinath Mishra (Anti-Saline UPVC Line Plumber)', 'kashinath.w@demo.local', '9876543372', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Ramakanta Sahu (Solar Pump & Farm Pipeline Pro)', 'ramakanta.w@demo.local', '9876543373', 'Puri', 'Brahmagiri', 'Loknath Road, Puri', '752001', 19.8050, 85.8150, 12],
+    ['Kartik Nayak (Window Mesh & Frame Carpenter)', 'kartik.w@demo.local', '9876543323', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.7990, 85.8150, 9],
+    ['Dinabandhu Maharana (Heritage Wood Carver)', 'dinabandhu.w@demo.local', '9876543374', 'Puri', 'Puri', 'Grand Road, Puri', '752001', 19.8060, 85.8220, 9],
+    ['Sudhanshu Sekhar Sahoo (Teakwood & Salwood Joiner)', 'sudhanshu.w@demo.local', '9876543375', 'Puri', 'Konark', 'Marine Drive, Konark', '752111', 19.8870, 86.0940, 10],
+    ['Balaram Mohapatra (Master Stone Carver & Mason)', 'balaram.w@demo.local', '9876543376', 'Puri', 'Konark', 'Marine Drive, Konark', '752111', 19.8870, 86.0940, 10],
+    ['Ghanashyam Dash (Coastal Saline Weathercoat Painter)', 'ghanashyam.w@demo.local', '9876543377', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Narayan Rout (Deep Cleaning & Sanitization Pro)', 'narayan.w@demo.local', '9876543328', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.8100, 85.8380, 11],
+    ['Damodar Panda (Temple & Heritage Wash Specialist)', 'damodar.w@demo.local', '9876543378', 'Puri', 'Puri', 'Grand Road, Puri', '752001', 19.8070, 85.8230, 9],
+    ['Deepak Swain (Certified Geriatric Caregiver)', 'deepak.w@demo.local', '9876543334', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8250, 85.8450, 9],
+    ['Manoj Dalai (Licensed City & Heritage Tour Chauffeur)', 'manoj.w@demo.local', '9876543336', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7980, 85.8210, 11],
+    ['Bichitra Nanda Jena (Submersible Pump & Borewell Tech)', 'bichitra.w@demo.local', '9876543379', 'Puri', 'Brahmagiri', 'Loknath Road, Puri', '752001', 19.8050, 85.8150, 12],
+    ['Prasanna Kumar Sahu (Electrical Rewiring & Generator Pro)', 'prasanna.w@demo.local', '9876543380', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8120, 85.8320, 9],
+    ['Nityananda Barik (Hotel Plumbing & Drain Clean Pro)', 'nitya.w@demo.local', '9876543381', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Radhashyam Maharana (Decorative Temple Wood Craftsman)', 'radha.w@demo.local', '9876543382', 'Puri', 'Konark', 'Marine Drive, Konark', '752111', 19.8870, 86.0940, 10],
+    ['Kailash Chandra Nayak (Coastal Waterproofing Membrane Pro)', 'kailash.n@demo.local', '9876543383', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Bhagaban Pradhan (Beach Resort Lawn & Coconut Arborist)', 'bhagaban.w@demo.local', '9876543384', 'Puri', 'Konark', 'Marine Drive, Konark', '752111', 19.8870, 86.0940, 10],
+    ['Upendra Nath Mohanty (Licensed Highway Chauffeur)', 'upendra.w@demo.local', '9876543385', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8120, 85.8320, 9],
+    ['Harish Chandra Panda (Solar Inverter & Rooftop Technician)', 'harish.w@demo.local', '9876543386', 'Puri', 'Brahmagiri', 'Loknath Road, Puri', '752001', 19.8050, 85.8150, 12],
+    ['Dhaneswar Behera (Commercial Carpet & Mattress Steam Pro)', 'dhaneswar.w@demo.local', '9876543387', 'Puri', 'Puri', 'Sea Beach Road, Puri', '752001', 19.7950, 85.8250, 11],
+    ['Padmanav Sahoo (Aluminium Partition & Glass Glazier)', 'padmanav.w@demo.local', '9876543388', 'Puri', 'Puri', 'VIP Road, Puri', '752002', 19.8120, 85.8320, 9],
   ];
 
-  for (const doc of statutoryDocs) {
-    await query(
-      `INSERT INTO society_statutory_documents (society_id, doc_type, document_name, document_url, verification_status, verified_by_officer)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      doc
-    );
+  for (const w of workerData) {
+    users.push([
+      w[0], w[1], w[2], salt, 'WORKER', w[3], w[4], w[5], w[6], w[7], w[8], 1, null, 'Certified Artisan', w[9]
+    ]);
   }
 
-  // =============================================
-  // 16. NCCT Training Records
-  // =============================================
-  const ncctRecords = [
-    ['NCCT-2024-001', 1, 7, 'Ramesh Kumar', 'Electrical', 'Advanced Solar Inverter & Smart Grid Architecture', 'NCCT Regional Institute of Management, Bhubaneswar', 'TECHNICAL', 'CERTIFIED', 2500.0, 2000.0, 500.0, 'NCCT-CERT-EL-9081', '2024-01-10', '2024-02-15'],
-    ['NCCT-2024-002', 1, 13, 'Ganesh Pradhan', 'Plumbing', 'Concealed Pressure Piping & Hydrostatic Leak Diagnostics', 'NCCT Regional Institute of Management, Bhubaneswar', 'TECHNICAL', 'CERTIFIED', 2500.0, 2000.0, 500.0, 'NCCT-CERT-PL-7712', '2024-02-01', '2024-03-05'],
-    ['NCCT-2024-003', 1, 1, 'Rajendra Mohapatra', 'Appliance Repair', 'VRF / Inverter HVAC Dual-Circuit Refrigeration', 'NCCT Regional Institute of Management, Bhubaneswar', 'TECHNICAL', 'CERTIFIED', 2800.0, 2200.0, 600.0, 'NCCT-CERT-HVAC-3309', '2024-03-10', '2024-04-12'],
-    ['NCCT-2024-004', 2, 19, 'Mohan Nayak', 'Carpentry', 'Modular Hydraulic Fittings & Precision Joinery', 'NCCT Regional Institute of Management, Cuttack', 'TECHNICAL', 'CERTIFIED', 2200.0, 1800.0, 400.0, 'NCCT-CERT-CR-5541', '2024-04-05', '2024-05-10'],
-    ['NCCT-2024-005', 1, 8, 'Suresh Behera', 'Electrical', 'Cooperative Accountancy, GST Form IV & Digital Billing', 'NCCT National Institute of Cooperative Governance', 'ACCOUNTING_GOVERNANCE', 'ENROLLED', 2000.0, 1500.0, 500.0, null, '2026-08-01', null],
+  // ── Dedicated Federation, DCO & Society Admins (IDs 145+) ──
+  const adminUsers = [
+    // 1. Apex Federation Head (Statewide jurisdiction across all 3 districts)
+    ['Shri Arun Kumar Pattnaik (State Apex Federation Head)', 'fedhead@demo.local', '9876543400', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'State Cooperative Complex, Unit-8, Bhubaneswar', '751012', 20.2900, 85.8200, 1, 'FEDERATION_HEAD', 'Odisha State Apex Federation Head & Secretary', null],
+
+    // 2. District Cooperative Officers (DCOs / District Registrars)
+    // Khordha DCO & Alias
+    ['Shri Debendra Nayak (Khordha DCO & District Registrar)', 'dco.khordha@demo.local', '9876543401', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'District Cooperative Office, Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Khordha', null],
+    ['Shri Debendra Nayak (Admin Alias)', 'admin@demo.local', '9876543411', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'District Cooperative Office, Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Khordha', null],
+
+    // Cuttack DCO & Alias
+    ['Smt. Laxmi Devi (Cuttack DCO & District Registrar)', 'dco.cuttack@demo.local', '9876543402', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'District Cooperative Office, Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Cuttack', null],
+    ['Smt. Laxmi Devi (Admin2 Alias)', 'admin2@demo.local', '9876543412', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'District Cooperative Office, Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Cuttack', null],
+
+    // Puri DCO & Alias
+    ['Shri Alok Mohapatra (Puri DCO & District Registrar)', 'dco.puri@demo.local', '9876543403', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'District Cooperative Office, VIP Road, Puri', '752002', 19.8120, 85.8320, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Puri', null],
+    ['Shri Alok Mohapatra (Admin3 Alias)', 'admin3@demo.local', '9876543413', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'District Cooperative Office, VIP Road, Puri', '752002', 19.8120, 85.8320, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Puri', null],
+
+    // 3. Society Admins / Secretaries
+    ['Bikash Mohanty (Secretary - Shramik Kalyan Samiti)', 'society.khordha@demo.local', '9876543404', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751001', 20.2650, 85.8450, 1, 'SOCIETY_ADMIN', 'Secretary, Shramik Kalyan Labour Cooperative Samiti', 1],
+    ['Bikash Mohanty (Secretary Alias 1)', 'society.khordha1@demo.local', '9876543414', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751001', 20.2650, 85.8450, 1, 'SOCIETY_ADMIN', 'Secretary, Shramik Kalyan Labour Cooperative Samiti', 1],
+    ['Pratap Rout (Secretary - Utkal Shilpi Seva Samiti)', 'society.cuttack@demo.local', '9876543405', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Badambadi Colony, Cuttack', '753012', 20.4550, 85.8750, 1, 'SOCIETY_ADMIN', 'Secretary, Utkal Shilpi Seva Sahakari Samiti', 5],
+    ['Pratap Rout (Secretary Alias 2)', 'society.cuttack1@demo.local', '9876543415', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Badambadi Colony, Cuttack', '753012', 20.4550, 85.8750, 1, 'SOCIETY_ADMIN', 'Secretary, Utkal Shilpi Seva Sahakari Samiti', 5],
+    ['Bibhuti Bhusan Sahoo (President - Jagannath Nirman)', 'society.puri@demo.local', '9876543406', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'VIP Road, Near Bus Stand, Puri', '752002', 19.8050, 85.8200, 1, 'SOCIETY_ADMIN', 'President, Jagannath Nirman Sahakari Federation', 9],
+    ['Bibhuti Bhusan Sahoo (President Alias 3)', 'society.puri1@demo.local', '9876543416', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'VIP Road, Near Bus Stand, Puri', '752002', 19.8050, 85.8200, 1, 'SOCIETY_ADMIN', 'President, Jagannath Nirman Sahakari Federation', 9],
   ];
 
-  for (const n of ncctRecords) {
+  users.push(...adminUsers);
+
+  for (const u of users) {
     await query(
-      `INSERT INTO ncct_trainings (training_code, society_id, worker_id, worker_name, trade, course_name, institute_name, training_type, status, cost_per_worker, subsidy_amount, payable_by_society, certificate_no, enrolled_date, completion_date)
+      `INSERT INTO users (name, email, phone, password, role, district, city, address, pincode, latitude, longitude, is_active, admin_type, designation, society_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
-      n
+      u
     );
   }
 
   // =============================================
-  // 17. Society Treasury Ledger
+  // 4. Worker Profiles (84 Workers)
   // =============================================
-  const treasuryLedger = [
-    [1, 'TXN-TREAS-001', 'TREASURY_DEPOSIT', 500000.0, null, null, 'Initial Treasury Corpus & Member Capital Contribution', 500000.0],
-    [1, 'TXN-TREAS-002', '2_PERCENT_PLATFORM_FEE', 14200.0, null, null, 'Accumulated 2% platform operations fee on completed bookings', 514200.0],
-    [1, 'TXN-TREAS-003', '5_PERCENT_WELFARE_FUND', 35500.0, null, null, 'Statutory 5% PF & insurance deposit into reserve pool', 549700.0],
-    [1, 'TXN-TREAS-004', 'CANCELLATION_REVENUE', 3800.0, null, null, 'Standard cooperative late cancellation forfeiture share', 553500.0],
-    [1, 'TXN-TREAS-005', 'LOAN_DISBURSEMENT', -45000.0, 1, null, 'Disbursed toolkit upgrade micro-loan to 3 senior electrician members', 508500.0],
-    [1, 'TXN-TREAS-006', 'LOAN_REPAYMENT', 8500.0, 1, null, 'Monthly EMI repayment received for toolkit micro-loans', 517000.0],
-    [1, 'TXN-TREAS-007', 'PROJECT_FUNDS_INFLOW', 350000.0, null, 1, 'Milestone Advance received for BMC Smart City Facility Revamp Tender', 867000.0],
-    [1, 'TXN-TREAS-008', 'INSURANCE_PREMIUM_OUTFLOW', -12400.0, null, null, 'Annual ESIC Group Accident & Medical policy renewal premium', 854600.0],
+  // Map 84 workers to their user records (user_id = 61 to 144)
+  for (let i = 0; i < workerData.length; i++) {
+    const w = workerData[i];
+    const userId = 61 + i;
+    const workerCode = `WKR-OD-${1001 + i}`;
+    const societyId = w[9];
+    const coopId = societyId;
+    const exp = 3 + (i % 12);
+    const rating = Math.round((4.6 + (i % 5) * 0.1) * 10) / 10;
+    const totalReviews = 18 + (i * 3) % 55;
+    const jobsDone = totalReviews - Math.floor(Math.random() * 3);
+    const earnings = jobsDone * 2800;
+    const tier = exp >= 10 ? 'MASTER' : exp >= 6 ? 'GOLD' : exp >= 4 ? 'SILVER' : 'BRONZE';
+    const merit = 600 + (exp * 35);
+    const isPending = (i > 0 && i % 7 === 0);
+    const vStatus = isPending ? 'PENDING' : 'VERIFIED';
+    const toolkitCompliance = vStatus === 'VERIFIED' ? 'VERIFIED_EQUIPPED' : 'PENDING';
+    const avail = isPending ? 'OFFLINE' : (i % 6 === 0 ? 'BUSY' : 'AVAILABLE');
+
+    // Extract trade from name or index
+    let trade = 'Appliance Repair';
+    if (w[0].includes('Electrician') || w[0].includes('Wiring') || w[0].includes('Solar') || w[0].includes('Lighting') || w[0].includes('Panel')) trade = 'Electrical';
+    else if (w[0].includes('Plumb') || w[0].includes('Pipe') || w[0].includes('Leak') || w[0].includes('Geyser') || w[0].includes('Drain') || w[0].includes('Tank')) trade = 'Plumbing';
+    else if (w[0].includes('Carpent') || w[0].includes('Wood') || w[0].includes('Furniture') || w[0].includes('Lock') || w[0].includes('Mesh') || w[0].includes('Cabinet')) trade = 'Carpentry';
+    else if (w[0].includes('Paint') || w[0].includes('Waterproof') || w[0].includes('Coat') || w[0].includes('Putty') || w[0].includes('Grout')) trade = 'Painting';
+    else if (w[0].includes('Clean') || w[0].includes('Pest') || w[0].includes('Termite') || w[0].includes('Descaling') || w[0].includes('Wash')) trade = 'Cleaning';
+    else if (w[0].includes('Garden') || w[0].includes('Irrigation') || w[0].includes('Arborist')) trade = 'Gardening';
+    else if (w[0].includes('Caregiver') || w[0].includes('Nursing')) trade = 'Caregiving';
+    else if (w[0].includes('Chauffeur')) trade = 'Driving';
+
+    await query(
+      `INSERT INTO workers (
+        user_id, worker_code, cooperative_id, experience_years, service_area,
+        latitude, longitude, verification_status, toolkit_compliance, availability, rating,
+        total_reviews, total_jobs_completed, total_earnings, bio, tier,
+        merit_points, strike_count, sos_active, primary_trade, society_id,
+        is_nlcf_affiliated, is_ncct_certified, tools_owned
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+      [
+        userId, workerCode, coopId, exp, w[4],
+        w[7], w[8], vStatus, toolkitCompliance, avail, rating,
+        totalReviews, jobsDone, earnings, `${w[0]} with verified cooperative guild credentials in ${w[4]}.`,
+        tier, merit, 0, 0, trade, societyId,
+        1, (i % 2 === 0 ? 1 : 0),
+        toolkitCompliance === 'VERIFIED_EQUIPPED' ? 'Standard ISI Certified Trade Toolkit & Safety Kit' : null
+      ]
+    );
+  }
+
+  // =============================================
+  // 5. Skills Taxonomy (45 Granular Skills)
+  // =============================================
+  const skills = [
+    // AC & Appliance Repair (Skills 1-10)
+    ['Split AC Deep Jet Service', 'Appliance Repair', 'Indoor and outdoor unit pressure jet washing and disinfection'],
+    ['Split AC Installation', 'Appliance Repair', 'Mounting, copper piping, vacuuming and commissioning of split ACs'],
+    ['AC Gas Leak & Refilling', 'Appliance Repair', 'Nitrogen pressure leak detection and R32/R410A gas charging'],
+    ['Inverter AC PCB Diagnostics', 'Appliance Repair', 'Circuit board troubleshooting, IPM sensor and capacitor repair'],
+    ['Window AC Servicing', 'Appliance Repair', 'Chemical wash, fan motor inspection, and cooling test'],
+    ['AC Uninstallation & Safe Pump-Down', 'Appliance Repair', 'Refrigerant gas lock, bracket removal, and transport packaging'],
+    ['Double-Door Refrigerator Repair', 'Appliance Repair', 'Defrost timer, bi-metal thermostat, and compressor replacement'],
+    ['Single-Door Refrigerator Repair', 'Appliance Repair', 'Capillary tube unclogging, thermostat and relay fixing'],
+    ['Fully-Automatic Washing Machine Repair', 'Appliance Repair', 'Inlet valve, drum bearing, and electronic error clearing'],
+    ['Microwave Oven Magnetron Repair', 'Appliance Repair', 'High-voltage diode, capacitor, and touchpad membrane service'],
+
+    // Electrical (Skills 11-18)
+    ['Switch & Socket Replacement', 'Electrical', 'Anchor/Havells modular switch, multi-plug socket, and gang box fitting'],
+    ['Ceiling Fan Installation & Repair', 'Electrical', 'Downrod mounting, capacitor replacement, and winding overhaul'],
+    ['MCB & Distribution Board Fitting', 'Electrical', 'Trip testing, single/three-phase MCB replacement, and load balancing'],
+    ['Inverter & Battery Wiring Setup', 'Electrical', 'Tubular battery terminal crimping, trolley setup, and bypass switch wiring'],
+    ['Concealed Copper House Wiring', 'Electrical', 'PVC conduit wall chasing, FR multi-strand copper wire pulling, and earthing'],
+    ['Chandelier & Decorative Profile Light Fitting', 'Electrical', 'Ceiling anchor bolt drilling, dimmer integration, and LED driver wiring'],
+    ['EV Charger Dedicated Line Installation', 'Electrical', '32A industrial socket, 6 sq.mm copper run, and independent earth pit test'],
+    ['Short Circuit & Earth Leakage Diagnostics', 'Electrical', 'Megger insulation resistance testing and neutral loop fault identification'],
+
+    // Plumbing (Skills 19-26)
+    ['Tap & Spout Ceramic Valve Repair', 'Plumbing', 'Spindle disc replacement, PTFE teflon sealing, and aerator de-liming'],
+    ['EWC Western Commode & Cistern Installation', 'Plumbing', 'Dual-flush syphon valve fitting, wax gasket seal, and soft-close seat setup'],
+    ['Water Tank High-Pressure Cleaning', 'Plumbing', 'Sludge evacuation, rotary brush scrubbing, and UV/chlorine disinfection'],
+    ['Overhead Tank Float Valve & Booster Pump', 'Plumbing', 'Brass ballcock replacement and 0.5HP/1HP automatic pressure controller hookup'],
+    ['Bathroom Concealed Diverter Overhaul', 'Plumbing', 'Grohe/Jaquar cartridge replacement, faceplate alignment, and leak check'],
+    ['Blocked Drain & Sewer Pipe De-clogging', 'Plumbing', 'Flexible steel snake auger rotation and enzymatic clog digestion'],
+    ['Storage Geyser Plumbing Connection', 'Plumbing', '25L multi-mount heater inlet/outlet SS braided hose and non-return valve setup'],
+    ['Emergency Main Pipe Burst Containment', 'Plumbing', 'Quick-compression clamp application and bypass CPVC/GI line coupling'],
+
+    // Carpentry (Skills 27-31)
+    ['Flatpack Furniture Assembly', 'Carpentry', 'Modular bed, wardrobe, computer desk, and bookshelf cam-lock assembly'],
+    ['Security Door Lock & Mortise Fitting', 'Carpentry', 'Godrej multi-bolt lock mortise chiseling, cylinder keying, and latch strike adjustment'],
+    ['Modular Kitchen Cabinet Hydraulic Hinge', 'Carpentry', 'Soft-close clip-on hinge alignment and drawer telescopic channel tuning'],
+    ['Wooden Door Planing & Alignment', 'Carpentry', 'Jack plane edge shaving, jamb shimming, and floor clearance adjustment'],
+    ['Aluminium Window Sliding & Mosquito Mesh', 'Carpentry', 'Bearing roller replacement, felt weatherstripping, and SS-304 mesh spline fitting'],
+
+    // Painting & Waterproofing (Skills 32-36)
+    ['Interior Luxury Emulsion Painting', 'Painting', 'Acrylic wall putty leveling, primer coat, and double roller finish with Asian Paints Royale'],
+    ['Terrace Chemical Waterproofing Membrane', 'Painting', 'PU elastomeric membrane application, fiberglass reinforcement, and ponding flood test'],
+    ['Exterior Weathercoat Anti-Fungal Coating', 'Painting', 'High-pressure wall power washing, anti-algae biocide wash, and Apex Ultima application'],
+    ['Wall Putty & Surface Crack Filling', 'Painting', 'Polymer modified crack filler injection and 120/180 grit smooth machine sanding'],
+    ['Wood French Spirit Polish & PU Lacquer', 'Painting', 'Shellac hand buffing, teak grain staining, and two-pack clear polyurethane spray'],
+
+    // Cleaning & Pest Control (Skills 37-41)
+    ['Full Home Deep Sanitization', 'Cleaning', 'Single-disc floor rotary scrubbing, HEPA vacuuming, and chemical surface disinfection'],
+    ['Kitchen Degreasing & Chimney Chemical Wash', 'Cleaning', 'Caustic degreaser spray on baffle filters, exhaust rotor de-carbonizing, and tile steam wipe'],
+    ['Bathroom Acid Descaling & Tile Scrubbing', 'Cleaning', 'Mineral limescale removal from sanitary fixtures, glass cubicle polish, and grout sanitization'],
+    ['Sofa & Upholstery Injection-Extraction Foam Wash', 'Cleaning', 'Fabric shampoo spray, rotary brush agitation, and wet vacuum moisture extraction'],
+    ['Herbal Gel Pest & Termite Drill-Fill Treatment', 'Cleaning', 'Fipronil odorless cockroach gel baiting and chlorpyrifos sub-slab perimeter drilling'],
+
+    // Gardening, Caregiving, Driving & Domestic (Skills 42-45)
+    ['Lawn Mowing & Landscape Horticulture', 'Gardening', 'Grass edging, rose bed pruning, organic vermicompost fertilization, and weed pulling'],
+    ['Terrace Garden & Micro Drip Irrigation Setup', 'Gardening', '4mm feeder line routing, adjustable dripper emitters, and 24-hour battery timer tap hookup'],
+    ['Elderly Bedside Assistance & Vital Monitoring', 'Caregiving', 'Blood pressure / SpO2 / glucometer tracking, ambulation support, and medication schedule'],
+    ['City & Outstation Chauffeur Service', 'Driving', 'Manual and automatic transmission driving, defensive city routing, and pre-drive safety check'],
   ];
 
-  for (const t of treasuryLedger) {
+  for (const s of skills) {
+    await query(`INSERT INTO skills (name, category, description) VALUES ($1, $2, $3)`, s);
+  }
+
+  // =============================================
+  // 6. Map Skills to Workers
+  // =============================================
+  for (let wId = 1; wId <= 84; wId++) {
+    // Map each worker to 2-3 skills based on their primary trade
+    let skillIds = [1, 2, 3];
+    if (wId >= 9 && wId <= 16) skillIds = [11, 12, 13];
+    else if (wId >= 17 && wId <= 24) skillIds = [19, 20, 26];
+    else if (wId >= 25 && wId <= 28) skillIds = [27, 28, 29];
+    else if (wId >= 29 && wId <= 32) skillIds = [32, 33, 37];
+    else if (wId >= 33 && wId <= 39) skillIds = [1, 7, 9];
+    else if (wId >= 40 && wId <= 46) skillIds = [11, 14, 17];
+    else if (wId >= 47 && wId <= 54) skillIds = [19, 21, 24];
+    else if (wId >= 55 && wId <= 61) skillIds = [27, 30, 31];
+    else if (wId >= 62 && wId <= 68) skillIds = [32, 34, 38];
+    else if (wId >= 69 && wId <= 75) skillIds = [1, 3, 5];
+    else if (wId >= 76 && wId <= 84) skillIds = [11, 13, 19, 26];
+
+    for (const sid of skillIds) {
+      await query(
+        `INSERT INTO worker_skills (worker_id, skill_id, proficiency_level) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+        [wId, sid, 'EXPERT']
+      );
+    }
+  }
+
+  // =============================================
+  // 7. Services Catalog (47 Granular Services)
+  // =============================================
+  const services = [
+    // 1-8: AC & Appliance Repair
+    ['Split AC Deep Jet Cleaning & Service', 'Appliance Repair', 'High-pressure indoor & outdoor unit coil wash, drain tray sterilization & blower fan sanitization', 449, 'per_unit', 45, 'Snowflake'],
+    ['Split AC Installation (New/Relocation)', 'Appliance Repair', 'Heavy-duty iron bracket mounting, copper piping, flare connection, nitrogen leak check & vacuuming', 799, 'per_unit', 90, 'Snowflake'],
+    ['AC Gas Leak Repair & Refilling', 'Appliance Repair', 'Nitrogen high-pressure leak testing, brazing, system vacuumization & R32/R410A gas top-up', 1499, 'per_visit', 120, 'Wind'],
+    ['Inverter AC PCB Diagnostics & Repair', 'Appliance Repair', 'Inverter circuit board troubleshooting, IPM sensor, capacitor & microcontroller diagnosis', 899, 'per_unit', 90, 'Settings'],
+    ['Double-Door Refrigerator Cooling & Gas Charge', 'Appliance Repair', 'Compressor relay, defrost thermostat replacement, capillary tube & eco refrigerant charging', 749, 'per_visit', 90, 'Wrench'],
+    ['Fully-Automatic Washing Machine Repair', 'Appliance Repair', 'Drum bearing balancing, inlet water solenoid & electronic drain pump overhaul', 449, 'per_visit', 60, 'Wrench'],
+    ['Kitchen Chimney & Hob Deep Degreasing', 'Appliance Repair', 'Baffle filter caustic degreasing, motor carbon cleaning, blower rotor & suction check', 599, 'per_service', 75, 'Wrench'],
+    ['Microwave Oven Magnetron & Touchpad Service', 'Appliance Repair', 'Magnetron emission testing, high-voltage diode replacement & membrane touch switch repair', 349, 'per_visit', 45, 'Wrench'],
+
+    // 9-17: Electrical
+    ['Switch, Socket & Modular Plate Replacement', 'Electrical', 'Fire-resistant ISI certified modular switch/socket replacement with load verification', 129, 'per_point', 30, 'Zap'],
+    ['Ceiling Fan Installation & Overhaul', 'Electrical', 'Downrod ceiling anchor fitting, heavy capacitor upgrade & noise-free dynamic blade balancing', 179, 'per_fan', 40, 'Wind'],
+    ['Main MCB & Distribution Board Replacement', 'Electrical', 'Short circuit protection, 32A/63A DP isolator & modular miniature circuit breaker wiring', 499, 'per_board', 75, 'Zap'],
+    ['Inverter & Battery Home Wiring Setup', 'Electrical', 'Tubular battery acid terminal conditioning, heavy copper wiring & bypass switch integration', 599, 'per_setup', 90, 'Zap'],
+    ['Complete House Concealed Rewiring', 'Electrical', 'Wall chasing, PVC conduit routing, FR multi-strand copper wire pulling & earth resistance test', 1999, 'per_sqft', 480, 'Zap'],
+    ['Chandelier & Designer Pendant Light Fitting', 'Electrical', 'Ceiling rawl plug anchor drilling, counterweight balancing & multi-tier chandelier assembly', 399, 'per_light', 60, 'Zap'],
+    ['EV Four-Wheeler Home Charger Line (7.4kW)', 'Electrical', 'Dedicated 40A MCB, 10 sq.mm heavy cable run & dedicated copper chemical earth electrode pit', 1799, 'per_setup', 180, 'Zap'],
+    ['Electric Geyser Fast Heating Diagnostic & Repair', 'Electrical', 'Incoloy heating element replacement, dual thermostat calibration & earth leakage testing', 299, 'per_visit', 45, 'Zap'],
+    ['Emergency Electrical Short Circuit Diagnostics', 'Electrical', 'Megger insulation testing, burnt wire replacement & emergency circuit isolation', 399, 'per_visit', 45, 'Zap'],
+
+    // 18-25: Plumbing
+    ['Tap, Spout & Flush Valve Leak Repair', 'Plumbing', 'Brass spindle cartridge replacement, ceramic disc renewal & teflon high-pressure thread seal', 129, 'per_tap', 30, 'Droplets'],
+    ['Western Commode EWC & Cistern Installation', 'Plumbing', 'Floor waste pipe wax ring seal, soft-close hydraulic seat cover & dual-flush tank assembly', 649, 'per_unit', 90, 'Droplets'],
+    ['Overhead Water Tank High-Pressure Disinfection', 'Plumbing', 'Automated sludge evacuation, rotary nylon jet scrubbing & non-toxic UV/chlorine sanitization', 549, 'per_tank', 60, 'Droplets'],
+    ['Automatic Water Booster Pump Installation', 'Plumbing', '0.5HP-1.0HP self-priming pressure pump hookup with flow sensor & anti-vibration rubber pads', 699, 'per_unit', 90, 'Droplets'],
+    ['Bathroom Multi-Flow Concealed Diverter Overhaul', 'Plumbing', 'Jaquar/Grohe cartridge replacement, brass sleeve greasing & mixer diverter recalibration', 399, 'per_unit', 60, 'Droplets'],
+    ['Blocked Drain & Sewer Pipe De-clogging', 'Plumbing', 'Heavy mechanical steel snake auger insertion & high-flow pressurized drain jetting', 349, 'per_drain', 45, 'Droplets'],
+    ['Water Purifier RO + UV Complete Filter Replacement', 'Plumbing', 'Sediment filter, pre-carbon block, 75 GPD membrane replacement & TDS balancing test', 599, 'per_service', 60, 'Droplets'],
+    ['Emergency 60-Min Main Pipe Burst Containment', 'Plumbing', 'Rapid on-site emergency water cutoff, compression coupling & CPVC line repair', 499, 'per_visit', 45, 'Droplets'],
+
+    // 26-31: Carpentry
+    ['Flatpack Furniture Assembly (Bed, Wardrobe, Desk)', 'Carpentry', 'IKEA/Pepperfry flatpack cam-lock joinery, drawer slide alignment & leveling', 499, 'per_item', 90, 'Hammer'],
+    ['High-Security Main Door Mortise Lock Fitting', 'Carpentry', 'Godrej/Yale 6-lever mortise lock cavity mortising, cylinder keying & striker alignment', 349, 'per_lock', 60, 'Hammer'],
+    ['Modular Kitchen Soft-Close Hydraulic Hinge Upgrade', 'Carpentry', 'Clip-on hydraulic soft-close hinge fitting, shutter plumb alignment & magnetic catches', 249, 'per_cabinet', 45, 'Hammer'],
+    ['Wooden Door Planing, Trimming & Floor Clearance', 'Carpentry', 'Power planer edge leveling, jamb recess shimming & brass butt hinge lubrication', 229, 'per_door', 45, 'Hammer'],
+    ['Aluminium Sliding Window Roller & Track Overhaul', 'Carpentry', 'Bearing wheel renewal, aluminium anodized track cleaning & nylon brush weatherstripping', 279, 'per_window', 45, 'Hammer'],
+    ['Premium French Spirit & Wood PU Clear Polish', 'Carpentry', 'Shellac hand pad buffing, grain filler staining & dual-coat polyurethane protective coat', 35, 'per_sqft', 120, 'Hammer'],
+
+    // 32-36: Painting & Waterproofing
+    ['Interior Luxury Silk Emulsion Painting', 'Painting', 'Acrylic wall putty base leveling, primer seal & dual-coat Asian Paints Royale silk finish', 11, 'per_sqft', 240, 'Paintbrush'],
+    ['Terrace Chemical Elastomeric Waterproofing', 'Painting', 'Fiberglass mesh reinforcement, crack sealing & 3-layer UV reflective polymer membrane coat', 28, 'per_sqft', 360, 'Paintbrush'],
+    ['Exterior Anti-Fungal Weathercoat Painting', 'Painting', 'High-pressure water blaster moss removal, biocide wash & dirt-pick-resistant exterior coat', 14, 'per_sqft', 300, 'Paintbrush'],
+    ['Wall Putty Application & Machine Sanding', 'Painting', 'Two coats of waterproof white cement putty followed by 180-grit vacuum sander smoothing', 7, 'per_sqft', 180, 'Paintbrush'],
+    ['Seepage Damp Treatment with Injection Grouting', 'Painting', 'PU chemical foam wall crack injection & moisture barrier hydrophobic plaster treatment', 48, 'per_sqft', 240, 'Paintbrush'],
+
+    // 37-41: Cleaning & Pest Control
+    ['Full Apartment Deep Machine Cleaning', 'Cleaning', 'Single-disc rotary floor buffing, vacuuming, window track cleaning & chemical sanitization', 1499, 'per_apartment', 240, 'SprayCan'],
+    ['Intensive Kitchen Oil & Grease Descaling', 'Cleaning', 'Industrial food-grade chemical degreaser on ceramic tiles, cooktop, slab & exhaust vent', 699, 'per_kitchen', 120, 'SprayCan'],
+    ['Bathroom Acid Free Descaling & Grout Restoration', 'Cleaning', 'Limescale dissolution from glass partitions, chrome taps & high-pressure tile steam scrubbing', 399, 'per_bathroom', 60, 'SprayCan'],
+    ['Sofa & Mattress Foam Shampoo & Extraction Wash', 'Cleaning', 'German injection-extraction deep foam wash for dust-mite elimination & stain removal', 499, 'per_sofa_set', 75, 'SprayCan'],
+    ['Odorless Herbal Gel Cockroach & Pest Barrier', 'Cleaning', 'Fipronil herbal bait dots across kitchen cabinets, drain perimeters & 90-day protection warranty', 599, 'per_home', 60, 'SprayCan'],
+
+    // 42-47: Specialized
+    ['Lawn Mowing & Landscape Shrub Pruning', 'Gardening', 'Motorized lawn mower trimming, boundary hedge shaping, aerating & vermicompost feeding', 349, 'per_garden', 90, 'Flower2'],
+    ['Terrace Garden Micro Drip Automation Setup', 'Gardening', 'Automated timer valve hookup, 16mm LDPE main line & individual potted plant micro drippers', 999, 'per_terrace', 120, 'Flower2'],
+    ['Elderly Bedside Attendant (Daily Day Care)', 'Caregiving', 'Patient mobility assistance, vitals monitoring (BP, SpO2, Sugar), hygiene & medicine compliance', 699, 'per_day', 480, 'HeartPulse'],
+    ['Post-Operative Dressing & Injection Nursing Visit', 'Caregiving', 'Sterile wound surgical dressing, IV line check, vitals documentation & nursing report', 249, 'per_visit', 45, 'HeartPulse'],
+    ['Professional City Chauffeur (8-Hour Shift)', 'Driving', 'Background-verified licensed chauffeur for manual and automatic luxury / hatchback cars', 599, 'per_day', 480, 'Car'],
+    ['Outstation Long-Distance Highway Chauffeur', 'Driving', 'Expert highway driver with all-India permit credentials & night-driving endurance', 899, 'per_day', 600, 'Car'],
+  ];
+
+  for (const s of services) {
     await query(
-      `INSERT INTO society_treasury_ledger (society_id, transaction_code, transaction_type, amount, worker_id, project_id, description, balance_after)
+      `INSERT INTO services (name, category, description, base_price, price_unit, icon, is_complex, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 1)`,
+      [s[0], s[1], s[2], s[3], s[4], s[6], s[5] > 90 ? 1 : 0]
+    );
+  }
+
+  // =============================================
+  // 8. Society Founding Members (12 Societies x 10 = 120 Members)
+  // =============================================
+  const occupations = ['Senior Electrician', 'Master Plumber', 'HVAC Technician', 'Cabinet Maker', 'Master Mason', 'Painter', 'Electronics Tech', 'Sanitation Pro', 'Gardener', 'Toolmaker'];
+  for (let socId = 1; socId <= 12; socId++) {
+    for (let m = 1; m <= 10; m++) {
+      const role = m === 1 ? 'PRESIDENT' : m === 2 ? 'SECRETARY' : m === 3 ? 'TREASURER' : 'MEMBER';
+      const name = `Promoter Member ${m} (Society ${socId})`;
+      const occ = occupations[m - 1];
+      const phone = `98765${socId.toString().padStart(2, '0')}${m.toString().padStart(3, '0')}`;
+      const aadhaar = `XXXX-XXXX-${socId.toString().padStart(2, '0')}${m.toString().padStart(2, '0')}`;
+      await query(
+        `INSERT INTO society_founding_members (society_id, full_name, occupation, address, phone, aadhaar_number, role_in_society, is_signatory)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 1)`,
+        [socId, name, occ, `Cooperative Ward Cluster, Society ${socId}`, phone, aadhaar, role]
+      );
+    }
+  }
+
+  // =============================================
+  // 9. Society Statutory Documents (12 Societies x 6 = 72 Documents)
+  // =============================================
+  const docTemplates = [
+    ['APPLICATION_FORM', 'Form No. 1 - Registered Society Charter Application', 'https://gov.in/docs/form1.pdf'],
+    ['MEMBER_LIST', 'Official Founding Member List & Identity Verification Roster', 'https://gov.in/docs/roster.pdf'],
+    ['BYLAWS', 'Model Cooperative Bylaws adopted under Odisha Cooperative Societies Act', 'https://gov.in/docs/bylaws.pdf'],
+    ['RESOLUTION_OF_FORMATION', 'Minutes of First General Body Formation Resolution', 'https://gov.in/docs/resolution.pdf'],
+    ['BANK_CERTIFICATE', 'Central Cooperative Bank Balance Certificate & Capital Proof', 'https://gov.in/docs/bank_cert.pdf'],
+    ['AFFIDAVIT', 'Chief Promoter Non-Judicial Sworn Statutory Affidavit', 'https://gov.in/docs/affidavit.pdf'],
+  ];
+
+  for (let socId = 1; socId <= 12; socId++) {
+    // Societies 1,3,5,7,10,11 are ACTIVE (VERIFIED docs)
+    // Societies 2,4,6,8,9,12 are DCO_REVIEW (PENDING verification by DCO!)
+    const isActive = [1, 3, 5, 7, 10, 11].includes(socId);
+    const status = isActive ? 'VERIFIED' : 'PENDING';
+    const officer = isActive ? (socId <= 4 ? 'Shri Debendra Nayak (DCO)' : socId <= 8 ? 'Smt. Laxmi Devi (DCO)' : 'Shri Alok Mohapatra (DCO)') : null;
+
+    for (const dt of docTemplates) {
+      await query(
+        `INSERT INTO society_statutory_documents (society_id, doc_type, document_name, document_url, verification_status, verified_by_officer, verified_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [socId, dt[0], `${dt[1]} (Soc #${socId})`, dt[2], status, officer, isActive ? new Date() : null]
+      );
+    }
+  }
+
+  // =============================================
+  // 10. Society Regulatory Inquiries (Section 68 - 1 per district)
+  // =============================================
+  const inquiries = [
+    [1, 'Khordha', 'SEC68-KHD-2026-004', 'SECTION_68', 'Territorial jurisdiction review over Saheed Nagar plumbing cluster', 'Niranjan Swain (President)', 'Local Unaffiliated Guild', 'HEARING_SCHEDULED', '2026-09-28', 'DCO Khordha issued formal summons for conciliation under Sec 68.'],
+    [5, 'Cuttack', 'SEC68-CTC-2026-002', 'SECTION_68', 'Artisan tool subsidy allocation audit appeal', 'Badambadi Woodwork Chapter', 'Utkal Shilpi Seva Samiti', 'HEARING_SCHEDULED', '2026-10-05', 'DCO Cuttack scheduled conciliation hearing under Sec 68.'],
+    [9, 'Puri', 'SEC68-PRI-2026-001', 'SECTION_68', 'Coastal maintenance tariff standardization inquiry', 'Sea Beach Hotel Association', 'Jagannath Nirman Sahakari Federation', 'HEARING_SCHEDULED', '2026-10-12', 'DCO Puri scheduled hearing for fair tariff review.'],
+  ];
+
+  for (const inq of inquiries) {
+    await query(
+      `INSERT INTO society_regulatory_inquiries (society_id, district, case_number, section, title, complainant, respondent, status, next_hearing_date, dco_remarks)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      inq
+    );
+  }
+
+  // =============================================
+  // 11. Society Treasury Ledger Entries
+  // =============================================
+  for (let socId = 1; socId <= 12; socId++) {
+    await query(
+      `INSERT INTO society_treasury_ledger (society_id, transaction_code, transaction_type, amount, description, balance_after)
+       VALUES ($1, $2, 'TREASURY_DEPOSIT', 50000.0, 'Initial Share Capital Contribution from Founding Artisan Members', 50000.0)`,
+      [socId, `TXN-CAP-2024-${100 + socId}`]
+    );
+  }
+
+  // =============================================
+  // 12. Mandatory Trade Toolkits & Cooperative Store
+  // =============================================
+  const toolkits = [
+    {
+      trade_category: 'Electrical',
+      kit_name: 'Pradhan Mantri Kaushal ISI Electrical Safety & Diagnostic Toolkit',
+      description: 'Official Federation-certified professional electrical toolkit. All insulated hand tools meet IS 13778 / IEC 60900 1000V high-voltage protection standards.',
+      items_included: JSON.stringify([
+        { item: '1000V VDE Insulated Combination & Nose Pliers (Set of 3)', standard: 'IS 13778 / IEC 60900', mandatory: true },
+        { item: 'Digital True-RMS Auto-Ranging Multimeter with Temp Probe', standard: 'CAT III 600V / ISI Certified', mandatory: true },
+        { item: 'Heavy-Duty 800W Rotary SDS Hammer Drill + 5 Masonry Bits', standard: 'BIS Certified Industrial Class', mandatory: true },
+        { item: 'Non-Contact AC Voltage Detector (90V-1000V) with Flashlight', standard: 'CAT IV 1000V Audible/Visual', mandatory: true },
+        { item: 'High-Impact Fibre Safety Hardhat & 1000V Dielectric Gloves', standard: 'IS 2925 & IS 4770 Class 0', mandatory: true },
+        { item: 'High-Tensile Spring Steel Conduit Wire Puller (30 Meters)', standard: 'Standard Artisan Guild Spec', mandatory: true },
+        { item: 'Magnetic Torpedo Bubble Spirit Level (9 Inch 3-Vial)', standard: 'Precision Calibrated', mandatory: false },
+      ]),
+      market_price: 8500.0, subsidized_price: 4850.0, monthly_emi: 485.0, tenure_months: 10,
+      isi_standards: 'IS 13778 (1000V Insulation), IS 2925 (Safety Helmet), IS 4770 (Dielectric Gloves)',
+      image_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600',
+    },
+    {
+      trade_category: 'Plumbing',
+      kit_name: 'Cooperative Hydro-Mechanic Master Plumber Toolkit',
+      description: 'Standardized municipal and domestic plumbing toolkit. Complete with high-pressure pipe leak sensors, pipe threading, and heavy joint wrenches.',
+      items_included: JSON.stringify([
+        { item: 'Heavy-Duty Ductile Iron Pipe Wrenches (10 Inch & 14 Inch)', standard: 'IS 4003 Heavy-Duty Certified', mandatory: true },
+        { item: 'Telescoping Basin Wrench & Multi-Angle Sink Faucet Spanner', standard: 'Forged Chrome Vanadium Steel', mandatory: true },
+        { item: 'High-Precision Hydrostatic Pressure Test Gauge (0-25 Bar)', standard: 'IS 3624 Hydraulic Class 1.6', mandatory: true },
+        { item: 'CPVC / PPR Pipe Heat Fusion Welding Die Machine (800W)', standard: 'ISI Approved 20-63mm Dies', mandatory: true },
+        { item: 'Rotary Drain Unclogging Spring Steel Snake Cable (7.5m Drum)', standard: 'High-Carbon Anti-Kink Steel', mandatory: true },
+        { item: 'Heavy Ratchet PVC/CPVC Pipe Cutter (Up to 42mm OD)', standard: 'Sk-5 High Carbon Blade', mandatory: true },
+        { item: 'Thread Seal Teflon Tape (Pack of 10 Rolls) + O-Ring Kit', standard: 'Food-Grade Potable Water Safe', mandatory: false },
+      ]),
+      market_price: 7400.0, subsidized_price: 4200.0, monthly_emi: 420.0, tenure_months: 10,
+      isi_standards: 'IS 4003 (Pipe Wrenches), IS 3624 (Pressure Gauges), BIS Certified Dies',
+      image_url: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600',
+    },
+    {
+      trade_category: 'Appliance Repair',
+      kit_name: 'National HVAC & Refrigeration Precision Servicing Toolkit',
+      description: 'Complete digital refrigeration & inverter appliance servicing suite. Designed for leak detection, gas recovery, vacuum charging, and jet washing.',
+      items_included: JSON.stringify([
+        { item: '2-Stage Rotary Vane Deep Vacuum Pump (1/3 HP, 3.5 CFM)', standard: 'ISO 9001 HVAC Grade 15 Micron', mandatory: true },
+        { item: 'Forged Brass 2-Way Manifold Gauge with R32/R410A Hoses', standard: 'Anti-Flutter 800 PSI Rated', mandatory: true },
+        { item: 'Sensitive Electronic Halogen & Refrigerant Gas Leak Detector', standard: 'Detects all HFC/HCFC down to 3g/yr', mandatory: true },
+        { item: 'High-Pressure Cordless AC Service Jet Wash Pump (80 Bar)', standard: 'With specialized 360-degree spray wand', mandatory: true },
+        { item: 'Heavy-Duty Copper Tube Flaring & Swaging Tool Kit', standard: 'Eccentric Cone Type 1/4" to 3/4"', mandatory: true },
+        { item: 'Infrared Non-Contact Laser Thermometer (-50C to 550C)', standard: 'Calibrated Emissivity 0.95', mandatory: true },
+      ]),
+      market_price: 14500.0, subsidized_price: 8900.0, monthly_emi: 890.0, tenure_months: 10,
+      isi_standards: 'ISO 9001 (Vacuum Pump), CE Certified Halogen Leak Sniffer',
+      image_url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600',
+    },
+  ];
+
+  for (const tk of toolkits) {
+    await query(
+      `INSERT INTO mandatory_toolkits (
+        trade_category, kit_name, description, items_included, market_price,
+        subsidized_price, monthly_emi, tenure_months, isi_standards, image_url
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        tk.trade_category, tk.kit_name, tk.description, tk.items_included,
+        tk.market_price, tk.subsidized_price, tk.monthly_emi, tk.tenure_months,
+        tk.isi_standards, tk.image_url,
+      ]
+    );
+  }
+
+  // =============================================
+  // 13. Sample Bookings & 93-2-5 Ledger
+  // =============================================
+  const sampleBookings = [
+    // Completed Bookings in Khordha (Customer 1, Worker 1)
+    [
+      'BKG-2026-1001', 1, 1, 3, 'Khordha', 'Bhubaneswar', 'Patia, Plot 42, Near KIIT Campus', '751024',
+      20.3540, 85.8170, '2026-09-15', '10:00 AM', 0, 0, 0.0, 'COMPLETED',
+      1899.0, 0.0, null, 94.95, 37.98, 2031.93, 'AC gas refilling completed with nitrogen leak test.',
+      '4321', '8765', 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600',
+      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600', '2026-09-15 11:30:00'
+    ],
+    // Completed Booking in Cuttack (Customer 26, Worker 33)
+    [
+      'BKG-2026-1002', 26, 33, 5, 'Cuttack', 'Cuttack', 'College Square, Buxi Lane', '753003',
+      20.4625, 85.8830, '2026-09-16', '02:00 PM', 0, 0, 0.0, 'COMPLETED',
+      899.0, 0.0, null, 44.95, 17.98, 961.93, 'Double door refrigerator relay replaced and cooling verified.',
+      '1234', '5678', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600',
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600', '2026-09-16 15:45:00'
+    ],
+    // Completed Booking in Puri (Customer 46, Worker 69)
+    [
+      'BKG-2026-1003', 46, 69, 1, 'Puri', 'Puri', 'VIP Road, Puri', '752001',
+      19.8135, 85.8312, '2026-09-17', '11:00 AM', 0, 0, 0.0, 'COMPLETED',
+      499.0, 0.0, null, 24.95, 9.98, 533.93, 'Split AC jet cleaning done with antibacterial coil wash.',
+      '2345', '6789', 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600',
+      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600', '2026-09-17 12:15:00'
+    ],
+    // In Progress Booking (Khordha, Customer 2, Worker 9)
+    [
+      'BKG-2026-1004', 2, 9, 11, 'Khordha', 'Bhubaneswar', 'Jaydev Vihar, Flat 302', '751013',
+      20.2961, 85.8245, '2026-09-19', '11:00 AM', 0, 0, 0.0, 'IN_PROGRESS',
+      599.0, 0.0, null, 29.95, 11.98, 640.93, 'MCB trip troubleshooting on main distribution panel.',
+      '9911', '8822', null, null, null
+    ],
+    // Emergency Requested Booking (Cuttack, Customer 27, Unassigned)
+    [
+      'BKG-2026-1005', 27, null, 25, 'Cuttack', 'Cuttack', 'Badambadi Colony, House 14', '753012',
+      20.4550, 85.8750, '2026-09-19', '12:30 PM', 1, 0, 0.0, 'REQUESTED',
+      599.0, 0.0, null, 29.95, 11.98, 640.93, 'Emergency main pipe burst in ground floor bathroom. Need immediate containment.',
+      '7711', '3344', null, null, null
+    ],
+  ];
+
+  for (const b of sampleBookings) {
+    await query(
+      `INSERT INTO bookings (
+        booking_code, customer_id, worker_id, service_id, location_district, location_city,
+        location_address, location_pincode, latitude, longitude, scheduled_date, scheduled_time,
+        is_emergency, is_bulk_order, bulk_discount_amount, status, amount, parts_cost,
+        parts_details, cooperative_fee, platform_fee, total_amount, notes, arrival_otp,
+        completion_otp, pre_job_photo_url, post_job_photo_url, completed_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)`,
+      b
+    );
+  }
+
+  // =============================================
+  // 14. Reviews & Citizen Trust Ledger
+  // =============================================
+  const reviewsSeed = [
+    [1, 1, 1, 5, 'Fixed ₹1,899 tariff vs ₹3,200 private app quote. Skilled and polite technician.', 5, 5, 5],
+    [2, 26, 33, 5, 'Quick response in Cuttack. Honest diagnosis without unnecessary parts replacement.', 5, 5, 5],
+    [3, 46, 69, 5, 'Prompt AC jet service in Puri. 30-day warranty card and invoice provided instantly.', 5, 5, 5],
+  ];
+
+  for (const r of reviewsSeed) {
+    await query(
+      `INSERT INTO reviews (booking_id, customer_id, worker_id, rating, comment, punctuality_score, quality_score, safety_score)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      t
+      r
     );
   }
 
-  // =============================================
-  // 18. Worker Welfare & Micro-Loans Ledger
-  // =============================================
-  const workerWelfareSeed = [
-    [1, 1, 'ESIC-POL-2024-9011', 'ESIC National Council', 'ACTIVE', 'ACC-POL-5L-8821', 500000.0, 'ACTIVE', 25000.0, 8500.0, 2200.0, '2026-09-15', 18400.0],
-    [2, 1, 'ESIC-POL-2024-9012', 'ESIC National Council', 'ACTIVE', 'ACC-POL-5L-8822', 500000.0, 'ACTIVE', 15000.0, 4200.0, 1500.0, '2026-09-15', 12800.0],
-    [3, 1, 'ESIC-POL-2024-9013', 'ESIC National Council', 'ACTIVE', 'ACC-POL-5L-8823', 500000.0, 'ACTIVE', 0.0, 0.0, 0.0, null, 24600.0],
-    [7, 1, 'ESIC-POL-2024-9014', 'ESIC National Council', 'ACTIVE', 'ACC-POL-5L-8824', 500000.0, 'ACTIVE', 10000.0, 3100.0, 1000.0, '2026-09-20', 9500.0],
-    [13, 1, 'ESIC-POL-2024-9015', 'ESIC National Council', 'ACTIVE', 'ACC-POL-5L-8825', 500000.0, 'ACTIVE', 0.0, 0.0, 0.0, null, 15400.0],
-    [19, 2, 'ESIC-POL-2024-9016', 'National Insurance Co', 'ACTIVE', 'ACC-POL-5L-8826', 500000.0, 'ACTIVE', 8000.0, 5600.0, 1200.0, '2026-09-15', 4200.0],
-  ];
+  // Reconcile worker availability with active bookings
+  await query(`
+    UPDATE workers
+    SET availability = 'BUSY', updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (
+      SELECT worker_id FROM bookings WHERE worker_id IS NOT NULL AND status IN ('MATCHED', 'ACCEPTED', 'IN_PROGRESS')
+      UNION
+      SELECT paired_master_worker_id FROM bookings WHERE paired_master_worker_id IS NOT NULL AND status IN ('MATCHED', 'ACCEPTED', 'IN_PROGRESS')
+    )
+  `);
 
-  for (const ww of workerWelfareSeed) {
-    await query(
-      `INSERT INTO society_worker_welfare (
-        worker_id, society_id, health_insurance_policy_no, health_insurance_provider,
-        health_insurance_status, accident_policy_no, accident_coverage_amount, accident_policy_status,
-        loan_sanctioned_amount, loan_balance_due, next_loan_due_amount, next_loan_due_date, mini_pf_accumulated
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      ww
-    );
-  }
-
-  // =============================================
-  // 19. Institutional Tenders & Bids
-  // =============================================
-  const tendersSeed = [
-    [
-      'TNDR-BMC-2026-041',
-      'Bhubaneswar Smart City Public Infrastructure Electrical & Lighting Maintenance',
-      'Bhubaneswar Municipal Administration (BMA)',
-      'Electrical',
-      'Khordha',
-      850000.0,
-      1, // requires_nlcf_affiliation = 1
-      'AWARDED',
-      1, // awarded to Shramik Kalyan Sahakari Samiti
-      350000.0,
-      500000.0,
-      6,
-      '2026-09-30',
-    ],
-    [
-      'TNDR-ECOR-2026-108',
-      'East Coast Railway Staff Quarters Sanitary & Hydro-Plumbing Overhaul',
-      'East Coast Railway Division',
-      'Plumbing',
-      'Khordha',
-      620000.0,
-      1,
-      'IN_PROGRESS',
-      1,
-      250000.0,
-      370000.0,
-      4,
-      '2026-10-15',
-    ],
-    [
-      'TNDR-CDA-2026-055',
-      'Cuttack Development Authority Residential Complex Painting & Waterproofing',
-      'Cuttack Development Authority (CDA)',
-      'Painting',
-      'Cuttack',
-      450000.0,
-      0,
-      'OPEN',
-      null,
-      0.0,
-      450000.0,
-      0,
-      '2026-09-25',
-    ],
-  ];
-
-  for (const t of tendersSeed) {
-    await query(
-      `INSERT INTO institutional_tenders (
-        tender_code, title, issuing_authority, category, district, estimated_value,
-        requires_nlcf_affiliation, status, awarded_society_id, funds_received, due_remaining,
-        allocated_workers_count, bid_submission_deadline
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      t
-    );
-  }
-
-  // Update workers with society affiliations & NCCT training flags
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 1, ncct_certificate_no = 'NCCT-CERT-HVAC-3309' WHERE id = 1`);
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 0 WHERE id = 2`);
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 0 WHERE id = 3`);
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 1, ncct_certificate_no = 'NCCT-CERT-EL-9081' WHERE id = 7`);
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 0 WHERE id = 8`);
-  await query(`UPDATE workers SET society_id = 1, is_nlcf_affiliated = 1, is_ncct_certified = 1, ncct_certificate_no = 'NCCT-CERT-PL-7712' WHERE id = 13`);
-  await query(`UPDATE workers SET society_id = 2, is_nlcf_affiliated = 0, is_ncct_certified = 1, ncct_certificate_no = 'NCCT-CERT-CR-5541' WHERE id = 19`);
-
-  console.log('\n✅ Database Populated Successfully: 25 Customers, 38 Multi-Trade Workers, 47 Granular Services & Complete 93-2-5 Cooperative Framework!\n');
+  console.log('\n========================================================================');
+  console.log('✅ Multi-District Cooperative Database Seeded Successfully:');
+  console.log('   🏛️ 3 Cooperative Federations (Khordha, Cuttack, Puri)');
+  console.log('   🏢 12 Unique Cooperative Societies (4 per district, each with unique location/pincode)');
+  console.log('   👥 60 Verified Customers across all 12 localities');
+  console.log('   🛠️ 84 Multi-Trade Verified Workers (NSDC/NCCT certified across 45 trades)');
+  console.log('   📋 120 Society Founding Members (10 promoter KYC members per society)');
+  console.log('   📜 72 Statutory Regulatory Documents (6 statutory dossier files per society)');
+  console.log('   ⚖️ 3 DCOs with District-Specific Authority + 1 State Federation Head');
+  console.log('========================================================================\n');
 }
 
 if (require.main === module) {

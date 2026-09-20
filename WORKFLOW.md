@@ -67,7 +67,7 @@ graph TD
 graph TD
     A1[Admin Logs into Federation Portal] --> A2[Review Federation KPI Banner]
     A2 --> A3[Audit Pending Worker Registrations]
-    A3 --> A4{Review ITI / Trade Certificates}
+    A3 --> A4{Review Trade Skill Certificates}
     A4 -->|Approve| A5[Mark Worker: VERIFIED -> Active in Directory]
     A4 -->|Reject| A6[Mark Worker: REJECTED with Reason]
     A2 --> A7[Booking & Dispatch Oversight across Districts]
@@ -78,6 +78,6 @@ graph TD
 
 ### Key Administrator Steps:
 1. **Federation Oversight**: Monitor active dispatches, completed gigs, emergency volume, and earnings across all member societies.
-2. **Worker Verification**: Review submitted trade licenses and ITI credentials before activating workers on the public directory.
+2. **Worker Verification**: Review submitted trade licenses and skill credentials before activating workers on the public directory.
 3. **AI Demand Forecasting**: Monitor 4-week predictive demand tables and seasonal weather directives.
 4. **Inter-Cooperative Mutual Aid**: Authorize temporary inter-district worker transfer agreements to balance regional shortages.

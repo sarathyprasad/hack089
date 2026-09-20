@@ -1,4 +1,4 @@
-const { verifyToken } = require('../utils/jwt');
+const { verifyToken, isTokenRevoked } = require('../utils/jwt');
 const { query } = require('../db/connection');
 
 /**
@@ -19,9 +19,18 @@ async function authenticate(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
+    // Check if token has been revoked / logged out
+    const revoked = await isTokenRevoked(token);
+    if (revoked) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Token has been revoked. Please log in again.',
+      });
+    }
+
     const decoded = verifyToken(token);
     const result = await query(
-      'SELECT id, name, email, phone, role, district, city, is_active FROM users WHERE id = $1',
+      'SELECT id, name, email, phone, role, district, city, is_active, admin_type, designation, society_id FROM users WHERE id = $1',
       [decoded.id]
     );
     const user = result.rows[0];

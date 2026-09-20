@@ -1,5 +1,6 @@
 
 const { query } = require('../db/connection');
+const { maskPhone, sanitizeWorkerProfile } = require('../utils/piiMasker');
 
 /**
  * GET /api/workers
@@ -71,6 +72,7 @@ async function getWorkers(req, res) {
              w.verification_status, w.availability, w.rating, w.total_reviews,
              w.total_jobs_completed, w.bio, w.latitude, w.longitude,
              w.tier, w.merit_points, w.strike_count, w.primary_trade,
+             w.tools_owned, w.toolkit_compliance,
              u.name, u.phone, u.district, u.city, u.avatar_url,
              c.name as cooperative_name
       FROM workers w
@@ -93,6 +95,8 @@ async function getWorkers(req, res) {
       `, [w.id]);
       w.skills = skillsRes.rows;
       w.primary_trade = w.primary_trade || (w.skills && w.skills[0] ? w.skills[0].category : 'General Artisan');
+      // Mask phone numbers in public catalog to prevent automated scraping
+      w.phone = maskPhone(w.phone);
     }
 
     res.json({
@@ -112,7 +116,7 @@ async function getWorkers(req, res) {
 
 /**
  * GET /api/workers/:id
- * Get full worker profile.
+ * Get full worker profile with DPDP PII data protection.
  */
 async function getWorkerById(req, res) {
   try {
@@ -126,9 +130,9 @@ async function getWorkerById(req, res) {
       WHERE w.id = $1
     `, [req.params.id]);
 
-    const worker = workerRes.rows[0];
+    const rawWorker = workerRes.rows[0];
 
-    if (!worker) {
+    if (!rawWorker) {
       return res.status(404).json({ error: 'Not Found', message: 'Worker not found.' });
     }
 
@@ -138,15 +142,15 @@ async function getWorkerById(req, res) {
       FROM worker_skills ws
       JOIN skills s ON ws.skill_id = s.id
       WHERE ws.worker_id = $1
-    `, [worker.id]);
-    worker.skills = skillsRes.rows;
-    worker.primary_trade = worker.primary_trade || (worker.skills && worker.skills[0] ? worker.skills[0].category : 'General Artisan');
+    `, [rawWorker.id]);
+    rawWorker.skills = skillsRes.rows;
+    rawWorker.primary_trade = rawWorker.primary_trade || (rawWorker.skills && rawWorker.skills[0] ? rawWorker.skills[0].category : 'General Artisan');
 
     // Certifications
     const certsRes = await query(`
       SELECT * FROM certifications WHERE worker_id = $1 ORDER BY issue_date DESC
-    `, [worker.id]);
-    worker.certifications = certsRes.rows;
+    `, [rawWorker.id]);
+    rawWorker.certifications = certsRes.rows;
 
     // Recent reviews
     const reviewsRes = await query(`
@@ -156,8 +160,11 @@ async function getWorkerById(req, res) {
       WHERE r.worker_id = $1
       ORDER BY r.created_at DESC
       LIMIT 10
-    `, [worker.id]);
-    worker.reviews = reviewsRes.rows;
+    `, [rawWorker.id]);
+    rawWorker.reviews = reviewsRes.rows;
+
+    // PII Sanitization Guard: Mask Aadhaar, PAN, Bank details for public visitors
+    const worker = sanitizeWorkerProfile(rawWorker, req.user);
 
     res.json({ worker });
   } catch (err) {

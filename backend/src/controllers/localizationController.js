@@ -11,7 +11,7 @@ const LOCALES = {
     direction: 'ltr',
     dictionary: {
       portalTitle: 'National Cooperative Labour Services Federation Portal',
-      brandName: 'Shram Setu',
+      brandName: 'Prithvi Fix',
       brandSubtitle: 'Cooperative Gig Services Platform',
       tagline: 'Verified Skills. Fair Work. Stronger Communities.',
       heroTitle: 'Trusted Services. Cooperative Workers. Stronger Communities.',
@@ -45,7 +45,7 @@ const LOCALES = {
       welfare: {
         esic: 'ESIC Group Accident Insurance (Rs. 2,00,000 Coverage)',
         health: 'Cooperative Health Support & Free Annual Checkup',
-        nsdc: 'NSDC & ITI Trade Upskilling Workshop',
+        nsdc: 'NSDC & Vocational Trade Upskilling Workshop',
         epfo: 'EPFO Social Security & Retirement Pension',
         emergencyLoan: 'Cooperative Emergency Family Assistance Fund',
       },
@@ -58,7 +58,7 @@ const LOCALES = {
     direction: 'ltr',
     dictionary: {
       portalTitle: 'राष्ट्रीय श्रम सहकारी सेवा पोर्टल',
-      brandName: 'श्रम सेतु',
+      brandName: 'पृथ्वी फिक्स',
       brandSubtitle: 'सहकारी गिग सेवा मंच',
       tagline: 'सत्यापित कौशल। उचित कार्य। सशक्त समुदाय।',
       heroTitle: 'विश्वसनीय सेवाएँ। सहकारी श्रमिक। सशक्त समुदाय।',
@@ -105,7 +105,7 @@ const LOCALES = {
     direction: 'ltr',
     dictionary: {
       portalTitle: 'ଶ୍ରମ ସମବାୟ ସେବା ପୋର୍ଟାଲ',
-      brandName: 'ଶ୍ରମ ସେତୁ',
+      brandName: 'ପୃଥିବୀ ଫିକ୍ସ',
       brandSubtitle: 'ସମବାୟ ଗିଗ୍ ସେବା ମଞ୍ଚ',
       tagline: 'ଯାଞ୍ଚ ହୋଇଥିବା ଦକ୍ଷତା। ନ୍ୟାଯ୍ୟ କାର୍ଯ୍ୟ। ସଶକ୍ତ ସମୁଦାୟ।',
       heroTitle: 'ବିଶ୍ୱସନୀୟ ସେବା। ସମବାୟ ଶ୍ରମିକ। ସଶକ୍ତ ସମାଜ।',
@@ -152,7 +152,7 @@ const LOCALES = {
     direction: 'ltr',
     dictionary: {
       portalTitle: 'সমবায় শ্রম সেবা পোর্টাল',
-      brandName: 'শ্রম সেতু',
+      brandName: 'পৃথ্বী ফিক্স',
       brandSubtitle: 'সমবায় গিগ সেবা প্ল্যাটফর্ম',
       tagline: 'যাচাইকৃত দক্ষতা। ন্যায্য কাজ। শক্তিশালী সমাজ।',
       heroTitle: 'নির্ভরযোগ্য সেবা। সমবায় কর্মী। শক্তিশালী সমাজ।',
@@ -199,7 +199,7 @@ const LOCALES = {
     direction: 'ltr',
     dictionary: {
       portalTitle: 'సహకార కార్మిక సేవల పోర్టల్',
-      brandName: 'శ్రమ్ సేతు',
+      brandName: 'పృథ్వీ ఫిక్స్',
       brandSubtitle: 'సహకార గిగ్ సేవల వేదిక',
       tagline: 'ధృవీకరించబడిన నైపుణ్యాలు. న్యాయమైన పని. బలమైన సమాజం.',
       heroTitle: 'విశ్వసనీయ సేవలు. సహకార కార్మికులు. బలమైన సమాజం.',

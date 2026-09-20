@@ -1,11 +1,11 @@
-# Shram Setu — Cooperative Gig Services Platform
+# Prithvi Fix — Cooperative Gig Services Platform
 > *"Verified Skills. Fair Work. Stronger Communities."*
 
-🏛️ **Shram Setu** is a digital public goods platform designed to connect verified, skilled workers belonging to regional **Labour Cooperative Federations / Societies** with households, institutions, and community organizations.
+🏛️ **Prithvi Fix** is a digital public goods platform designed to connect verified, skilled workers belonging to regional **Labour Cooperative Federations / Societies** with households, institutions, and community organizations.
 
-Unlike profit-extracting private aggregator platforms that treat workers as expendable gig laborers with high commissions and zero safety nets, **Shram Setu** implements an institutional cooperative model where:
+Unlike profit-extracting private aggregator platforms that treat workers as expendable gig laborers with high commissions and zero safety nets, **Prithvi Fix** implements an institutional cooperative model where:
 1. Workers are **member-owners** in their registered district federations.
-2. A transparent **93-2-5 model (93% direct worker take-home, 2% platform fee, 5% PF & insurance)** where contributions pool directly into **ESIC Accident Insurance, EPFO Pensions, Health Funds, and NSDC/ITI Trade Upskilling**.
+2. A transparent **93-2-5 model (93% direct worker take-home, 2% platform fee, 5% PF & insurance)** where contributions pool directly into **ESIC Accident Insurance, EPFO Pensions, Health Funds, and NSDC Vocational Trade Upskilling**.
 3. Tariffs are standardized with **government-regulated base rates** and zero hidden surge pricing.
 4. Citizen satisfaction is guaranteed through background checks and trade credential audits.
 

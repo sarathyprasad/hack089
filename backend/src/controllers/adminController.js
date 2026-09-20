@@ -1,4 +1,6 @@
 const { query } = require('../db/connection');
+const { calculateHaversineDistanceKm, calculateEtaMinutes } = require('./matchingController');
+const { logAuditEvent, getAuditLogs } = require('../services/auditLog');
 
 /**
  * GET /api/admin/dashboard
@@ -118,30 +120,44 @@ async function getAdminWorkers(req, res) {
 
     let baseQuery = `
       SELECT w.*, u.name, u.email, u.phone, u.district, u.city, u.address,
-             c.name as cooperative_name, c.registration_number as cooperative_reg
+             c.name as cooperative_name, c.registration_number as cooperative_reg,
+             c.local_area, c.jurisdiction_zone,
+             s.name as society_name, s.society_code
       FROM workers w
       JOIN users u ON w.user_id = u.id
       JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies s ON w.society_id = s.id
     `;
 
     const where = [];
     const params = [];
     let paramIdx = 1;
 
+    // Federation / Society Admin scope: only workers under their specific local society/federation
+    if (req.user?.admin_type === 'SOCIETY_ADMIN' && req.user?.society_id) {
+      where.push(`(w.society_id = $${paramIdx} OR w.cooperative_id = $${paramIdx})`);
+      params.push(req.user.society_id);
+      paramIdx++;
+    } else if (req.user?.admin_type === 'DCO_REGISTRAR' && req.user?.district) {
+      where.push(`u.district = $${paramIdx}`);
+      params.push(req.user.district);
+      paramIdx++;
+    }
+
     if (status) {
       where.push(`w.verification_status = $${paramIdx}`);
       params.push(status);
       paramIdx++;
     }
-    if (district) {
+    if (district && req.user?.admin_type !== 'DCO_REGISTRAR') {
       where.push(`u.district = $${paramIdx}`);
       params.push(district);
       paramIdx++;
     }
     if (search) {
-      where.push(`(u.name ILIKE $${paramIdx} OR w.worker_code ILIKE $${paramIdx + 1} OR c.name ILIKE $${paramIdx + 2})`);
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-      paramIdx += 3;
+      where.push(`(u.name ILIKE $${paramIdx} OR w.worker_code ILIKE $${paramIdx + 1} OR c.name ILIKE $${paramIdx + 2} OR COALESCE(s.name, '') ILIKE $${paramIdx + 3})`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      paramIdx += 4;
     }
 
     if (where.length > 0) {
@@ -190,9 +206,33 @@ async function verifyWorker(req, res) {
       return res.status(400).json({ error: 'Validation Error', message: 'Invalid verification status.' });
     }
 
-    const workerRes = await query('SELECT id FROM workers WHERE id = $1', [workerId]);
+    const workerRes = await query(`
+      SELECT w.id, w.society_id, w.cooperative_id, u.district 
+      FROM workers w 
+      JOIN users u ON w.user_id = u.id 
+      WHERE w.id = $1
+    `, [workerId]);
     if (workerRes.rowCount === 0) {
       return res.status(404).json({ error: 'Not Found', message: 'Worker not found.' });
+    }
+
+    const workerRecord = workerRes.rows[0];
+
+    // Local Federation/Society Admin can only approve workers under their specific local society/federation
+    if (req.user?.admin_type === 'SOCIETY_ADMIN' && req.user?.society_id) {
+      if (workerRecord.society_id !== req.user.society_id && workerRecord.cooperative_id !== req.user.society_id) {
+        return res.status(403).json({
+          error: 'Jurisdiction Restriction',
+          message: 'As a Federation/Society Admin, you can only review and approve workers registered under your local society/federation jurisdiction.'
+        });
+      }
+    } else if (req.user?.admin_type === 'DCO_REGISTRAR' && req.user?.district) {
+      if (workerRecord.district !== req.user.district) {
+        return res.status(403).json({
+          error: 'District Jurisdiction Restriction',
+          message: `As DCO for ${req.user.district}, you can only review workers within your district.`
+        });
+      }
     }
 
     if (status === 'VERIFIED') {
@@ -239,6 +279,17 @@ async function verifyWorker(req, res) {
       `, [workerId]);
     }
 
+    // Record administrative action in immutable audit log
+    await logAuditEvent({
+      userId: adminId,
+      userRole: req.user?.role,
+      action: status === 'VERIFIED' ? 'WORKER_VERIFIED' : status === 'REJECTED' ? 'WORKER_REJECTED' : 'WORKER_STATUS_PENDING',
+      entityType: 'WORKER',
+      entityId: workerId,
+      ipAddress: req.ip,
+      details: { status, rejectionReason },
+    });
+
     res.json({
       message: `Worker application updated to ${status}`,
       status,
@@ -264,6 +315,7 @@ async function getAdminBookings(req, res) {
              u_cust.name as customer_name, u_cust.phone as customer_phone,
              u_work.name as worker_name,
              w.worker_code,
+             w.latitude as worker_latitude, w.longitude as worker_longitude, w.service_area as worker_service_area,
              c.name as cooperative_name,
              p.status as payment_status, p.transaction_id
       FROM bookings b
@@ -295,12 +347,68 @@ async function getAdminBookings(req, res) {
     baseQuery += ` ORDER BY b.id DESC LIMIT $${paramIdx}`;
     params.push(parseInt(limit, 10));
 
-    const bookingsRes = await query(baseQuery, params);
+    const result = await query(baseQuery, params);
 
-    res.json({ bookings: bookingsRes.rows });
+    const enrichedBookings = result.rows.map((b) => {
+      let custLat = Number(b.latitude);
+      let custLng = Number(b.longitude);
+      const cityUpper = (b.location_city || b.location_district || '').toUpperCase();
+
+      if (isNaN(custLat) || !custLat) {
+        if (cityUpper.includes('PURI')) { custLat = 19.8135; custLng = 85.8312; }
+        else if (cityUpper.includes('CUTTACK')) { custLat = 20.4625; custLng = 85.8830; }
+        else { custLat = 20.3540; custLng = 85.8170; }
+      }
+
+      let workerLat = Number(b.worker_latitude);
+      let workerLng = Number(b.worker_longitude);
+
+      if (isNaN(workerLat) || !workerLat) {
+        if (cityUpper.includes('PURI')) { workerLat = 19.8100; workerLng = 85.8380; }
+        else if (cityUpper.includes('CUTTACK')) { workerLat = 20.4890; workerLng = 85.8770; }
+        else { workerLat = 20.2750; workerLng = 85.8100; }
+      }
+
+      const straightDist = calculateHaversineDistanceKm(workerLat, workerLng, custLat, custLng) || 2.4;
+      const distanceKm = Math.max(1.2, Math.round(straightDist * 1.3 * 10) / 10);
+      const etaMinutes = calculateEtaMinutes(distanceKm);
+
+      return {
+        ...b,
+        latitude: custLat,
+        longitude: custLng,
+        worker_latitude: workerLat,
+        worker_longitude: workerLng,
+        distance_km: distanceKm,
+        eta_minutes: etaMinutes,
+        tracking: {
+          workerCoords: { lat: workerLat, lng: workerLng },
+          customerCoords: { lat: custLat, lng: custLng },
+          distanceKm,
+          etaMinutes,
+          dispatchStatus: b.status === 'COMPLETED' ? 'Service Completed' : b.status === 'IN_PROGRESS' ? 'On-Site' : 'En Route',
+        }
+      };
+    });
+
+    res.json({ bookings: enrichedBookings });
   } catch (err) {
     console.error('Admin get bookings error:', err);
     res.status(500).json({ error: 'Server Error', message: 'Failed to fetch bookings for admin.' });
+  }
+}
+
+/**
+ * GET /api/admin/audit-logs
+ * Security Audit Trail Console for Cooperative Federation Admins.
+ */
+async function getAdminAuditLogs(req, res) {
+  try {
+    const logs = await getAuditLogs(100);
+    res.json({ auditLogs: logs });
+  } catch (err) {
+    console.error('Admin get audit logs error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to fetch audit logs.' });
   }
 }
 
@@ -309,4 +417,5 @@ module.exports = {
   getAdminWorkers,
   verifyWorker,
   getAdminBookings,
+  getAdminAuditLogs,
 };

@@ -24,9 +24,11 @@ router.get('/:id', getBookingById);
 router.put('/:id/status', updateBookingStatus);
 router.post('/:id/cancel', cancelBooking);
 
-// 7-Phase Workflow Handshakes
-router.post('/:id/verify-arrival-otp', verifyArrivalOtp);
-router.post('/:id/verify-completion-otp', verifyCompletionOtp);
+const { otpLimiter } = require('../middleware/rateLimiter');
+
+// 7-Phase Workflow Handshakes with Anti-Brute-Force Throttling
+router.post('/:id/verify-arrival-otp', otpLimiter, verifyArrivalOtp);
+router.post('/:id/verify-completion-otp', otpLimiter, verifyCompletionOtp);
 router.post('/:id/photo-proof', uploadPhotoProof);
 router.post('/:id/add-parts', addParts);
 router.post('/:id/claim-guarantee', claimGuarantee);

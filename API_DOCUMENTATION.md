@@ -136,7 +136,7 @@ Update duty status (`AVAILABLE`, `BUSY`, `OFFLINE`).
 Execute job dispatch action (`ACCEPT`, `DECLINE`, `START`, `COMPLETE`).
 
 ### `GET /api/worker-portal/welfare`
-Retrieve enrolled and available social security schemes (ESIC, EPFO, Health, ITI training).
+Retrieve enrolled and available social security schemes (ESIC, EPFO, Health, vocational training).
 
 ### `POST /api/worker-portal/welfare/enroll`
 Simulate 1-click enrollment into a government welfare program.

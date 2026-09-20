@@ -6,6 +6,8 @@ const {
   handleJobAction,
   getWorkerWelfare,
   enrollWelfare,
+  getWorkerToolkits,
+  orderWorkerToolkit,
 } = require('../controllers/workerPortalController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -18,5 +20,7 @@ router.put('/availability', updateAvailability);
 router.put('/jobs/:id/action', handleJobAction);
 router.get('/welfare', getWorkerWelfare);
 router.post('/welfare/enroll', enrollWelfare);
+router.get('/toolkits', getWorkerToolkits);
+router.post('/toolkits/order', orderWorkerToolkit);
 
 module.exports = router;

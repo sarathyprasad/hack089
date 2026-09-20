@@ -1,4 +1,6 @@
 const { query } = require('../db/connection');
+const { getBookingAccess } = require('../utils/bookingAccess');
+const { runLifecycleChecks } = require('../services/bookingLifecycle');
 const {
   calculateHaversineDistanceKm,
   calculateEtaMinutes,
@@ -6,9 +8,33 @@ const {
   ODISHA_LOCALITY_COORDS,
 } = require('./matchingController');
 
+// Valid booking lifecycle states — mirrors the CHECK constraint on bookings.status
+const BOOKING_STATUSES = ['REQUESTED', 'MATCHED', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+
 // Helper to generate 4-digit random numeric OTP
 function generate4DigitOtp() {
   return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+/**
+ * Release an artisan back to AVAILABLE, but only when they have no other
+ * live job. Blindly setting AVAILABLE would free a worker who is still
+ * on-site for a different booking.
+ */
+async function releaseWorkerIfIdle(workerId, exceptBookingId) {
+  if (!workerId) return;
+  const remaining = await query(`
+    SELECT COUNT(*) as count FROM bookings
+    WHERE worker_id = $1 AND status IN ('ACCEPTED', 'IN_PROGRESS') AND id != $2
+  `, [workerId, exceptBookingId]);
+
+  if (parseInt(remaining.rows[0].count, 10) === 0) {
+    await query(`
+      UPDATE workers
+      SET availability = 'AVAILABLE', updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND availability = 'BUSY'
+    `, [workerId]);
+  }
 }
 
 /**
@@ -30,8 +56,9 @@ async function createBooking(req, res) {
     const is_bulk_order = req.body.is_bulk_order || req.body.isBulkOrder ? 1 : 0;
     const notes = req.body.notes || '';
 
-    // Robust user id extraction
-    const customerId = req.user ? req.user.id : 1;
+    // The route is mounted behind authenticate + authorize('CUSTOMER'),
+    // so req.user is always present. Never fall back to a hardcoded id.
+    const customerId = req.user.id;
 
     if (!serviceId) {
       return res.status(400).json({ error: 'Validation Error', message: 'Service selection is required.' });
@@ -43,10 +70,14 @@ async function createBooking(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Selected service not found in catalog.' });
     }
 
-    // Price calculation
-    let baseAmount = Number(service.base_price) || 299;
+    // Sizing & Squad Support
+    const squad_size = Math.max(1, Math.min(10, parseInt(req.body.squad_size || req.body.squadSize || 1, 10)));
+    const squad_worker_ids = String(req.body.squad_worker_ids || req.body.squadWorkerIds || '').trim();
+
+    // Price calculation (scaled by squad headcount)
+    let baseAmount = (Number(service.base_price) || 299) * squad_size;
     if (is_emergency) {
-      baseAmount = Math.max(baseAmount, 499);
+      baseAmount = Math.max(baseAmount, 499 * squad_size);
     }
 
     // Bulk discount (15% off labour for apartment societies / bulk orders)
@@ -56,9 +87,24 @@ async function createBooking(req, res) {
       baseAmount = baseAmount - bulkDiscount;
     }
 
-    // Model: 93% Worker + 2% Platform Fee + 5% PF & Insurance (93-2-5 model)
-    const cooperativeFee = Math.round(baseAmount * 0.05 * 100) / 100; // 5% PF & Insurance
-    const platformFee = Math.round(baseAmount * 0.02 * 100) / 100; // 2% Platform Fee
+    // Dynamic Cooperative Economics (defaults to 93-2-5 if not customized in society bylaws)
+    let welfarePct = 5.0;
+    let platformPct = 2.0;
+    try {
+      const econRes = await query(`
+        SELECT welfare_fund_share_pct, platform_upkeep_share_pct
+        FROM cooperatives
+        WHERE district ILIKE $1 OR name ILIKE $1
+        LIMIT 1
+      `, [`%${location_district}%`]);
+      if (econRes.rows[0]) {
+        welfarePct = econRes.rows[0].welfare_fund_share_pct ?? 5.0;
+        platformPct = econRes.rows[0].platform_upkeep_share_pct ?? 2.0;
+      }
+    } catch (_) {}
+
+    const cooperativeFee = Math.round(baseAmount * (welfarePct / 100) * 100) / 100; // Configurable Welfare/ESIC
+    const platformFee = Math.round(baseAmount * (platformPct / 100) * 100) / 100; // Configurable Upkeep
     const totalAmount = Math.round((baseAmount + cooperativeFee + platformFee) * 100) / 100;
 
     // Generate Guaranteed Unique Booking Code and Invoice Code
@@ -93,9 +139,6 @@ async function createBooking(req, res) {
     }
 
     // Fair Cooperative Broadcast Dispatch Protocol:
-    // Customer does NOT have authority to choose an individual worker.
-    // The service request is broadcasted to all nearby verified cooperative artisans in the matching trade and district.
-    // The first nearby qualified artisan who accepts receives the order.
     const validWorkerId = null;
     const initialStatus = 'REQUESTED';
 
@@ -106,8 +149,8 @@ async function createBooking(req, res) {
         latitude, longitude,
         scheduled_date, scheduled_time, is_emergency, is_bulk_order, bulk_discount_amount, status,
         amount, cooperative_fee, platform_fee, total_amount, notes,
-        arrival_otp, completion_otp
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+        arrival_otp, completion_otp, squad_size, squad_worker_ids, transit_compensation_fee
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       RETURNING *
     `, [
       bookingCode,
@@ -133,7 +176,10 @@ async function createBooking(req, res) {
       totalAmount,
       notes || null,
       arrivalOtp,
-      completionOtp
+      completionOtp,
+      squad_size,
+      squad_worker_ids,
+      50.0 // Doorstep transit compensation fee
     ]);
 
     const newBookingRow = insertResult.rows[0];
@@ -142,7 +188,7 @@ async function createBooking(req, res) {
     // Create Invoice Skeleton
     let coopName = 'Bhubaneswar Labour Cooperative Federation';
     let workerName = 'Assigned Cooperative Worker';
-    const customerName = req.user ? req.user.name : 'Citizen Customer';
+    const customerName = req.user.name || 'Citizen Customer';
 
     if (validWorkerId) {
       const workerInfoRes = await query(`
@@ -213,6 +259,7 @@ async function createBooking(req, res) {
  */
 async function getBookings(req, res) {
   try {
+    await runLifecycleChecks();
     const { role, id: userId } = req.user;
     const { status, limit = 50 } = req.query;
 
@@ -222,6 +269,7 @@ async function getBookings(req, res) {
              u_cust.name as customer_name, u_cust.phone as customer_phone, u_cust.email as customer_email,
              u_work.name as worker_name, u_work.phone as worker_phone,
              w.worker_code, w.rating as worker_rating, w.tier as worker_tier,
+             w.latitude as worker_latitude, w.longitude as worker_longitude, w.service_area as worker_service_area,
              u_master.name as paired_master_name,
              c.name as cooperative_name,
              p.status as payment_status, p.transaction_id,
@@ -272,7 +320,59 @@ async function getBookings(req, res) {
     params.push(parseInt(limit, 10));
 
     const result = await query(baseQuery, params);
-    res.json({ bookings: result.rows });
+
+    const enrichedBookings = result.rows.map((b) => {
+      let custLat = Number(b.latitude);
+      let custLng = Number(b.longitude);
+      const cityUpper = (b.location_city || b.location_district || '').toUpperCase();
+
+      if (isNaN(custLat) || !custLat) {
+        if (cityUpper.includes('PURI')) { custLat = 19.8135; custLng = 85.8312; }
+        else if (cityUpper.includes('CUTTACK')) { custLat = 20.4625; custLng = 85.8830; }
+        else { custLat = 20.3540; custLng = 85.8170; }
+      }
+
+      let workerLat = Number(b.worker_latitude);
+      let workerLng = Number(b.worker_longitude);
+
+      if (isNaN(workerLat) || !workerLat) {
+        if (cityUpper.includes('PURI')) { workerLat = 19.8100; workerLng = 85.8380; }
+        else if (cityUpper.includes('CUTTACK')) { workerLat = 20.4890; workerLng = 85.8770; }
+        else { workerLat = 20.2750; workerLng = 85.8100; }
+      }
+
+      const straightDist = calculateHaversineDistanceKm(workerLat, workerLng, custLat, custLng) || 2.4;
+      const distanceKm = Math.max(1.2, Math.round(straightDist * 1.3 * 10) / 10);
+      const etaMinutes = calculateEtaMinutes(distanceKm);
+
+      const cleanB = {
+        ...b,
+        latitude: custLat,
+        longitude: custLng,
+        worker_latitude: workerLat,
+        worker_longitude: workerLng,
+        distance_km: distanceKm,
+        eta_minutes: etaMinutes,
+        tracking: {
+          workerCoords: { lat: workerLat, lng: workerLng },
+          customerCoords: { lat: custLat, lng: custLng },
+          distanceKm,
+          etaMinutes,
+          dispatchStatus: b.status === 'COMPLETED' ? 'Service Completed' : b.status === 'IN_PROGRESS' ? 'On-Site' : 'En Route',
+        }
+      };
+
+      // Cryptographic OTP Handshake Protection:
+      // Strip OTPs for non-owner customers and workers (workers must never see the customer's handshake code)
+      if (role !== 'COOPERATIVE_ADMIN' && (role !== 'CUSTOMER' || b.customer_id !== userId)) {
+        delete cleanB.arrival_otp;
+        delete cleanB.completion_otp;
+      }
+
+      return cleanB;
+    });
+
+    res.json({ bookings: enrichedBookings });
   } catch (err) {
     console.error('Get bookings error:', err);
     res.status(500).json({ error: 'Server Error', message: 'Failed to fetch bookings.' });
@@ -284,6 +384,7 @@ async function getBookings(req, res) {
  */
 async function getBookingById(req, res) {
   try {
+    await runLifecycleChecks();
     const rawId = req.params.id;
     const isNumeric = /^\d+$/.test(rawId);
     const whereClause = isNumeric ? 'b.id = $1' : 'b.booking_code = $1';
@@ -316,14 +417,36 @@ async function getBookingById(req, res) {
     }
 
     // Attach Live Route Telemetry & Waypoints if worker is assigned
-    const workerLat = booking.worker_latitude || (booking.location_city === 'Cuttack' ? 20.4890 : 20.2750);
-    const workerLng = booking.worker_longitude || (booking.location_city === 'Cuttack' ? 85.8770 : 85.8100);
-    const custLat = booking.latitude || 20.3540;
-    const custLng = booking.longitude || 85.8170;
+    const cityUpper = (booking.location_city || booking.location_district || '').toUpperCase();
+    let workerLat = Number(booking.worker_latitude);
+    let workerLng = Number(booking.worker_longitude);
 
-    const distanceKm = calculateHaversineDistanceKm(workerLat, workerLng, custLat, custLng) || 3.4;
+    if (isNaN(workerLat) || !workerLat) {
+      if (cityUpper.includes('PURI')) { workerLat = 19.8100; workerLng = 85.8380; }
+      else if (cityUpper.includes('CUTTACK')) { workerLat = 20.4890; workerLng = 85.8770; }
+      else { workerLat = 20.2750; workerLng = 85.8100; }
+    }
+
+    let custLat = Number(booking.latitude);
+    let custLng = Number(booking.longitude);
+
+    if (isNaN(custLat) || !custLat) {
+      if (cityUpper.includes('PURI')) { custLat = 19.8135; custLng = 85.8312; }
+      else if (cityUpper.includes('CUTTACK')) { custLat = 20.4625; custLng = 85.8830; }
+      else { custLat = 20.3540; custLng = 85.8170; }
+    }
+
+    const straightDist = calculateHaversineDistanceKm(workerLat, workerLng, custLat, custLng) || 2.4;
+    const distanceKm = Math.max(1.2, Math.round(straightDist * 1.3 * 10) / 10);
     const etaMinutes = calculateEtaMinutes(distanceKm);
     const routeWaypoints = generateRouteWaypoints(workerLat, workerLng, custLat, custLng);
+
+    booking.latitude = custLat;
+    booking.longitude = custLng;
+    booking.worker_latitude = workerLat;
+    booking.worker_longitude = workerLng;
+    booking.distance_km = distanceKm;
+    booking.eta_minutes = etaMinutes;
 
     booking.tracking = {
       workerCoords: { lat: workerLat, lng: workerLng },
@@ -353,6 +476,16 @@ async function getBookingById(req, res) {
           return res.status(403).json({ error: 'Forbidden', message: 'Access denied: You can only view jobs assigned to you.' });
         }
       }
+    }
+
+    // Cryptographic OTP Handshake Protection:
+    // Only the citizen who raised the order and Cooperative Admin can view the OTPs.
+    // The artisan MUST NOT see the code in the API response — they must collect it physically on-site from the customer.
+    const isCitizenOwner = req.user && req.user.role === 'CUSTOMER' && booking.customer_id === req.user.id;
+    const isCoopAdmin = req.user && req.user.role === 'COOPERATIVE_ADMIN';
+    if (!isCitizenOwner && !isCoopAdmin) {
+      delete booking.arrival_otp;
+      delete booking.completion_otp;
     }
 
     const paymentRes = await query('SELECT * FROM payments WHERE booking_id = $1', [booking.id]);
@@ -385,6 +518,17 @@ async function verifyArrivalOtp(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    // Only the dispatched artisan (or a cooperative admin acting on support)
+    // may complete the arrival handshake — the customer holds the code, the
+    // artisan proves they are on-site by entering it.
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only the artisan dispatched to this job can verify the arrival OTP.',
+      });
+    }
+
     if (booking.status === 'COMPLETED') {
       return res.status(400).json({ error: 'Bad Request', message: 'Work is already marked as completed.' });
     }
@@ -397,21 +541,57 @@ async function verifyArrivalOtp(req, res) {
         booking,
       });
     }
-
-    const expectedOtp = String(booking.arrival_otp || '4821').trim();
-    const providedOtp = String(otp || '').trim();
-
-    if (providedOtp !== expectedOtp && providedOtp !== '1234') {
+    if (booking.status === 'REQUESTED' || !booking.worker_id) {
       return res.status(400).json({
-        error: 'Invalid OTP',
-        message: 'The 4-digit Arrival OTP entered is incorrect. Please ask the customer to confirm the code on their screen.',
+        error: 'Bad Request',
+        message: 'This job has not been accepted by an artisan yet.',
       });
     }
 
-    // Set status to IN_PROGRESS upon successful arrival handshake
+    // Brute-force protection: Check if OTP verification is temporarily locked
+    if (booking.otp_locked_until && new Date() < new Date(booking.otp_locked_until)) {
+      const remainingSecs = Math.ceil((new Date(booking.otp_locked_until).getTime() - Date.now()) / 1000);
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: `OTP verification is locked due to multiple failed attempts. Please retry in ${Math.max(1, Math.ceil(remainingSecs / 60))} minute(s).`,
+        lockedRemainingSeconds: remainingSecs,
+      });
+    }
+
+    const expectedOtp = String(booking.arrival_otp || '').trim();
+    const providedOtp = String(otp || '').trim();
+
+    if (!expectedOtp || providedOtp !== expectedOtp) {
+      const currentAttempts = (parseInt(booking.arrival_otp_attempts, 10) || 0) + 1;
+      if (currentAttempts >= 3) {
+        await query(`
+          UPDATE bookings
+          SET arrival_otp_attempts = $1, otp_locked_until = CURRENT_TIMESTAMP + INTERVAL '15 minutes', updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2
+        `, [currentAttempts, bookingId]);
+        return res.status(429).json({
+          error: 'Too Many Requests',
+          message: 'Security Alert: Maximum 3 failed OTP attempts reached. Handshake verification is locked for 15 minutes.',
+          lockedRemainingSeconds: 900,
+        });
+      } else {
+        await query(`
+          UPDATE bookings
+          SET arrival_otp_attempts = $1, updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2
+        `, [currentAttempts, bookingId]);
+        return res.status(400).json({
+          error: 'Invalid OTP',
+          message: `The 4-digit Arrival OTP entered is incorrect (${currentAttempts}/3 attempts). Please ask the customer to confirm the code on their screen.`,
+          attemptsRemaining: 3 - currentAttempts,
+        });
+      }
+    }
+
+    // Set status to IN_PROGRESS upon successful arrival handshake & reset failed attempts
     const updateRes = await query(`
       UPDATE bookings
-      SET status = 'IN_PROGRESS', updated_at = CURRENT_TIMESTAMP
+      SET status = 'IN_PROGRESS', arrival_otp_attempts = 0, otp_locked_until = NULL, updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING *
     `, [bookingId]);
@@ -449,6 +629,14 @@ async function verifyCompletionOtp(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only the artisan dispatched to this job can verify the completion OTP.',
+      });
+    }
+
     if (booking.status === 'CANCELLED') {
       return res.status(400).json({ error: 'Bad Request', message: 'Cannot complete a cancelled booking.' });
     }
@@ -458,15 +646,51 @@ async function verifyCompletionOtp(req, res) {
         booking,
       });
     }
+    if (!['ACCEPTED', 'IN_PROGRESS'].includes(booking.status)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'This job has not started yet. Verify the arrival OTP first.',
+      });
+    }
 
-    const expectedOtp = String(booking.completion_otp || '9156').trim();
+    // Brute-force protection: Check if OTP verification is temporarily locked
+    if (booking.otp_locked_until && new Date() < new Date(booking.otp_locked_until)) {
+      const remainingSecs = Math.ceil((new Date(booking.otp_locked_until).getTime() - Date.now()) / 1000);
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: `OTP verification is locked due to multiple failed attempts. Please retry in ${Math.max(1, Math.ceil(remainingSecs / 60))} minute(s).`,
+        lockedRemainingSeconds: remainingSecs,
+      });
+    }
+
+    const expectedOtp = String(booking.completion_otp || '').trim();
     const providedOtp = String(otp || '').trim();
 
-    if (providedOtp !== expectedOtp && providedOtp !== '1234') {
-      return res.status(400).json({
-        error: 'Invalid OTP',
-        message: 'The 4-digit Completion OTP entered is incorrect. Please ask the customer to confirm the code on their screen.',
-      });
+    if (!expectedOtp || providedOtp !== expectedOtp) {
+      const currentAttempts = (parseInt(booking.completion_otp_attempts, 10) || 0) + 1;
+      if (currentAttempts >= 3) {
+        await query(`
+          UPDATE bookings
+          SET completion_otp_attempts = $1, otp_locked_until = CURRENT_TIMESTAMP + INTERVAL '15 minutes', updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2
+        `, [currentAttempts, bookingId]);
+        return res.status(429).json({
+          error: 'Too Many Requests',
+          message: 'Security Alert: Maximum 3 failed OTP attempts reached. Handshake verification is locked for 15 minutes.',
+          lockedRemainingSeconds: 900,
+        });
+      } else {
+        await query(`
+          UPDATE bookings
+          SET completion_otp_attempts = $1, updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2
+        `, [currentAttempts, bookingId]);
+        return res.status(400).json({
+          error: 'Invalid OTP',
+          message: `The 4-digit Completion OTP entered is incorrect (${currentAttempts}/3 attempts). Please ask the customer to confirm the code on their screen.`,
+          attemptsRemaining: 3 - currentAttempts,
+        });
+      }
     }
 
     const completedAt = new Date().toISOString();
@@ -475,7 +699,8 @@ async function verifyCompletionOtp(req, res) {
 
     const updateRes = await query(`
       UPDATE bookings
-      SET status = 'COMPLETED', completed_at = $1, guarantee_armed_until = $2, updated_at = CURRENT_TIMESTAMP
+      SET status = 'COMPLETED', completed_at = $1, guarantee_armed_until = $2,
+          completion_otp_attempts = 0, otp_locked_until = NULL, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3
       RETURNING *
     `, [completedAt, guaranteeUntil, bookingId]);
@@ -492,18 +717,7 @@ async function verifyCompletionOtp(req, res) {
       `, [booking.amount || 299, booking.worker_id]);
 
       // Release worker back to AVAILABLE if no other active jobs
-      const remainingActive = await query(`
-        SELECT COUNT(*) as count FROM bookings
-        WHERE worker_id = $1 AND status IN ('ACCEPTED', 'IN_PROGRESS') AND id != $2
-      `, [booking.worker_id, bookingId]);
-
-      if (parseInt(remainingActive.rows[0].count, 10) === 0) {
-        await query(`
-          UPDATE workers
-          SET availability = 'AVAILABLE', updated_at = CURRENT_TIMESTAMP
-          WHERE id = $1 AND availability = 'BUSY'
-        `, [booking.worker_id]);
-      }
+      await releaseWorkerIfIdle(booking.worker_id, bookingId);
     }
 
     // Auto-record in Appliance Lineage (Phase 6)
@@ -546,6 +760,22 @@ async function uploadPhotoProof(req, res) {
       return res.status(400).json({ error: 'Validation Error', message: 'Photo URL or proof data is required.' });
     }
 
+    const bookingRes = await query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
+    const booking = bookingRes.rows[0];
+    if (!booking) {
+      return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
+    }
+
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only the artisan assigned to this job can upload work proofs.',
+      });
+    }
+
+    // `type` is interpolated into the SQL, so it must never come straight
+    // from the request body — map it to one of two known columns instead.
     const column = type === 'POST' ? 'post_job_photo_url' : 'pre_job_photo_url';
     const updateRes = await query(`
       UPDATE bookings
@@ -578,14 +808,33 @@ async function addParts(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only the artisan assigned to this job can add parts to the work order.',
+      });
+    }
+
+    if (!Array.isArray(parts)) {
+      return res.status(400).json({ error: 'Validation Error', message: 'parts must be an array of catalog line items.' });
+    }
+
     let partsTotal = 0;
-    const partsSummary = (parts || []).map(p => {
-      const lineCost = p.price * (p.quantity || 1);
+    const partsSummary = parts.map((p) => {
+      // Guard against NaN totals from a malformed/absent price or quantity.
+      const price = Number(p.price) || 0;
+      const quantity = Math.max(1, parseInt(p.quantity, 10) || 1);
+      const lineCost = Math.round(price * quantity * 100) / 100;
       partsTotal += lineCost;
-      return `${p.partName} (x${p.quantity || 1}) - ₹${lineCost}`;
+      return `${p.partName || 'Standard Part'} (x${quantity}) - ₹${lineCost}`;
     }).join(', ');
 
-    const newTotalAmount = Math.round((booking.amount + booking.cooperative_fee + booking.platform_fee + partsTotal) * 100) / 100;
+    partsTotal = Math.round(partsTotal * 100) / 100;
+
+    const newTotalAmount = Math.round(
+      (Number(booking.amount) + Number(booking.cooperative_fee) + Number(booking.platform_fee) + partsTotal) * 100
+    ) / 100;
 
     const updateRes = await query(`
       UPDATE bookings
@@ -624,14 +873,53 @@ async function claimGuarantee(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isOwner) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only the citizen who raised this order can claim its 30-Day Guarantee.',
+      });
+    }
+
+    if (booking.status !== 'COMPLETED') {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'The 30-Day Guarantee applies only to completed services.',
+      });
+    }
+
+    // Without this the endpoint mints an unlimited number of free
+    // Master-Artisan dispatches from a single completed booking.
+    if (booking.guarantee_claimed) {
+      return res.status(409).json({
+        error: 'Already Claimed',
+        message: 'The 30-Day Guarantee for this service has already been claimed. Please raise a grievance ticket for further help.',
+      });
+    }
+
     if (!booking.guarantee_armed_until || new Date() > new Date(booking.guarantee_armed_until)) {
       return res.status(400).json({ error: 'Expired', message: 'The 30-Day Guarantee period for this service has expired.' });
+    }
+
+    // Flag the claim first, conditionally, so two concurrent requests cannot
+    // both pass the check above and each get a free re-dispatch.
+    const claimRes = await query(`
+      UPDATE bookings
+      SET guarantee_claimed = 1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND (guarantee_claimed IS NULL OR guarantee_claimed = 0)
+      RETURNING id
+    `, [bookingId]);
+
+    if (claimRes.rowCount === 0) {
+      return res.status(409).json({
+        error: 'Already Claimed',
+        message: 'The 30-Day Guarantee for this service has already been claimed.',
+      });
     }
 
     // Find top Master Artisan in district
     const masterRes = await query(`
       SELECT w.id FROM workers w
-      JOIN users u ON w.user_id = u.id
       WHERE w.tier = 'MASTER' AND (w.verification_status = 'VERIFIED' OR w.verification_status IS NULL)
       LIMIT 1
     `);
@@ -667,9 +955,6 @@ async function claimGuarantee(req, res) {
       newCompletionOtp
     ]);
 
-    // Mark original as claimed
-    await query('UPDATE bookings SET guarantee_claimed = 1 WHERE id = $1', [bookingId]);
-
     res.json({
       message: '30-Day Guarantee Claim Approved! Master Artisan dispatched at ₹0 labour cost.',
       rebooking: newBookingRes.rows[0],
@@ -693,8 +978,35 @@ async function updateBookingStatus(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isOwner && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only update bookings you are party to.',
+      });
+    }
+
+    // status is written straight into the bookings row; anything outside the
+    // lifecycle enum either violates the CHECK constraint (500) or wedges the
+    // booking in a state no screen knows how to render.
+    if (!BOOKING_STATUSES.includes(status)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: `status must be one of: ${BOOKING_STATUSES.join(', ')}.`,
+      });
+    }
+
     let updateWorkerId = booking.worker_id;
     if (workerId && workerId !== booking.worker_id) {
+      // Reassigning an artisan is a dispatch-desk action, not something a
+      // citizen or another worker may do.
+      if (!access.isAdmin) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: 'Only the cooperative dispatch desk can reassign an artisan to a booking.',
+        });
+      }
+
       const workerRes = await query(`
         SELECT w.id, w.availability, u.name
         FROM workers w
@@ -751,18 +1063,7 @@ async function updateBookingStatus(req, res) {
           WHERE id = $1
         `, [updateWorkerId]);
       } else if (status === 'COMPLETED' || status === 'CANCELLED') {
-        const remaining = await query(`
-          SELECT COUNT(*) as count FROM bookings
-          WHERE worker_id = $1 AND status IN ('ACCEPTED', 'IN_PROGRESS') AND id != $2
-        `, [updateWorkerId, req.params.id]);
-
-        if (parseInt(remaining.rows[0].count, 10) === 0) {
-          await query(`
-            UPDATE workers
-            SET availability = 'AVAILABLE', updated_at = CURRENT_TIMESTAMP
-            WHERE id = $1 AND availability = 'BUSY'
-          `, [updateWorkerId]);
-        }
+        await releaseWorkerIfIdle(updateWorkerId, req.params.id);
       }
     }
 
@@ -793,6 +1094,14 @@ async function cancelBooking(req, res) {
       return res.status(404).json({ error: 'Not Found', message: 'Booking not found.' });
     }
 
+    const access = await getBookingAccess(req.user, booking);
+    if (!access.isAdmin && !access.isOwner && !access.isAssignedWorker) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only cancel bookings you are party to.',
+      });
+    }
+
     if (booking.status === 'COMPLETED') {
       return res.status(400).json({ error: 'Bad Request', message: 'Completed bookings cannot be cancelled.' });
     }
@@ -801,9 +1110,20 @@ async function cancelBooking(req, res) {
       return res.status(400).json({ error: 'Bad Request', message: 'Booking is already cancelled.' });
     }
 
-    if (booking.worker_id) {
-      await query(`UPDATE workers SET availability = 'AVAILABLE' WHERE id = $1`, [booking.worker_id]);
+    // Doorstep Transit Protection:
+    // If cancelled after dispatch (ACCEPTED / IN_PROGRESS), credit transit compensation to worker
+    let transitCompensationAwarded = 0;
+    if (booking.worker_id && ['ACCEPTED', 'IN_PROGRESS'].includes(booking.status)) {
+      transitCompensationAwarded = Number(booking.transit_compensation_fee) || 50.0;
+      await query(`
+        UPDATE workers
+        SET total_earnings = total_earnings + $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+      `, [transitCompensationAwarded, booking.worker_id]);
     }
+
+    // Only free the artisan if this was their last live job
+    await releaseWorkerIfIdle(booking.worker_id, booking.id);
 
     const updateRes = await query(`
       UPDATE bookings
@@ -816,7 +1136,10 @@ async function cancelBooking(req, res) {
     `, [reason || 'Cancelled by customer', booking.id]);
 
     res.json({
-      message: 'Booking cancelled successfully. Allocated artisan released.',
+      message: transitCompensationAwarded > 0
+        ? `Booking cancelled. Dispatched artisan credited ₹${transitCompensationAwarded.toFixed(0)} doorstep transit compensation under cooperative protection rules.`
+        : 'Booking cancelled successfully. Allocated artisan released.',
+      transitCompensationAwarded,
       booking: updateRes.rows[0],
     });
   } catch (err) {
