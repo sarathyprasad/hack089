@@ -1,4 +1,4 @@
-# System Workflows & User Journeys — Shram Setu
+# System Workflows & User Journeys — Prithvi Fix
 
 This document outlines the detailed workflows across all platform roles and actors.
 
