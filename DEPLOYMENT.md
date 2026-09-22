@@ -1,6 +1,6 @@
-# Production Deployment Guide — Shram Setu
+# Production Deployment Guide — Prithvi Fix
 
-This document outlines the deployment instructions for hosting **Shram Setu** on state government infrastructure (NIC / State Data Centre / Cloud VM).
+This document outlines the deployment instructions for hosting **Prithvi Fix** on state government infrastructure (NIC / State Data Centre / Cloud VM).
 
 ---
 
