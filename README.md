@@ -14,8 +14,8 @@ Unlike profit-extracting private aggregator platforms that treat workers as expe
 ## 🌟 Key Highlights & Modules
 
 ### 1. 🏛️ Public Portal & Multi-Lingual Interface
-- Official government design system (National Navy `#1a237e`, Saffron `#FF9933`, Green `#138808`).
-- **Live Tri-Lingual Support**: English (EN), Hindi (हिंदी), and Odia (ଓଡ଼ିଆ).
+- Official government design system.
+- **Live Multi-Lingual Support**: English (EN), Hindi (हिंदी), Odia (ଓଡ଼ିଆ), etc..
 - Standardized Public Services Catalog across 12 trade categories (Electrical, Plumbing, Carpentry, Painting, Cleaning, Gardening, Caregiving, Driving, Appliance Repair, Domestic, IT/CCTV, Emergency).
 - Public Worker Directory with skill tags, badge credentials, and customer review summaries.
 
