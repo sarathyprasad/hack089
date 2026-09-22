@@ -96,9 +96,9 @@ For testing and evaluation, 1-click login buttons are embedded directly on the L
 
 | Role | Demo Email | Password | Pre-configured Access |
 |------|------------|----------|-----------------------|
-| 👤 **Customer** | `customer@demo.local` | `demo123` | Bookings, Smart Matching, Payments, Invoices, Reviews |
-| 👷 **Worker** | `ramesh.w@demo.local` | `demo123` | Duty Toggle, Job Dispatch, Earnings, Welfare Centre |
-| 🏢 **Coop Admin** | `admin@demo.local` | `demo123` | Worker Verification, Oversight, AI Demand & Mutual Aid |
+| 👤 **Customer** | `customer@demo.local` | `password123` | Bookings, Smart Matching, Payments, Invoices, Reviews |
+| 👷 **Worker** | `ramesh.w@demo.local` | `password123` | Duty Toggle, Job Dispatch, Earnings, Welfare Centre |
+| 🏢 **Coop Admin** | `fedhead@demo.local` | `password123` | Worker Verification, Oversight, AI Demand & Mutual Aid |
 
 ---
 
