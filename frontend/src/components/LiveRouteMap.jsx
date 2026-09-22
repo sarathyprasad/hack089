@@ -17,9 +17,11 @@ export default function LiveRouteMap({
 }) {
   // View Mode: 'ROUTE' (directions from worker to customer), 'CUSTOMER' (customer center), 'ARTISAN' (artisan focus)
   const [viewMode, setViewMode] = useState('ROUTE');
+  const [mapType, setMapType] = useState('roadmap'); // 'roadmap' | 'satellite'
   const [zoomLevel, setZoomLevel] = useState(14);
   const [selectedPinWorker, setSelectedPinWorker] = useState(null);
   const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const [iframeBlocked, setIframeBlocked] = useState(false);
 
   // 1. Resolve Customer Coordinates
   let resolvedCustLat = customerCoords?.lat != null ? Number(customerCoords.lat) : NaN;
@@ -93,9 +95,10 @@ export default function LiveRouteMap({
   // Direct native Google Maps navigation URL for mobile & desktop
   const googleMapsExternalUrl = `https://www.google.com/maps/dir/?api=1&origin=${resolvedWorkerLat},${resolvedWorkerLng}&destination=${resolvedCustLat},${resolvedCustLng}&travelmode=driving`;
 
-  // Build Verified Google Maps Embed URL (Works directly in iframes without 301 SAMEORIGIN blocking)
+  // Build Verified Google Maps Embed URL (Works directly in iframes across production domains)
   const googleMapsEmbedUrl = useMemo(() => {
     setIsIframeLoading(true);
+    setIframeBlocked(false);
 
     const apiKey = import.meta.env?.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -108,27 +111,24 @@ export default function LiveRouteMap({
       } else if (viewMode === 'ARTISAN') {
         const activeLat = selectedPinWorker?.latitude || resolvedWorkerLat;
         const activeLng = selectedPinWorker?.longitude || resolvedWorkerLng;
-        return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${activeLat},${activeLng}&zoom=${zoomLevel}`;
+        return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${activeLat},${activeLng}&zoom=${zoomLevel}&maptype=${mapType === 'satellite' ? 'satellite' : 'roadmap'}`;
       } else {
-        return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${resolvedCustLat},${resolvedCustLng}&zoom=${zoomLevel}`;
+        return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${resolvedCustLat},${resolvedCustLng}&zoom=${zoomLevel}&maptype=${mapType === 'satellite' ? 'satellite' : 'roadmap'}`;
       }
     }
 
-    // Option 2: Direct Google Maps Embed Engine (Zero API Key required, coordinates strictly in local district)
-    let query = '';
+    // Option 2: Universal Google Maps Embed Engine (Zero API Key required, standard maps.google.com)
+    const tParam = mapType === 'satellite' ? 'k' : 'm';
     if (viewMode === 'ROUTE') {
-      query = `${resolvedWorkerLat},${resolvedWorkerLng} to ${resolvedCustLat},${resolvedCustLng}`;
+      return `https://maps.google.com/maps?saddr=${resolvedWorkerLat},${resolvedWorkerLng}&daddr=${resolvedCustLat},${resolvedCustLng}&t=${tParam}&z=${zoomLevel}&output=embed`;
     } else if (viewMode === 'ARTISAN') {
       const activeLat = selectedPinWorker?.latitude || resolvedWorkerLat;
       const activeLng = selectedPinWorker?.longitude || resolvedWorkerLng;
-      query = `${activeLat},${activeLng}`;
+      return `https://maps.google.com/maps?q=${activeLat},${activeLng}&t=${tParam}&z=${zoomLevel}&ie=UTF8&iwloc=&output=embed`;
     } else {
-      query = `${resolvedCustLat},${resolvedCustLng}`;
+      return `https://maps.google.com/maps?q=${resolvedCustLat},${resolvedCustLng}&t=${tParam}&z=${zoomLevel}&ie=UTF8&iwloc=&output=embed`;
     }
-
-    const encodedQuery = encodeURIComponent(query);
-    return `https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s${encodedQuery}!6i${zoomLevel}!3m1!1sen!5m1!1sen`;
-  }, [viewMode, zoomLevel, resolvedWorkerLat, resolvedWorkerLng, resolvedCustLat, resolvedCustLng, selectedPinWorker]);
+  }, [viewMode, mapType, zoomLevel, resolvedWorkerLat, resolvedWorkerLng, resolvedCustLat, resolvedCustLng, selectedPinWorker]);
 
   const handleRecenter = () => {
     setViewMode('ROUTE');
@@ -221,11 +221,26 @@ export default function LiveRouteMap({
             )}
           </div>
 
+          {/* Map Layer Switcher: Roadmap vs Satellite */}
+          <button
+            type="button"
+            onClick={() => setMapType((prev) => (prev === 'roadmap' ? 'satellite' : 'roadmap'))}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+              mapType === 'satellite'
+                ? 'bg-slate-900 text-amber-300 border-slate-700 shadow-xs'
+                : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
+            }`}
+            title="Toggle Google Maps Satellite / Roadmap View"
+          >
+            <Layers size={13} className={mapType === 'satellite' ? 'text-amber-300' : 'text-blue-900'} />
+            <span className="hidden sm:inline">{mapType === 'satellite' ? 'Satellite' : 'Roadmap'}</span>
+          </button>
+
           {/* Recenter button */}
           <button
             type="button"
             onClick={handleRecenter}
-            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition shadow-2xs"
+            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition shadow-2xs cursor-pointer"
             title="Recenter to Route"
           >
             <RefreshCw size={14} />
@@ -248,11 +263,45 @@ export default function LiveRouteMap({
       {/* Google Maps Embed Canvas */}
       <div className="relative w-full rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-slate-100">
         {/* Loading Spinner Skeleton */}
-        {isIframeLoading && (
+        {isIframeLoading && !iframeBlocked && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100/80 backdrop-blur-xs">
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded-full border-4 border-blue-900 border-t-transparent animate-spin" />
               <span className="text-xs text-gray-500 font-semibold">Loading Google Maps...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback Overlay if Browser Blocks Iframe */}
+        {iframeBlocked && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-900/95 text-white text-center rounded-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-400 flex items-center justify-center mb-3">
+              <Navigation size={24} />
+            </div>
+            <h4 className="font-bold text-base mb-1">Google Maps Navigation Ready</h4>
+            <p className="text-xs text-slate-300 max-w-sm mb-4 leading-relaxed">
+              Your browser tracking prevention or ad-block settings restricted the third-party map frame. You can launch full turn-by-turn driving directions in the Google Maps app.
+            </p>
+            <div className="flex items-center gap-2.5">
+              <a
+                href={googleMapsExternalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-md transition"
+              >
+                <ExternalLink size={14} />
+                <span>Open in Google Maps</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setIframeBlocked(false);
+                  setIsIframeLoading(true);
+                }}
+                className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-700 transition"
+              >
+                Retry
+              </button>
             </div>
           </div>
         )}
@@ -266,8 +315,16 @@ export default function LiveRouteMap({
           }`}
           loading="lazy"
           allowFullScreen
+          allow="geolocation"
           referrerPolicy="no-referrer-when-downgrade"
-          onLoad={() => setIsIframeLoading(false)}
+          onLoad={() => {
+            setIsIframeLoading(false);
+            setIframeBlocked(false);
+          }}
+          onError={() => {
+            setIsIframeLoading(false);
+            setIframeBlocked(true);
+          }}
         />
 
         {/* Floating Zoom Controls Overlay */}

@@ -24,11 +24,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://*.google.com", "https://maps.googleapis.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*", "http://127.0.0.1:*", "https:", "http:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:", "https://*.google.com", "https://*.googleapis.com", "https://*.gstatic.com"],
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*", "http://127.0.0.1:*", "https:", "http:", "https://*.google.com", "https://*.googleapis.com"],
+      frameSrc: ["'self'", "https://www.google.com", "https://maps.google.com", "https://*.google.com"],
       frameAncestors: ["'none'"], // Mitigate Clickjacking
     },
   },
