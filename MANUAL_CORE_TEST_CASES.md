@@ -1,6 +1,6 @@
-# 📑 Shram Setu Platform — Core Manual Test Cases
+# 📑 Prithvi Fix Platform — Core Manual Test Cases
 
-This document outlines the detailed, step-by-step manual test cases for the three core workflows of the **Sahakari Shram Setu Platform**:
+This document outlines the detailed, step-by-step manual test cases for the three core workflows of the **Prithvi Fix Platform**:
 1. **Customer Service Order Flow**
 2. **Worker Job Assignment Flow**
 3. **Facilitator Board — New Registration Approval**
@@ -11,9 +11,9 @@ This document outlines the detailed, step-by-step manual test cases for the thre
 
 | Role | Portal URL | Login Email | Password | Pre-configured Persona |
 | :--- | :--- | :--- | :--- | :--- |
-| **👤 Citizen / Customer** | `/login` | `customer@demo.local` | `demo123` | Ananya Patel (Patia, Bhubaneswar) |
-| **👷 Skilled Worker** | `/login?portal=worker` | `ramesh.w@demo.local` | `demo123` | Ramesh Kumar (Master Electrician • Skill Certified) |
-| **🏢 Facilitator / Board Admin** | `/login?portal=admin` | `admin@demo.local` | `demo123` | Arun Kumar Pattnaik (Federation Secretary) |
+| **👤 Citizen / Customer** | `/login` | `customer@demo.local` | `password123` | Ananya Patel (Patia, Bhubaneswar) |
+| **👷 Skilled Worker** | `/login?portal=worker` | `ramesh.w@demo.local` | `password123` | Ramesh Kumar (Master Electrician • Skill Certified) |
+| **🏢 Facilitator / Board Admin** | `/login?portal=admin` | `admin@demo.local` | `password123` | Arun Kumar Pattnaik (Federation Secretary) |
 
 ---
 
