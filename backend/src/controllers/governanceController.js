@@ -277,6 +277,151 @@ async function getPartsCatalog(req, res) {
   }
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FEDERATION HEAD TARIFF ADMINISTRATION — Services & Parts Catalog
+// Only admin_type === 'FEDERATION_HEAD' may modify these tables.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function requireFederationHead(req, res) {
+  if (req.user?.admin_type !== 'FEDERATION_HEAD') {
+    res.status(403).json({ error: 'Forbidden', message: 'Only the State Apex Federation Head may modify the statutory tariff matrix.' });
+    return false;
+  }
+  return true;
+}
+
+/** POST /api/governance/admin/services — Create a new service */
+async function createService(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { name, category, description, base_price, price_unit, icon, is_complex } = req.body;
+    if (!name || !category || base_price === undefined) {
+      return res.status(400).json({ error: 'Validation Error', message: 'name, category, and base_price are required.' });
+    }
+    const result = await query(
+      `INSERT INTO services (name, category, description, base_price, price_unit, icon, is_complex, is_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,1) RETURNING *`,
+      [name, category, description || '', parseFloat(base_price), price_unit || 'per_visit', icon || '🔧', is_complex ? 1 : 0]
+    );
+    res.status(201).json({ success: true, service: result.rows[0], message: `Service "${name}" added to the statutory tariff matrix.` });
+  } catch (err) {
+    console.error('Create service error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to create service.' });
+  }
+}
+
+/** PUT /api/governance/admin/services/:id — Update a service */
+async function updateService(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { id } = req.params;
+    const { name, category, description, base_price, price_unit, icon, is_complex, is_active } = req.body;
+    const result = await query(
+      `UPDATE services SET
+        name = COALESCE($1, name),
+        category = COALESCE($2, category),
+        description = COALESCE($3, description),
+        base_price = COALESCE($4, base_price),
+        price_unit = COALESCE($5, price_unit),
+        icon = COALESCE($6, icon),
+        is_complex = COALESCE($7, is_complex),
+        is_active = COALESCE($8, is_active)
+       WHERE id = $9 RETURNING *`,
+      [name, category, description, base_price !== undefined ? parseFloat(base_price) : null, price_unit, icon,
+       is_complex !== undefined ? (is_complex ? 1 : 0) : null,
+       is_active !== undefined ? (is_active ? 1 : 0) : null, id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Not Found', message: 'Service not found.' });
+    res.json({ success: true, service: result.rows[0], message: 'Service tariff updated in the statutory matrix.' });
+  } catch (err) {
+    console.error('Update service error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to update service.' });
+  }
+}
+
+/** DELETE /api/governance/admin/services/:id — Deactivate (soft-delete) a service */
+async function deleteService(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { id } = req.params;
+    await query('UPDATE services SET is_active = 0 WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Service deactivated from the statutory tariff matrix.' });
+  } catch (err) {
+    console.error('Delete service error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to deactivate service.' });
+  }
+}
+
+/** POST /api/governance/admin/parts-catalog — Add a part to the locked price matrix */
+async function createPart(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { trade_category, part_name, standard_price, unit, warranty_months } = req.body;
+    if (!trade_category || !part_name || standard_price === undefined) {
+      return res.status(400).json({ error: 'Validation Error', message: 'trade_category, part_name, and standard_price are required.' });
+    }
+    const result = await query(
+      `INSERT INTO parts_catalog (trade_category, part_name, standard_price, unit, warranty_months)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [trade_category, part_name, parseFloat(standard_price), unit || 'piece', parseInt(warranty_months) || 6]
+    );
+    res.status(201).json({ success: true, part: result.rows[0], message: `Part "${part_name}" added to the locked price matrix.` });
+  } catch (err) {
+    console.error('Create part error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to create part entry.' });
+  }
+}
+
+/** PUT /api/governance/admin/parts-catalog/:id — Update a part's regulated price */
+async function updatePart(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { id } = req.params;
+    const { trade_category, part_name, standard_price, unit, warranty_months } = req.body;
+    const result = await query(
+      `UPDATE parts_catalog SET
+        trade_category = COALESCE($1, trade_category),
+        part_name = COALESCE($2, part_name),
+        standard_price = COALESCE($3, standard_price),
+        unit = COALESCE($4, unit),
+        warranty_months = COALESCE($5, warranty_months)
+       WHERE id = $6 RETURNING *`,
+      [trade_category, part_name, standard_price !== undefined ? parseFloat(standard_price) : null,
+       unit, warranty_months !== undefined ? parseInt(warranty_months) : null, id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Not Found', message: 'Part not found.' });
+    res.json({ success: true, part: result.rows[0], message: 'Part price updated in the locked matrix.' });
+  } catch (err) {
+    console.error('Update part error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to update part.' });
+  }
+}
+
+/** DELETE /api/governance/admin/parts-catalog/:id — Remove a part from the catalog */
+async function deletePart(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM parts_catalog WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Part removed from the locked price matrix.' });
+  } catch (err) {
+    console.error('Delete part error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to delete part.' });
+  }
+}
+
+/** GET /api/governance/admin/services — All services including inactive (for admin management) */
+async function getAllServicesAdmin(req, res) {
+  if (!requireFederationHead(req, res)) return;
+  try {
+    const result = await query('SELECT * FROM services ORDER BY category, name');
+    res.json({ services: result.rows });
+  } catch (err) {
+    console.error('Get all services admin error:', err);
+    res.status(500).json({ error: 'Server Error', message: 'Failed to fetch services.' });
+  }
+}
+
 module.exports = {
   triggerSos,
   getSosAlerts,
@@ -286,4 +431,12 @@ module.exports = {
   resolveDispute,
   getApplianceLineage,
   getPartsCatalog,
+  // Tariff Administration (FEDERATION_HEAD only)
+  getAllServicesAdmin,
+  createService,
+  updateService,
+  deleteService,
+  createPart,
+  updatePart,
+  deletePart,
 };

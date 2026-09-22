@@ -4,6 +4,11 @@ const {
   registerSociety,
   getSocietyByTrackingId,
   getSocietiesList,
+  getFederationsList,
+  createFederation,
+  getDistrictsList,
+  createDistrict,
+  toggleDistrictPortal,
   getFederationsOverview,
   updateSocietyTimelineStage,
   getPendingSocietiesForDco,
@@ -18,6 +23,14 @@ const { authenticate, authorize } = require('../middleware/auth');
 // Public society registration & tracking
 router.post('/register', registerSociety);
 router.get('/track/:trackingId', getSocietyByTrackingId);
+router.get('/federations', getFederationsList);
+router.post('/federations', authenticate, authorize('COOPERATIVE_ADMIN'), createFederation);
+
+// Operational Districts Registry (Apex Managed)
+router.get('/districts', getDistrictsList);
+router.post('/districts', authenticate, authorize('COOPERATIVE_ADMIN'), createDistrict);
+router.patch('/districts/:id/toggle', authenticate, authorize('COOPERATIVE_ADMIN'), toggleDistrictPortal);
+
 router.get('/', getSocietiesList);
 
 // Federation & District Overview

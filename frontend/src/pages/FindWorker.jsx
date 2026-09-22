@@ -292,11 +292,25 @@ export default function FindWorker() {
                     {worker.name.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base leading-tight">
-                      {worker.name}
-                    </h3>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-gray-900 text-base leading-tight">
+                        {worker.name}
+                      </h3>
+                      {worker.is_independent || !worker.society_id ? (
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
+                          Independent Artisan
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 border border-purple-200">
+                          Society Member
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                      <Building2 size={12} /> {worker.cooperative_name}
+                      <Building2 size={12} /> {worker.society_name || worker.cooperative_name}
+                      {worker.society_name && (
+                        <span className="text-[10px] text-gray-400">({worker.cooperative_name})</span>
+                      )}
                     </div>
                     <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
                       <MapPin size={12} /> {worker.city || worker.service_area}, {worker.district}

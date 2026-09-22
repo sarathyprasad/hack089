@@ -72,12 +72,15 @@ async function getWorkers(req, res) {
              w.verification_status, w.availability, w.rating, w.total_reviews,
              w.total_jobs_completed, w.bio, w.latitude, w.longitude,
              w.tier, w.merit_points, w.strike_count, w.primary_trade,
-             w.tools_owned, w.toolkit_compliance,
+             w.tools_owned, w.toolkit_compliance, w.society_id,
              u.name, u.phone, u.district, u.city, u.avatar_url,
-             c.name as cooperative_name
+             c.name as cooperative_name,
+             s.name as society_name, s.society_code,
+             (w.society_id IS NULL) as is_independent
       FROM workers w
       JOIN users u ON w.user_id = u.id
       JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies s ON w.society_id = s.id
       ${whereClause}
       ORDER BY w.rating DESC, w.total_jobs_completed DESC
       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
@@ -123,10 +126,13 @@ async function getWorkerById(req, res) {
     const workerRes = await query(`
       SELECT w.*, u.name, u.email, u.phone, u.district, u.city, u.address, 
              u.pincode, u.avatar_url,
-             c.name as cooperative_name, c.registration_number as cooperative_reg
+             c.name as cooperative_name, c.registration_number as cooperative_reg,
+             s.name as society_name, s.society_code,
+             (w.society_id IS NULL) as is_independent
       FROM workers w
       JOIN users u ON w.user_id = u.id
       JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies s ON w.society_id = s.id
       WHERE w.id = $1
     `, [req.params.id]);
 

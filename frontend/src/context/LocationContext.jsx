@@ -149,15 +149,19 @@ function calculateHaversineKm(lat1, lon1, lat2, lon2) {
 }
 
 const KNOWN_EXTERNAL_CITIES = [
-  { name: 'Berhampur', district: 'Ganjam', lat: 19.315, lng: 84.794 },
   { name: 'Rourkela', district: 'Sundargarh', lat: 22.249, lng: 84.882 },
-  { name: 'Sambalpur', district: 'Sambalpur', lat: 21.466, lng: 83.975 },
   { name: 'Balasore', district: 'Balasore', lat: 21.493, lng: 86.933 },
   { name: 'Baripada', district: 'Mayurbhanj', lat: 21.934, lng: 86.736 },
   { name: 'Angul', district: 'Angul', lat: 20.840, lng: 85.100 },
   { name: 'Bhadrak', district: 'Bhadrak', lat: 21.057, lng: 86.495 },
   { name: 'Jharsuguda', district: 'Jharsuguda', lat: 21.855, lng: 84.006 },
   { name: 'Jeypore', district: 'Koraput', lat: 18.854, lng: 82.569 },
+];
+
+export const AVAILABLE_DISTRICTS = [
+  { name: 'Khordha', displayName: 'Khordha (Bhubaneswar)', city: 'Bhubaneswar', primaryAreaId: 1 },
+  { name: 'Cuttack', displayName: 'Cuttack District', city: 'Cuttack', primaryAreaId: 5 },
+  { name: 'Puri', displayName: 'Puri District', city: 'Puri', primaryAreaId: 9 },
 ];
 
 const LocationContext = createContext(null);
@@ -215,7 +219,7 @@ export function LocationProvider({ children }) {
       localStorage.setItem('prithvifix_use_current_location', 'true');
       localStorage.setItem('prithvifix_selected_area_id', '2');
       setIsDetectingLocation(false);
-      showNotice(`📍 Location set: ${fallback.name.split('/')[0].trim()} (${fallback.city})`);
+      showNotice(`📍 District set: ${fallback.district} (${fallback.city})`);
       return;
     }
 
@@ -249,7 +253,7 @@ export function LocationProvider({ children }) {
         }
 
         // 2. Coverage threshold: active hubs cover a maximum radius of 35 km
-        // If greater than 35 km, the user is outside active coverage (e.g., Berhampur, ~105 km away)
+        // If greater than 35 km, the user is outside active coverage
         const isOutOfCoverage = minKm > 35;
 
         if (!isOutOfCoverage) {
@@ -262,7 +266,7 @@ export function LocationProvider({ children }) {
           localStorage.setItem('prithvifix_use_current_location', 'true');
           localStorage.setItem('prithvifix_selected_area_id', String(closestId));
           setIsDetectingLocation(false);
-          showNotice(`📍 GPS detected: ${matched.name.split('/')[0].trim()} (${matched.city})`);
+          showNotice(`📍 GPS detected: ${matched.district} District (${matched.city})`);
           return;
         }
 
@@ -286,12 +290,6 @@ export function LocationProvider({ children }) {
           }
         } catch {
           // Network timeout or offline - rely on coordinate distance lookup
-        }
-
-        // Standardize Berhampur / Brahmapur
-        if (/brahmapur|berhampur/i.test(detectedCity) || /ganjam/i.test(detectedDistrict)) {
-          detectedCity = 'Berhampur';
-          detectedDistrict = 'Ganjam';
         }
 
         // Offline / fallback lookup from known external cities
@@ -339,15 +337,38 @@ export function LocationProvider({ children }) {
         localStorage.setItem('prithvifix_use_current_location', 'true');
         localStorage.setItem('prithvifix_selected_area_id', '2');
         setIsDetectingLocation(false);
-        showNotice(`📍 GPS unavailable. Defaulted to ${fallback.name.split('/')[0].trim()} (${fallback.city})`);
+        showNotice(`📍 GPS unavailable. Defaulted to ${fallback.district} District (${fallback.city})`);
       },
       { timeout: 5000, maximumAge: 30000, enableHighAccuracy: false }
     );
   };
 
+  const changeDistrict = (districtName) => {
+    if (districtName === 'current' || districtName === 'CURRENT_LOCATION' || districtName === 'detect_current') {
+      detectCurrentLocation();
+      return;
+    }
+    const matchedDist = AVAILABLE_DISTRICTS.find(
+      (d) => d.name.toLowerCase() === String(districtName).toLowerCase()
+    );
+    const targetId = matchedDist ? matchedDist.primaryAreaId : 1;
+    setSelectedAreaId(targetId);
+    setIsUsingCurrentLocation(false);
+    setUnsupportedLocation(null);
+    localStorage.removeItem('prithvifix_unsupported_location');
+    localStorage.removeItem('prithvifix_use_current_location');
+    localStorage.setItem('prithvifix_selected_area_id', String(targetId));
+    const dName = matchedDist ? matchedDist.displayName : `${districtName} District`;
+    showNotice(`📍 Switched to ${dName}`);
+  };
+
   const changeLocation = (areaId) => {
     if (areaId === 'current' || areaId === 'CURRENT_LOCATION' || areaId === 'detect_current') {
       detectCurrentLocation();
+      return;
+    }
+    if (typeof areaId === 'string' && isNaN(Number(areaId))) {
+      changeDistrict(areaId);
       return;
     }
     const id = Number(areaId);
@@ -359,7 +380,7 @@ export function LocationProvider({ children }) {
     localStorage.setItem('prithvifix_selected_area_id', String(id));
     const loc = locations.find(l => l.id === id);
     if (loc) {
-      showNotice(`📍 Switched area: ${loc.name.split('/')[0].trim()} (${loc.city})`);
+      showNotice(`📍 Switched to ${loc.district} District`);
     }
   };
 
@@ -374,6 +395,7 @@ export function LocationProvider({ children }) {
 
   const value = {
     locations,
+    availableDistricts: AVAILABLE_DISTRICTS,
     selectedLocation,
     selectedAreaId,
     selectedDistrict,
@@ -381,6 +403,7 @@ export function LocationProvider({ children }) {
     isDetectingLocation,
     detectCurrentLocation,
     changeLocation,
+    changeDistrict,
     calculateAreaPrice,
     multiplier: selectedLocation.multiplier,
     label: selectedLocation.label,

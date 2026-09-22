@@ -75,27 +75,9 @@ export default function Services() {
   const [isListeningMic, setIsListeningMic] = useState(false);
 
   // Modals
-  const [quickBookingService, setQuickBookingService] = useState(null);
   const [tariffModalService, setTariffModalService] = useState(null);
   const [processModalService, setProcessModalService] = useState(null);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(null);
-  const [bookingError, setBookingError] = useState('');
-
-  // Quick Book Form Data
-  const [quickForm, setQuickForm] = useState({
-    district: user?.district || 'Khordha',
-    societyId: '1',
-    areaId: 1,
-    city: user?.city || 'Bhubaneswar',
-    address: user?.address || 'Saheed Nagar',
-    pincode: user?.pincode || '751007',
-    scheduledDate: new Date().toISOString().split('T')[0],
-    scheduledTime: '10:00 AM',
-    isEmergency: false,
-    notes: '',
-  });
 
   // Synchronize URL query params with state and global LocationContext
   useEffect(() => {
@@ -182,6 +164,11 @@ export default function Services() {
     return ['ALL', ...Object.keys(categoryStats).sort()];
   }, [categoryStats]);
 
+  const availableDistricts = useMemo(() => {
+    const list = Array.from(new Set(locations.map((l) => l.district).filter(Boolean)));
+    return list.length > 0 ? list : ['Khordha', 'Cuttack', 'Puri'];
+  }, [locations]);
+
   // Voice Search Handler
   const handleVoiceSearch = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -235,7 +222,7 @@ export default function Services() {
     } else if (sortBy === 'PRICE_HIGH') {
       result.sort((a, b) => (Number(b.price || b.base_price) || 0) - (Number(a.price || a.base_price) || 0));
     } else if (sortBy === 'WORKERS') {
-      result.sort((a, b) => (b.available_workers || 0) - (a.available_workers || 0));
+      result.sort((a, b) => (b.available_workers ?? 0) - (a.available_workers ?? 0));
     } else if (sortBy === 'EMERGENCY') {
       result.sort((a, b) => (b.category === 'Emergency Services' ? 1 : 0) - (a.category === 'Emergency Services' ? 1 : 0));
     } else if (sortBy === 'NAME') {
@@ -245,72 +232,8 @@ export default function Services() {
     return result;
   }, [services, selectedCategory, complexityFilter, searchQuery, sortBy]);
 
-  // Open Quick Book Modal for a service
-  const handleOpenQuickBook = (service) => {
-    setQuickBookingService(service);
-    setBookingSuccess(null);
-    setBookingError('');
-
-    const targetDistrict = activeLocation ? activeLocation.district : (selectedDistrict !== 'ALL' ? selectedDistrict : 'Khordha');
-    const matchedSociety = societies.find((s) => s.id === activeLocation?.society_id) || societies[0];
-
-    setQuickForm({
-      district: targetDistrict,
-      societyId: matchedSociety ? String(matchedSociety.id) : '1',
-      areaId: activeLocation?.id || 1,
-      city: activeLocation?.city || matchedSociety?.city || 'Bhubaneswar',
-      address: user?.address || `${activeLocation?.name || 'Central Sector'}, Near Cooperative Hub`,
-      pincode: activeLocation?.pincode || matchedSociety?.pincode || '751001',
-      scheduledDate: new Date().toISOString().split('T')[0],
-      scheduledTime: '10:00 AM',
-      isEmergency: service.category === 'Emergency Services',
-      notes: '',
-    });
-  };
-
-  // Submit Quick Booking
-  const handleConfirmBooking = async (e) => {
-    e.preventDefault();
-    setBookingLoading(true);
-    setBookingError('');
-
-    try {
-      // Auto-authenticate as verified demo citizen if guest to prevent flow disruption
-      if (!isAuthenticated && login) {
-        try {
-          await login('customer@demo.local', 'demo123');
-        } catch (authErr) {
-          console.warn('Guest checkout auto-login fallback:', authErr);
-        }
-      }
-
-      const res = await api.createBooking({
-        serviceId: quickBookingService.id,
-        location_district: quickForm.district,
-        location_city: quickForm.city,
-        location_address: quickForm.address,
-        location_pincode: quickForm.pincode,
-        scheduled_date: quickForm.scheduledDate,
-        scheduled_time: quickForm.scheduledTime,
-        is_emergency: quickForm.isEmergency,
-        notes: quickForm.notes,
-      });
-
-      if (res && res.booking) {
-        setBookingSuccess(res.booking);
-      } else {
-        throw new Error('Booking could not be confirmed.');
-      }
-    } catch (err) {
-      console.error('Quick booking error:', err);
-      setBookingError(err.message || 'Failed to confirm booking. Please try the Instant Booking Wizard.');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
   return (
-    <div className="container py-8 max-w-6xl mx-auto px-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* ─────────────────────────────────────────────────────────────
           1. HEADER & MODE SWITCHER
          ───────────────────────────────────────────────────────────── */}
@@ -359,7 +282,7 @@ export default function Services() {
                   Cooperative Services Not Yet Operational in {unsupportedLocation.name}
                 </h4>
                 <span className="text-[10px] bg-amber-200 text-amber-950 font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
-                  Phase 2 Expansion (Coming Soon)
+                  Expansion Coming Soon
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -534,9 +457,9 @@ export default function Services() {
             {filteredAndSortedServices.map((service) => {
               const IconComponent = ICON_MAP[service.icon] || Settings;
               const isEmergency = service.category === 'Emergency Services';
-              const effectivePrice = Number(service.price) || Number(service.base_price) || 299;
-              const basePrice = Number(service.base_price) || effectivePrice;
-              const priceDiff = Number(service.price_diff) || (effectivePrice - basePrice);
+              const effectivePrice = Number(service.base_price) || Number(service.price) || 299;
+              const basePrice = effectivePrice;
+              const priceDiff = Number(service.price_diff) || 0;
               const workerWage = Number(service.worker_wage) || Math.round(effectivePrice * 0.93);
 
               return (
@@ -595,7 +518,7 @@ export default function Services() {
                       <div className="flex items-baseline justify-between">
                         <div>
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                            Regulated Rate:
+                            Base Price:
                           </span>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-extrabold text-blue-950 font-mono tracking-tight">
@@ -626,9 +549,12 @@ export default function Services() {
                     {/* Worker Availability & Duration */}
                     <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
                       <div className="flex items-center gap-1.5">
-                        <Users size={13} className="text-emerald-600" />
-                        <span>
-                          <strong>{service.available_workers || 6}</strong> Artisans in {activeLocation?.city}
+                        <Users
+                          size={13}
+                          className={(service.available_workers ?? 0) > 0 ? "text-emerald-600" : "text-amber-500"}
+                        />
+                        <span className={(service.available_workers ?? 0) > 0 ? "text-gray-600" : "text-amber-700 font-medium"}>
+                          <strong>{service.available_workers ?? 0}</strong> {(service.available_workers ?? 0) === 1 ? 'Artisan' : 'Artisans'} in {activeLocation?.city || 'this area'}
                         </span>
                       </div>
                       <button
@@ -653,31 +579,22 @@ export default function Services() {
                       <ArrowRight size={13} className="text-amber-500 stroke-[2.5]" />
                     </button>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleOpenQuickBook(service)}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-900 transition shadow-2xs cursor-pointer"
-                        title="1-Click rapid dispatch in this area"
-                      >
-                        Quick Book
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/book-service?serviceId=${service.id}&district=${encodeURIComponent(
-                              activeLocation?.district || selectedDistrict
-                            )}&area_id=${activeLocation?.id || selectedAreaId}`
-                          )
-                        }
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition shadow-xs cursor-pointer ${
-                          isEmergency
-                            ? 'bg-red-600 hover:bg-red-700 text-white'
-                            : 'bg-blue-950 hover:bg-blue-900 text-white'
-                        }`}
-                      >
-                      </button>
-                    </div>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/book-service?serviceId=${service.id}&district=${encodeURIComponent(
+                            activeLocation?.district || selectedDistrict
+                          )}&area_id=${activeLocation?.id || selectedAreaId}`
+                        )
+                      }
+                      className={`px-4 py-2 rounded-xl text-xs font-extrabold transition shadow-xs cursor-pointer ${
+                        isEmergency
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-blue-950 hover:bg-blue-900 text-white'
+                      }`}
+                    >
+                      {isEmergency ? 'Emergency SOS' : 'Book Service'}
+                    </button>
                   </div>
                 </div>
               );
@@ -806,288 +723,6 @@ export default function Services() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          6. QUICK BOOKING MODAL
-         ───────────────────────────────────────────────────────────── */}
-      {quickBookingService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div>
-                <span className="inline-block text-[10px] font-bold text-blue-900 bg-blue-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1">
-                  Cooperative Work Order • {activeLocation?.name?.split('/')[0]}
-                </span>
-                <h3 className="text-lg font-extrabold text-slate-900">{quickBookingService.name}</h3>
-                <div className="text-xs text-slate-600 font-mono mt-0.5">
-                  Regulated Rate:{' '}
-                  <strong className="text-blue-950 font-bold">
-                    ₹{quickBookingService.price || quickBookingService.base_price}
-                  </strong>
-                  <span className="text-slate-400 ml-1">
-                    (Base: ₹{quickBookingService.base_price})
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setQuickBookingService(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {bookingSuccess ? (
-              <div className="py-6 text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                  <CheckCircle2 size={32} />
-                </div>
-                <div>
-                  <h4 className="text-lg font-extrabold text-slate-900">Work Order Dispatched Successfully!</h4>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Your request has been broadcast to verified artisans in {quickForm.city}.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-1.5 font-mono">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Booking Code:</span>
-                    <strong className="text-blue-950">{bookingSuccess.booking_code}</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Scheduled Date:</span>
-                    <span>{bookingSuccess.scheduled_date} at {bookingSuccess.scheduled_time}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Security Arrival OTP:</span>
-                    <strong className="text-emerald-700 font-extrabold text-sm">{bookingSuccess.arrival_otp || '••••'}</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Regulated Total Fare:</span>
-                    <strong>₹{bookingSuccess.total_amount}</strong>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setQuickBookingService(null)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-700 hover:bg-slate-50"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => navigate('/dashboard')}
-                    className="flex-1 py-2.5 rounded-xl bg-blue-950 text-white font-bold text-xs hover:bg-blue-900"
-                  >
-                    View in Dashboard →
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleConfirmBooking} className="mt-4 space-y-4 text-xs">
-                {bookingError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium">
-                    {bookingError}
-                  </div>
-                )}
-
-                {/* District and Area Selection */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      District Jurisdiction *
-                    </label>
-                    <select
-                      value={quickForm.district}
-                      onChange={(e) => {
-                        const dist = e.target.value;
-                        const match = locations.find((l) => l.district.toLowerCase() === dist.toLowerCase());
-                        setQuickForm({
-                          ...quickForm,
-                          district: dist,
-                          areaId: match?.id || 1,
-                          city: match?.city || 'Bhubaneswar',
-                          pincode: match?.pincode || '751001',
-                        });
-                      }}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
-                    >
-                      <option value="Khordha">Khordha (Bhubaneswar)</option>
-                      <option value="Cuttack">Cuttack District</option>
-                      <option value="Puri">Puri District</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Local Cooperative Area *
-                    </label>
-                    <select
-                      value={quickForm.areaId}
-                      onChange={(e) => {
-                        const loc = locations.find((l) => l.id === Number(e.target.value));
-                        if (loc) {
-                          setQuickForm({
-                            ...quickForm,
-                            areaId: loc.id,
-                            societyId: String(loc.society_id),
-                            city: loc.city,
-                            pincode: loc.pincode,
-                          });
-                        }
-                      }}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
-                    >
-                      {locations
-                        .filter((l) => l.district.toLowerCase() === quickForm.district.toLowerCase())
-                        .map((l) => (
-                          <option key={l.id} value={l.id}>
-                            {l.name} ({l.label})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Location Address */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Street Address / Flat / Landmark *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Plot 45, Near Cooperative Society"
-                      value={quickForm.address}
-                      onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Pincode *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 751001"
-                      value={quickForm.pincode}
-                      onChange={(e) => setQuickForm({ ...quickForm, pincode: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Date & Time Slot */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Service Date *
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={quickForm.scheduledDate}
-                      onChange={(e) => setQuickForm({ ...quickForm, scheduledDate: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Preferred Time Slot *
-                    </label>
-                    <select
-                      value={quickForm.scheduledTime}
-                      onChange={(e) => setQuickForm({ ...quickForm, scheduledTime: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-900 text-xs bg-white"
-                    >
-                      <option value="09:00 AM">09:00 AM - 11:00 AM (Morning)</option>
-                      <option value="11:30 AM">11:30 AM - 01:30 PM (Mid-Day)</option>
-                      <option value="02:30 PM">02:30 PM - 04:30 PM (Afternoon)</option>
-                      <option value="05:00 PM">05:00 PM - 07:00 PM (Evening)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Priority Emergency Toggle */}
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="modal-emergency"
-                    checked={quickForm.isEmergency}
-                    onChange={(e) => setQuickForm({ ...quickForm, isEmergency: e.target.checked })}
-                    className="rounded text-red-600 focus:ring-red-500 w-4 h-4"
-                  />
-                  <label htmlFor="modal-emergency" className="text-xs text-slate-800 cursor-pointer font-semibold">
-                    <span className="text-red-700 font-bold">⚡ 60-Minute Priority Emergency Dispatch</span>
-                    <span className="block text-[10px] text-slate-500 font-normal">
-                      Dispatches closest on-duty artisan immediately (+20% emergency rate).
-                    </span>
-                  </label>
-                </div>
-
-                {/* 93-2-5 Cost Breakdown Box */}
-                {(() => {
-                  const svcPrice = quickBookingService.price || quickBookingService.base_price;
-                  const effective = quickForm.isEmergency ? Math.round(svcPrice * 1.2) : svcPrice;
-                  const artisanPay = Math.round(effective * 0.93);
-                  const welfare = Math.round(effective * 0.02);
-                  const reserve = Math.round(effective * 0.05);
-
-                  return (
-                    <div className="p-3.5 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-1.5 font-mono text-[11px]">
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-sans mb-1">
-                        Transparent Regulated Tariff Breakdown:
-                      </div>
-                      <div className="flex justify-between text-slate-700">
-                        <span>93% Direct Artisan Pay:</span>
-                        <span>₹{artisanPay}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-700">
-                        <span>2% Social Security & Welfare Fund:</span>
-                        <span>₹{welfare}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-700">
-                        <span>5% Local Society Reserve:</span>
-                        <span>₹{reserve}</span>
-                      </div>
-                      <div className="border-t border-slate-200 pt-1 flex justify-between font-bold text-blue-950 text-xs font-sans">
-                        <span>Total Regulated Fee (0% Surge):</span>
-                        <span className="font-mono">₹{effective}</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuickBookingService(null)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-600 hover:bg-slate-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={bookingLoading}
-                    className="flex-1 py-2.5 rounded-xl bg-blue-950 text-white font-extrabold hover:bg-blue-900 transition flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
-                  >
-                    {bookingLoading ? (
-                      <span>Broadcasting Order...</span>
-                    ) : (
-                      <>
-                        <Check size={14} />
-                        <span>Confirm Cooperative Work Order</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ─────────────────────────────────────────────────────────────
           7. 93-2-5 TARIFF EXPLAINER MODAL
          ───────────────────────────────────────────────────────────── */}
       {tariffModalService && (
@@ -1183,7 +818,7 @@ export default function Services() {
          ───────────────────────────────────────────────────────────── */}
       {processModalService && (() => {
         const sop = getProcessStepsForService(processModalService);
-        const effectivePrice = Number(processModalService.price) || Number(processModalService.base_price) || 299;
+        const effectivePrice = Number(processModalService.base_price) || Number(processModalService.price) || 299;
         const workerWage = Number(processModalService.worker_wage) || Math.round(effectivePrice * 0.93);
 
         return (
@@ -1223,7 +858,7 @@ export default function Services() {
                 <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
                   <div>
                     <span className="text-[10px] uppercase font-medium text-slate-300 block">
-                      Regulated Rate:
+                      Base Price:
                     </span>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-2xl font-extrabold font-mono text-white">₹{effectivePrice}</span>
@@ -1237,12 +872,16 @@ export default function Services() {
                     onClick={() => {
                       const svc = processModalService;
                       setProcessModalService(null);
-                      handleOpenQuickBook(svc);
+                      navigate(
+                        `/book-service?serviceId=${svc.id}&district=${encodeURIComponent(
+                          activeLocation?.district || selectedDistrict
+                        )}&area_id=${activeLocation?.id || selectedAreaId}`
+                      );
                     }}
                     className="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
                   >
                     <Zap size={14} className="fill-white" />
-                    <span>Quick Book This</span>
+                    <span>Book Service</span>
                   </button>
                 </div>
 
@@ -1337,11 +976,15 @@ export default function Services() {
                     onClick={() => {
                       const svc = processModalService;
                       setProcessModalService(null);
-                      handleOpenQuickBook(svc);
+                      navigate(
+                        `/book-service?serviceId=${svc.id}&district=${encodeURIComponent(
+                          activeLocation?.district || selectedDistrict
+                        )}&area_id=${activeLocation?.id || selectedAreaId}`
+                      );
                     }}
                     className="px-4 py-2 rounded-xl bg-blue-950 hover:bg-blue-900 text-white font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm flex-1 sm:flex-initial"
                   >
-                    <span>Quick Book (₹{effectivePrice})</span>
+                    <span>Book Service (₹{effectivePrice})</span>
                     <ArrowRight size={13} />
                   </button>
                 </div>

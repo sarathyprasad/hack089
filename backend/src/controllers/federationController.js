@@ -44,23 +44,68 @@ function calculateWorkerTier({ experienceYears = 0, isNcctCertified = false, isN
  */
 async function getAdminDashboardData(req, res) {
   try {
-    const societyId = req.query.societyId || 1;
+    const isApex = req.user?.admin_type === 'FEDERATION_HEAD' && (!req.query.societyId || req.query.societyId === 'apex' || req.query.societyId === 'all');
+    const societyId = isApex ? null : (req.query.societyId || req.user?.society_id || 1);
+
+    // List all societies for Apex switcher
+    const allSocietiesRes = await query('SELECT id, name, society_code, district, status FROM societies ORDER BY district ASC, name ASC');
+    const societiesList = allSocietiesRes.rows || [];
+
+    // Current Society Information
+    let currentSociety = null;
+    if (isApex) {
+      currentSociety = {
+        id: 'apex',
+        name: 'Odisha State Labour Cooperative Federation (Apex)',
+        society_code: 'APEX-OD-2024-001',
+        registration_number: 'APEX-REG-2024-01',
+        district: 'Statewide (Khordha, Cuttack, Puri)',
+        is_nlcf_affiliated: 1,
+        dco_linked: 1,
+        status: 'ACTIVE',
+        cooperative_bank_name: 'Apex State Cooperative Bank, Bhubaneswar Main',
+        bank_account_no: 'OSCB-APEX-001001',
+        bank_ifsc: 'OSCB0001001',
+        initial_capital_balance: 5000000.0,
+        is_apex: true,
+      };
+    } else {
+      const socInfoRes = await query('SELECT * FROM societies WHERE id = $1', [societyId]);
+      currentSociety = socInfoRes.rows[0] || null;
+    }
 
     // Slide 1: Workforce Telemetry & Welfare
-    const workersRes = await query(
-      `SELECT w.*, u.name as user_name, u.email, u.phone, u.district, u.city, 
+    let workersQuery = `
+      SELECT w.*, u.name as user_name, u.email, u.phone, u.district, u.city, u.address, u.pincode, u.created_at as user_registered_at,
               s.name as society_name, s.is_nlcf_affiliated as soc_nlcf, s.dco_linked as soc_dco,
               sw.health_insurance_status, sw.health_insurance_policy_no, sw.accident_policy_no, sw.mini_pf_accumulated
        FROM workers w
        JOIN users u ON w.user_id = u.id
        LEFT JOIN societies s ON w.society_id = s.id
        LEFT JOIN society_worker_welfare sw ON w.id = sw.worker_id
-       ORDER BY w.id ASC`
-    );
+    `;
+    const workersParams = [];
+    if (!isApex && societyId) {
+      workersQuery += ' WHERE w.society_id = $1 OR w.cooperative_id = $1';
+      workersParams.push(societyId);
+    }
+    workersQuery += ' ORDER BY w.id ASC';
 
-    // Fetch society information
-    const socInfoRes = await query('SELECT * FROM societies WHERE id = $1', [societyId]);
-    const currentSociety = socInfoRes.rows[0] || null;
+    const workersRes = await query(workersQuery, workersParams);
+
+    // Fetch certifications for all retrieved workers
+    const workerIds = workersRes.rows.map((r) => r.id);
+    const certsByWorkerId = {};
+    if (workerIds.length > 0) {
+      const certsRes = await query(
+        'SELECT * FROM certifications WHERE worker_id = ANY($1::int[]) ORDER BY id DESC',
+        [workerIds]
+      );
+      for (const c of certsRes.rows) {
+        if (!certsByWorkerId[c.worker_id]) certsByWorkerId[c.worker_id] = [];
+        certsByWorkerId[c.worker_id].push(c);
+      }
+    }
 
     const workers = workersRes.rows.map((w) => {
       const isNlcf = w.is_nlcf_affiliated === 1 || w.soc_nlcf === 1;
@@ -73,6 +118,7 @@ async function getAdminDashboardData(req, res) {
 
       return {
         ...w,
+        certifications: certsByWorkerId[w.id] || [],
         computedTier,
         isNlcfAffiliated: isNlcf,
         isNcctCertified: isNcct,
@@ -127,6 +173,8 @@ async function getAdminDashboardData(req, res) {
           kycPendingWorkers,
         },
         workersList: workers,
+        societiesList,
+        isApex: Boolean(isApex),
       },
     });
   } catch (err) {
@@ -141,32 +189,63 @@ async function getAdminDashboardData(req, res) {
  */
 async function getTreasurerDashboardData(req, res) {
   try {
-    const societyId = req.query.societyId || 1;
+    const isApex = req.user?.admin_type === 'FEDERATION_HEAD' && (!req.query.societyId || req.query.societyId === 'apex' || req.query.societyId === 'all');
+    const societyId = isApex ? null : (req.query.societyId || req.user?.society_id || 1);
 
-    // Fetch Society Info & Treasury Balance
-    const socRes = await query('SELECT * FROM societies WHERE id = $1', [societyId]);
-    const society = socRes.rows[0] || { initial_capital_balance: 850000.0, name: 'Shramik Kalyan Labour Cooperative Samiti' };
+    // List all societies for Apex switcher
+    const allSocietiesRes = await query('SELECT id, name, society_code, district, status FROM societies ORDER BY district ASC, name ASC');
+    const societiesList = allSocietiesRes.rows || [];
 
-    // Fetch Ledger
-    const ledgerRes = await query(
-      'SELECT * FROM society_treasury_ledger WHERE society_id = $1 ORDER BY id DESC',
-      [societyId]
-    );
-    const ledger = ledgerRes.rows || [];
+    let society = null;
+    let ledger = [];
+    let welfareRecords = [];
+    let tenders = [];
 
-    // Fetch Welfare Records
-    const welfareRes = await query(
-      'SELECT * FROM society_worker_welfare WHERE society_id = $1',
-      [societyId]
-    );
-    const welfareRecords = welfareRes.rows || [];
+    if (isApex) {
+      society = {
+        id: 'apex',
+        name: 'Odisha State Labour Cooperative Federation (Apex)',
+        initial_capital_balance: 5000000.0,
+        cooperative_bank_name: 'Apex State Cooperative Bank, Bhubaneswar Main',
+        bank_account_no: 'OSCB-APEX-001001',
+        bank_ifsc: 'OSCB0001001',
+        is_apex: true,
+      };
 
-    // Fetch Institutional Tenders
-    const tendersRes = await query(
-      'SELECT * FROM institutional_tenders WHERE awarded_society_id = $1 OR awarded_society_id IS NULL',
-      [societyId]
-    );
-    const tenders = tendersRes.rows || [];
+      const ledgerRes = await query('SELECT * FROM society_treasury_ledger ORDER BY id DESC LIMIT 100');
+      ledger = ledgerRes.rows || [];
+
+      const welfareRes = await query('SELECT * FROM society_worker_welfare');
+      welfareRecords = welfareRes.rows || [];
+
+      const tendersRes = await query('SELECT * FROM institutional_tenders ORDER BY id DESC');
+      tenders = tendersRes.rows || [];
+    } else {
+      // Fetch Society Info & Treasury Balance
+      const socRes = await query('SELECT * FROM societies WHERE id = $1', [societyId]);
+      society = socRes.rows[0] || { initial_capital_balance: 850000.0, name: 'Shramik Kalyan Labour Cooperative Samiti' };
+
+      // Fetch Ledger
+      const ledgerRes = await query(
+        'SELECT * FROM society_treasury_ledger WHERE society_id = $1 ORDER BY id DESC',
+        [societyId]
+      );
+      ledger = ledgerRes.rows || [];
+
+      // Fetch Welfare Records
+      const welfareRes = await query(
+        'SELECT * FROM society_worker_welfare WHERE society_id = $1',
+        [societyId]
+      );
+      welfareRecords = welfareRes.rows || [];
+
+      // Fetch Institutional Tenders
+      const tendersRes = await query(
+        'SELECT * FROM institutional_tenders WHERE awarded_society_id = $1 OR awarded_society_id IS NULL',
+        [societyId]
+      );
+      tenders = tendersRes.rows || [];
+    }
 
     // Calculate 10 Specific KPIs (Page 4)
     const latestTxn = ledger[0];
@@ -192,7 +271,7 @@ async function getTreasurerDashboardData(req, res) {
     const totalLoanAmountDisbursed = welfareRecords.reduce((sum, w) => sum + parseFloat(w.loan_sanctioned_amount || 0), 58000.0);
     const nextLoanAmountDue = welfareRecords.reduce((sum, w) => sum + parseFloat(w.next_loan_due_amount || 0), 4900.0);
 
-    const awardedTenders = tenders.filter((t) => t.awarded_society_id == societyId);
+    const awardedTenders = isApex ? tenders : tenders.filter((t) => t.awarded_society_id == societyId);
     const projectFundsReceived = awardedTenders.reduce((sum, t) => sum + parseFloat(t.funds_received || 0), 600000.0);
     const dueRemainingForProjects = awardedTenders.reduce((sum, t) => sum + parseFloat(t.due_remaining || 0), 870000.0);
 
@@ -217,6 +296,8 @@ async function getTreasurerDashboardData(req, res) {
         ledger,
         welfareRecords,
         tenders,
+        societiesList,
+        isApex: Boolean(isApex),
       },
     });
   } catch (err) {

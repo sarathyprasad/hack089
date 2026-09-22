@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, X, LogOut, LayoutDashboard,
-  ShieldCheck, Volume2, VolumeX, Sun, Moon, MapPin, LocateFixed
+  ShieldCheck, Volume2, VolumeX, Sun, Moon, MapPin, LocateFixed, Globe
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useLocationContext } from '../context/LocationContext';
 
@@ -16,9 +16,12 @@ export default function GovLayout() {
   const { fontSize, setFontSize, isDarkMode, toggleDarkMode, highContrast, toggleHighContrast, isSpeaking, stopSpeaking } = useAccessibility();
   const {
     locations,
+    availableDistricts,
     selectedLocation,
     selectedAreaId,
+    selectedDistrict,
     changeLocation,
+    changeDistrict,
     isUsingCurrentLocation,
     isDetectingLocation,
     detectCurrentLocation,
@@ -169,27 +172,27 @@ export default function GovLayout() {
                     ? 'unsupported'
                     : isUsingCurrentLocation
                     ? 'current'
-                    : selectedAreaId
+                    : selectedDistrict
                 }
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === 'current' || val === 'detect_current') {
                     detectCurrentLocation();
                   } else if (val !== 'detecting' && val !== 'unsupported') {
-                    changeLocation(Number(val));
+                    changeDistrict(val);
                   }
                 }}
                 className={`bg-transparent font-bold text-xs border-0 outline-none cursor-pointer pr-1 ${
                   unsupportedLocation ? 'text-amber-950' : 'text-slate-900'
                 }`}
-                title="Select your area to view localized tariffs across the platform"
+                title="Select district to view localized cooperative tariffs"
               >
                 {isDetectingLocation ? (
-                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting Location...')}</option>
+                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting District...')}</option>
                 ) : unsupportedLocation ? (
                   <>
                     <option value="unsupported">
-                      📍 {unsupportedLocation.name} (Coming Soon)
+                      📍 {unsupportedLocation.district || unsupportedLocation.name} (Coming Soon)
                     </option>
                     <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
                   </>
@@ -197,57 +200,42 @@ export default function GovLayout() {
                   <>
                     <option value="current">
                       📍 {isUsingCurrentLocation
-                        ? `${selectedLocation.name.split('/')[0].trim()} (GPS)`
-                        : t('currentLocation', 'Current Location')}
+                        ? `${selectedDistrict} District (GPS)`
+                        : t('currentLocation', 'Current District (GPS)')}
                     </option>
                     {isUsingCurrentLocation && (
                       <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
                     )}
                   </>
                 )}
-                <optgroup label="Khordha (Bhubaneswar)">
-                  {locations.filter(l => l.district === 'Khordha').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Cuttack">
-                  {locations.filter(l => l.district === 'Cuttack').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Puri">
-                  {locations.filter(l => l.district === 'Puri').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
+                {(availableDistricts || []).map((d) => (
+                  <option key={d.name} value={d.name}>
+                    📍 {d.displayName}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Language (compact) */}
-            <div className="hidden md:flex items-center gap-0.5 bg-slate-50 rounded-lg p-0.5 border border-slate-100">
-              {[
-                { code: 'EN', label: 'EN' },
-                { code: 'HI', label: 'हि' },
-                { code: 'OR', label: 'ଓ' },
-              ].map((item) => (
-                <button
-                  key={item.code}
-                  onClick={() => setLang(item.code)}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                    lang === item.code
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-400 hover:text-slate-700'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+            {/* Language Dropdown Bar */}
+            <div className="hidden md:flex items-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs shadow-2xs">
+              <Globe size={13} className="text-blue-600 dark:text-blue-400 mr-1.5 shrink-0" />
+              <select
+                id="header-language-select"
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                className="bg-transparent font-bold text-xs text-slate-800 dark:text-slate-100 outline-none cursor-pointer pr-1"
+                aria-label="Select Language"
+              >
+                {SUPPORTED_LANGUAGES.map((item) => (
+                  <option
+                    key={item.code}
+                    value={item.code}
+                    className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 py-1"
+                  >
+                    {item.native} ({item.code})
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Dark mode */}
@@ -362,14 +350,14 @@ export default function GovLayout() {
                     ? 'unsupported'
                     : isUsingCurrentLocation
                     ? 'current'
-                    : selectedAreaId
+                    : selectedDistrict
                 }
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === 'current' || val === 'detect_current') {
                     detectCurrentLocation();
                   } else if (val !== 'detecting' && val !== 'unsupported') {
-                    changeLocation(Number(val));
+                    changeDistrict(val);
                   }
                 }}
                 className={`w-full p-2 rounded-xl text-xs font-bold border ${
@@ -379,11 +367,11 @@ export default function GovLayout() {
                 }`}
               >
                 {isDetectingLocation ? (
-                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting Location...')}</option>
+                  <option value="detecting">⏳ {t('detectingLocation', 'Detecting District...')}</option>
                 ) : unsupportedLocation ? (
                   <>
                     <option value="unsupported">
-                      📍 {unsupportedLocation.name} (Coming Soon)
+                      📍 {unsupportedLocation.district || unsupportedLocation.name} (Coming Soon)
                     </option>
                     <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
                   </>
@@ -391,59 +379,39 @@ export default function GovLayout() {
                   <>
                     <option value="current">
                       📍 {isUsingCurrentLocation
-                        ? `${selectedLocation.name.split('/')[0].trim()} (GPS)`
-                        : t('currentLocation', 'Current Location')}
+                        ? `${selectedDistrict} District (GPS)`
+                        : t('currentLocation', 'Current District (GPS)')}
                     </option>
                     {isUsingCurrentLocation && (
                       <option value="detect_current">🎯 {t('redetectGps', 'Re-detect GPS Location')}</option>
                     )}
                   </>
                 )}
-                <optgroup label="Khordha (Bhubaneswar)">
-                  {locations.filter(l => l.district === 'Khordha').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Cuttack">
-                  {locations.filter(l => l.district === 'Cuttack').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Puri">
-                  {locations.filter(l => l.district === 'Puri').map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name.split('/')[0].trim()}
-                    </option>
-                  ))}
-                </optgroup>
+                {(availableDistricts || []).map((d) => (
+                  <option key={d.name} value={d.name}>
+                    📍 {d.displayName}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Mobile Language */}
-            <div className="flex items-center gap-1 pt-2 border-t border-slate-100">
-              {[
-                { code: 'EN', label: 'English' },
-                { code: 'HI', label: 'हिंदी' },
-                { code: 'OR', label: 'ଓଡ଼ିଆ' },
-                { code: 'BN', label: 'বাংলা' },
-                { code: 'TE', label: 'తెలుగు' },
-              ].map((item) => (
-                <button
-                  key={item.code}
-                  onClick={() => setLang(item.code)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    lang === item.code
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+            {/* Mobile Language Dropdown */}
+            <div className="pt-2 border-t border-slate-100">
+              <label className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <Globe size={13} className="text-blue-600" />
+                <span>Select Language</span>
+              </label>
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                className="w-full p-2 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-900"
+              >
+                {SUPPORTED_LANGUAGES.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.native} ({item.label} - {item.code})
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Mobile Auth */}
@@ -565,7 +533,7 @@ export default function GovLayout() {
               © 2026 <strong>{t('brandName')}</strong> — {t('brandSubtitle')}. All Rights Reserved.
             </div>
             <div className="flex items-center gap-4 text-xs">
-              <Link to="/about" className="hover:text-white">Form IV GST Compliant</Link>
+              <Link to="/about" className="hover:text-white">Official GST Compliant Bill</Link>
               <span>•</span>
               <Link to="/about" className="hover:text-white">Privacy Policy</Link>
               <span>•</span>

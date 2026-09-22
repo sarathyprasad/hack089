@@ -122,7 +122,8 @@ async function getAdminWorkers(req, res) {
       SELECT w.*, u.name, u.email, u.phone, u.district, u.city, u.address,
              c.name as cooperative_name, c.registration_number as cooperative_reg,
              c.local_area, c.jurisdiction_zone,
-             s.name as society_name, s.society_code
+             s.name as society_name, s.society_code,
+             (w.society_id IS NULL) as is_independent
       FROM workers w
       JOIN users u ON w.user_id = u.id
       JOIN cooperatives c ON w.cooperative_id = c.id
@@ -197,7 +198,7 @@ async function getAdminWorkers(req, res) {
  */
 async function verifyWorker(req, res) {
   try {
-    const { status, rejectionReason } = req.body;
+    const { status, rejectionReason, verificationStep } = req.body;
     const workerId = req.params.id;
     const adminId = req.user?.id || null;
 
@@ -207,7 +208,7 @@ async function verifyWorker(req, res) {
     }
 
     const workerRes = await query(`
-      SELECT w.id, w.society_id, w.cooperative_id, u.district 
+      SELECT w.id, w.society_id, w.cooperative_id, w.verification_step, u.district 
       FROM workers w 
       JOIN users u ON w.user_id = u.id 
       WHERE w.id = $1
@@ -217,20 +218,23 @@ async function verifyWorker(req, res) {
     }
 
     const workerRecord = workerRes.rows[0];
+    const targetStep = verificationStep ? Number(verificationStep) : (status === 'VERIFIED' ? 4 : (workerRecord.verification_step || 2));
 
-    // Local Federation/Society Admin can only approve workers under their specific local society/federation
+    // Statutory Authority Separation:
+    // The approval authority for artisans/workers is strictly their registered Primary Cooperative Society.
+    // The approval authority for societies is the DCO.
+    if (req.user?.admin_type === 'DCO_REGISTRAR') {
+      return res.status(403).json({
+        error: 'Statutory Authority Restriction',
+        message: 'Under statutory cooperative hierarchy, the approval authority for workers is strictly the Primary Cooperative Society they chose during registration. The DCO is the approval authority for Societies, not individual artisans.'
+      });
+    }
+
     if (req.user?.admin_type === 'SOCIETY_ADMIN' && req.user?.society_id) {
-      if (workerRecord.society_id !== req.user.society_id && workerRecord.cooperative_id !== req.user.society_id) {
+      if (workerRecord.society_id && workerRecord.society_id !== req.user.society_id && workerRecord.cooperative_id !== req.user.society_id) {
         return res.status(403).json({
           error: 'Jurisdiction Restriction',
-          message: 'As a Federation/Society Admin, you can only review and approve workers registered under your local society/federation jurisdiction.'
-        });
-      }
-    } else if (req.user?.admin_type === 'DCO_REGISTRAR' && req.user?.district) {
-      if (workerRecord.district !== req.user.district) {
-        return res.status(403).json({
-          error: 'District Jurisdiction Restriction',
-          message: `As DCO for ${req.user.district}, you can only review workers within your district.`
+          message: 'As a Primary Cooperative Society Admin, you can only review and approve workers registered under your society jurisdiction.'
         });
       }
     }
@@ -239,6 +243,7 @@ async function verifyWorker(req, res) {
       await query(`
         UPDATE workers
         SET verification_status = 'VERIFIED',
+            verification_step = 4,
             rejection_reason = NULL,
             availability = 'AVAILABLE',
             reviewed_by_admin_id = $1,
@@ -263,7 +268,7 @@ async function verifyWorker(req, res) {
             reviewed_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $3
-      `, [rejectionReason || 'Trade or KYC documents could not be verified by District Officer.', adminId, workerId]);
+      `, [rejectionReason || 'Trade or KYC documents could not be verified by Primary Cooperative Society.', adminId, workerId]);
 
       await query(`
         UPDATE certifications
@@ -274,9 +279,10 @@ async function verifyWorker(req, res) {
       await query(`
         UPDATE workers
         SET verification_status = 'PENDING',
+            verification_step = $1,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-      `, [workerId]);
+        WHERE id = $2
+      `, [targetStep, workerId]);
     }
 
     // Record administrative action in immutable audit log
@@ -293,6 +299,7 @@ async function verifyWorker(req, res) {
     res.json({
       message: `Worker application updated to ${status}`,
       status,
+      verificationStep: targetStep,
       rejectionReason: status === 'REJECTED' ? rejectionReason : null,
     });
   } catch (err) {

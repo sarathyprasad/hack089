@@ -9,7 +9,7 @@ import {
   HeartPulse, Car, Wrench, Home as HomeIcon, Settings, AlertTriangle,
   Building2, ArrowRight, CheckCircle2, ChevronRight,
   ShieldCheck, Sparkles, IndianRupee, PhoneCall,
-  Search, Mic, MicOff, MapPin, Check, Clock, ThumbsUp, Snowflake, LocateFixed
+  Search, Mic, MicOff, MapPin, Check, Clock, ThumbsUp, Snowflake, LocateFixed, X
 } from 'lucide-react';
 import HomeReviews from '../components/HomeReviews';
 
@@ -18,10 +18,12 @@ export default function Home() {
   const { isSpeaking, speakText, stopSpeaking } = useAccessibility();
   const {
     locations,
+    availableDistricts,
     selectedLocation,
     selectedDistrict,
     selectedAreaId,
     changeLocation,
+    changeDistrict,
     calculateAreaPrice,
     isUsingCurrentLocation,
     isDetectingLocation,
@@ -384,14 +386,14 @@ export default function Home() {
                       ? 'unsupported'
                       : isUsingCurrentLocation
                       ? 'current'
-                      : selectedAreaId
+                      : selectedDistrict
                   }
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === 'current' || val === 'detect_current') {
                       detectCurrentLocation();
                     } else if (val !== 'detecting' && val !== 'unsupported') {
-                      changeLocation(Number(val));
+                      changeDistrict(val);
                     }
                   }}
                   className={`w-full pl-9 pr-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold border-0 focus:outline-none focus:ring-2 focus:ring-blue-900 transition cursor-pointer appearance-none ${
@@ -399,14 +401,14 @@ export default function Home() {
                       ? 'bg-amber-50 hover:bg-amber-100/90 text-amber-950'
                       : 'bg-slate-50 hover:bg-slate-100/90 text-slate-900'
                   }`}
-                  title="Select your area to view localized tariffs across the platform"
+                  title="Select district to view localized cooperative tariffs across the platform"
                 >
                   {isDetectingLocation ? (
-                    <option value="detecting">⏳ Detecting GPS Location...</option>
+                    <option value="detecting">⏳ Detecting District (GPS)...</option>
                   ) : unsupportedLocation ? (
                     <>
                       <option value="unsupported">
-                        📍 {unsupportedLocation.name} (Coming Soon)
+                        📍 {unsupportedLocation.district || unsupportedLocation.name} (Coming Soon)
                       </option>
                       <option value="detect_current">🎯 Re-detect GPS Location</option>
                     </>
@@ -414,35 +416,19 @@ export default function Home() {
                     <>
                       <option value="current">
                         📍 {isUsingCurrentLocation
-                          ? `${selectedLocation.name.split('/')[0].trim()} (GPS)`
-                          : 'Current Location (GPS)'}
+                          ? `${selectedDistrict} District (GPS)`
+                          : 'Current District (GPS)'}
                       </option>
                       {isUsingCurrentLocation && (
                         <option value="detect_current">🎯 Re-detect GPS Location</option>
                       )}
                     </>
                   )}
-                  <optgroup label="Khordha (Bhubaneswar)">
-                    {locations.filter(l => l.district === 'Khordha').map(l => (
-                      <option key={l.id} value={l.id}>
-                        📍 {l.name.split('/')[0].trim()}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Cuttack District">
-                    {locations.filter(l => l.district === 'Cuttack').map(l => (
-                      <option key={l.id} value={l.id}>
-                        📍 {l.name.split('/')[0].trim()}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Puri Coastal Heritage">
-                    {locations.filter(l => l.district === 'Puri').map(l => (
-                      <option key={l.id} value={l.id}>
-                        📍 {l.name.split('/')[0].trim()}
-                      </option>
-                    ))}
-                  </optgroup>
+                  {(availableDistricts || []).map((d) => (
+                    <option key={d.name} value={d.name}>
+                      📍 {d.displayName}
+                    </option>
+                  ))}
                 </select>
                 <ChevronRight size={13} className="absolute right-3 text-slate-400 pointer-events-none rotate-90" />
               </div>
@@ -507,7 +493,7 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           2. STANDARDIZED SERVICES CATALOG (WITH MINIMAL FILTER TABS)
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-12 px-4 max-w-6xl mx-auto">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="scroll-reveal text-center max-w-2xl mx-auto mb-8">
           <span className="inline-block text-[11px] font-bold text-blue-900 uppercase tracking-wider px-3 py-1 bg-blue-50 rounded-full mb-2 border border-blue-200">
             Regulated Tariffs
@@ -673,8 +659,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           3. HOW IT WORKS (SIMPLE 3-STEP GUIDE)
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-14 bg-slate-50/80 border-y border-slate-200/80 px-4">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-14 bg-slate-50/80 border-y border-slate-200/80 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="scroll-reveal text-center max-w-2xl mx-auto mb-10">
             <span className="inline-block text-[11px] font-bold text-emerald-900 uppercase tracking-wider px-3 py-1 bg-emerald-100 rounded-full mb-2">
               Transparent &amp; Simple
@@ -712,7 +698,7 @@ export default function Home() {
 
             {/* Step 3 */}
             <div className="scroll-reveal-card group p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs home-interactive-card">
-              <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 3
               </div>
               <h3 className="font-extrabold text-base text-slate-900 mb-1.5">3. Pay Fixed Rate &amp; Relax</h3>
@@ -727,8 +713,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           4. COMPARISON: PRITHVI FIX VS PRIVATE APPS (EASY TO UNDERSTAND)
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-14 bg-white px-4 border-b border-slate-200/80">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="py-14 bg-white px-4 sm:px-6 lg:px-8 border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto text-center">
           <div className="scroll-reveal">
             <span className="inline-block text-[11px] font-bold text-amber-900 uppercase tracking-wider px-3 py-1 bg-amber-100 rounded-full mb-2">
               Why Cooperative
@@ -741,9 +727,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8 text-left">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 text-left max-w-5xl mx-auto">
             {/* Prithvi Fix Card */}
-            <div className="scroll-reveal-left home-interactive-card p-6 rounded-2xl bg-blue-50/50 border-2 border-blue-600/60 shadow-xs relative overflow-hidden">
+            <div className="scroll-reveal-left home-interactive-card p-6 sm:p-8 rounded-2xl bg-blue-50/50 border-2 border-blue-600/60 shadow-xs relative overflow-hidden">
               <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-900 text-white">
                 PRITHVI FIX
               </div>
@@ -777,27 +763,35 @@ export default function Home() {
             </div>
 
             {/* Commercial Apps Card */}
-            <div className="scroll-reveal-right home-interactive-card p-6 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 shadow-2xs">
+            <div className="scroll-reveal-right home-interactive-card p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 shadow-2xs">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                 Commercial Gig Apps
               </div>
               <h3 className="font-extrabold text-lg text-slate-700 mb-4">Private Aggregators</h3>
               <ul className="space-y-3 text-xs text-slate-500">
                 <li className="flex items-center gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span>Unpredictable surge pricing up to 2x during peak weather or emergency hours.</span>
+                  <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <X size={12} />
+                  </div>
+                  <span><strong>Dynamic Surge Multipliers:</strong> 1.5x–2.5x price surge during peak demand.</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span>Heavy commissions (20% to 30%) deducted from workers' hard-earned fees.</span>
+                  <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <X size={12} />
+                  </div>
+                  <span><strong>High Intermediary Cuts:</strong> 25%–35% deducted from worker earnings.</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span>Often gig workers with self-proclaimed experience and no trade certifications.</span>
+                  <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <X size={12} />
+                  </div>
+                  <span><strong>No Social Security:</strong> Contractual gig work without health or accident cover.</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span>Complex bot-based customer care with difficult warranty claims.</span>
+                  <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <X size={12} />
+                  </div>
+                  <span><strong>Bot-Only Redressal:</strong> Inflexible chat bots without cooperative nodal officer review.</span>
                 </li>
               </ul>
             </div>
@@ -815,8 +809,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           6. PHONE BOOKING & ASSISTED KIOSK BANNER
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-10 bg-[#FFFDF7] border-b border-amber-200/70 px-4">
-        <div className="scroll-reveal-scale home-interactive-card max-w-5xl mx-auto p-6 sm:p-7 rounded-2xl bg-white border border-amber-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-left">
+      <section className="py-10 bg-[#FFFDF7] border-b border-amber-200/70 px-4 sm:px-6 lg:px-8">
+        <div className="scroll-reveal-scale home-interactive-card max-w-7xl mx-auto p-6 sm:p-8 rounded-2xl bg-white border border-amber-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-left">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
               <PhoneCall size={24} />
@@ -828,7 +822,7 @@ export default function Home() {
               <h3 className="text-lg font-extrabold text-slate-900">
                 Prefer to book by phone? Call our Toll-Free Helpline
               </h3>
-              <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+              <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
                 Dial <strong className="font-mono text-slate-900">1800-345-7788</strong> (toll-free, 8 AM to 8 PM) or visit your nearest Gram Panchayat Mo Seva Kendra / CSC kiosk for in-person assisted bookings.
               </p>
             </div>
@@ -856,8 +850,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           7. LIVE COOPERATIVE STATS
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-10 bg-slate-900 text-white px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="py-10 bg-slate-900 text-white px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 scroll-reveal-stagger">
             <div className="scroll-reveal-card p-4 rounded-xl bg-white/5 border border-white/10 home-interactive-card">
               <div className="text-2xl sm:text-3xl font-bold text-white font-mono">
@@ -893,8 +887,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────────────
           8. ARTISAN REGISTRATION CALLOUT
          ───────────────────────────────────────────────────────────── */}
-      <section className="py-10 bg-white px-4">
-        <div className="scroll-reveal-scale home-interactive-card max-w-4xl mx-auto p-6 sm:p-7 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-5 text-left">
+      <section className="py-10 bg-white px-4 sm:px-6 lg:px-8">
+        <div className="scroll-reveal-scale home-interactive-card max-w-7xl mx-auto p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-5 text-left">
           <div className="space-y-1">
             <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">
               Artisan Cooperative Membership

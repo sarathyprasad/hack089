@@ -105,25 +105,49 @@ const FAQS = [
     a: 'Yes. All replacement capacitors, sensors, copper joints, and PCB repairs sourced through Prithvi Fix carry a 30-day to 12-month manufacturer-backed ISI warranty. You receive a digital warranty certificate directly in your citizen portal.'
   },
   {
-    q: 'What if the same cooling issue occurs again within 30 days?',
-    a: 'Under our 30-Day Shram Suraksha Cover, if the same cooling or leakage issue arises within 30 days of service, a certified Master Artisan will re-inspect and re-service the appliance at ₹0 labour fee.'
+    q: 'What if the same issue occurs again within 30 days?',
+    a: 'Under our 30-Day Shram Suraksha Cover, if the same issue arises within 30 days of service due to the artisan\'s workmanship, a certified Master Artisan will re-inspect and re-service at ₹0 labour fee. You just need to raise the issue from your dashboard.'
   },
   {
     q: 'How can I verify the repair quote shared by the professional?',
-    a: 'Every repair quote shared by our artisan is strictly pre-validated against the official Prithvi Fix Fixed Rate Card. You can cross-check part prices and capped labour directly on our public rate card page.'
+    a: 'Every repair quote is strictly pre-validated against the official Prithvi Fix Fixed Rate Card, which is set by the State Apex Federation Head. You can cross-check all part prices and capped labour charges directly on our public Rate Card page before approving any work.'
   },
   {
     q: 'What if I am charged extra or asked for tips?',
-    a: 'Prithvi Fix enforces a strict Zero Surge & Zero Unregulated Surcharge policy. Artisans receive 93% directly into their bank account plus 5% social security, so tipping is never expected. If any excess fee is demanded, our Federation grievance desk executes an immediate refund.'
+    a: 'Prithvi Fix enforces a strict Zero Surge & Zero Unregulated Surcharge policy. Artisans receive 93% directly into their bank account plus 5% social security, so tipping is never expected or required. If any excess fee is demanded, contact our grievance desk immediately for an investigation and refund.'
   },
   {
-    q: 'Will the professional bring all the necessary tools for the service?',
-    a: 'Yes. Every certified artisan arrives equipped with an industrial-grade portable pressure jet pump, chemical foam gun, waterproof indoor drain jacket, and a calibrated digital manifold pressure gauge.'
+    q: 'Will the professional bring all the necessary tools and parts?',
+    a: 'Yes. Every certified artisan arrives with a trade-specific toolkit. Commonly needed ISI-approved spare parts (capacitors, gaskets, valves, etc.) are also sourced from our cooperative locked price matrix and brought for the visit. If a specialized part needs ordering, the artisan will inform you before proceeding.'
   },
   {
     q: 'What happens if anything is damaged during the service?',
-    a: 'All bookings are automatically covered under Shram Suraksha Cover with up to ₹10,000 property damage protection. In the unlikely event of accidental damage, claims are settled with 1-click documentation.'
-  }
+    a: 'All bookings are automatically covered under Shram Suraksha Cover with up to ₹10,000 property damage protection. In the unlikely event of accidental damage, claims are settled with 1-click documentation through your dashboard. No lengthy paperwork or insurance calls required.'
+  },
+  {
+    q: 'Can I watch the artisan work to understand the problem?',
+    a: 'Absolutely. Our artisans are trained to explain the issue and repair steps in simple language. Transparency is a core cooperative value — you are always welcome to observe, ask questions, and approve any parts replacement before it is done.'
+  },
+  {
+    q: 'How long does a typical service appointment take?',
+    a: 'Most standard servicing appointments (AC cleaning, minor electrical work, pipe repairs) are completed within 1–2 hours. Complex repairs or multi-appliance jobs may take 3–4 hours. The artisan will estimate the time on arrival after initial inspection.'
+  },
+  {
+    q: 'Can I book for multiple appliances in one visit?',
+    a: 'Yes. You can mention multiple appliances or issues in the booking notes. For institutional or bulk work (5+ appliances, large premises), use the Institutional Booking option for a coordinated squad deployment at a negotiated cooperative rate.'
+  },
+  {
+    q: 'What if the artisan cannot fix the problem?',
+    a: 'If the artisan determines the appliance is beyond repair or needs a part that must be factory-sourced, they will provide a detailed assessment report with no labour charge for the diagnostic visit. You will not be charged for work that could not be completed.'
+  },
+  {
+    q: 'Do I need to be present during the service?',
+    a: 'Yes, an adult (18+) must be present during the service. For the first booking with a new artisan, this is especially important for identity verification. You can share a trusted family member\'s presence if you are unavailable.'
+  },
+  {
+    q: 'How is the artisan assigned to my booking?',
+    a: 'Artisans are matched based on trade skills, proximity to your location, cooperative zone, availability, and rating. Senior artisans (Master tier) are auto-assigned for complex services. You can also request a specific artisan you have worked with before.'
+  },
 ];
 
 export default function ServiceDetail() {
@@ -181,7 +205,7 @@ export default function ServiceDetail() {
     <div className="min-h-screen bg-[#F8FAFC] pb-28">
       {/* ── Breadcrumbs & Back Nav ── */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <Link to="/services" className="hover:text-blue-900 flex items-center gap-1 font-bold text-slate-700">
               <ArrowLeft size={14} />
@@ -215,7 +239,7 @@ export default function ServiceDetail() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
         {/* ── 1. Hero Card: Service Title, Foam-Jet Visual & Multi-Unit Selector ── */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -842,7 +866,7 @@ export default function ServiceDetail() {
 
       {/* ── 12. Sticky Bottom Booking Bar (Mobile & Desktop) ── */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 shadow-lg z-30">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div>
               <div className="text-[10px] text-slate-500 uppercase font-bold">

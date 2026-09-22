@@ -524,14 +524,14 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container py-8 max-w-7xl mx-auto space-y-6">
+    <div className="w-full py-6 space-y-6 min-w-0 max-w-full">
       {/* ── DCO Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-[#1E294B] pb-5">
-        <div>
+        <div className="min-w-0">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 text-xs font-bold uppercase tracking-wider mb-1">
             <Landmark size={14} /> District Cooperative Registrar Authority
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white truncate">
             {userDistrict} District Cooperative Regulatory Portal
           </h1>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
@@ -541,18 +541,18 @@ export default function AdminDashboard() {
 
         <button
           onClick={loadAllData}
-          className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs self-start md:self-auto cursor-pointer"
+          className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs self-start md:self-auto cursor-pointer shrink-0"
         >
           <RefreshCw size={13} /> Refresh Registry Data
         </button>
       </div>
 
       {/* ── 4 Executive DCO KPI Pillar Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4 min-w-0">
         {/* DCO Pillar 1: Registered Societies */}
         <div 
           onClick={() => setActiveTab('DCO_REGISTRY')}
-          className="cursor-pointer bg-white dark:bg-[#131B38] p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-emerald-400 dark:hover:border-emerald-400/50 hover:shadow-md transition group"
+          className="cursor-pointer bg-white dark:bg-[#131B38] p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-emerald-400 dark:hover:border-emerald-400/50 hover:shadow-md transition group min-w-0"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
         {/* DCO Pillar 2: Statutory Scrutiny Queue */}
         <div 
           onClick={() => { setActiveTab('DCO_APPROVAL'); setDcoSubTab('PENDING'); }}
-          className={`cursor-pointer p-5 rounded-2xl border transition group shadow-xs hover:shadow-md ${
+          className={`cursor-pointer p-4 sm:p-5 rounded-2xl border transition group shadow-xs hover:shadow-md min-w-0 ${
             dcoPendingSocieties.length > 0
               ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800 hover:border-amber-500'
               : 'bg-white dark:bg-[#131B38] border-gray-200 dark:border-[#1E294B] hover:border-amber-400'
@@ -613,7 +613,7 @@ export default function AdminDashboard() {
         {/* DCO Pillar 3: Section 70 Tribunal */}
         <div 
           onClick={() => setActiveTab('DCO_TRIBUNAL')}
-          className="cursor-pointer bg-white dark:bg-[#131B38] p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-amber-400 dark:hover:border-amber-400/50 hover:shadow-md transition group"
+          className="cursor-pointer bg-white dark:bg-[#131B38] p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-amber-400 dark:hover:border-amber-400/50 hover:shadow-md transition group min-w-0"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -640,7 +640,7 @@ export default function AdminDashboard() {
         {/* DCO Pillar 4: Statutory Welfare Escrow (2%) */}
         <div 
           onClick={() => setActiveTab('DCO_WELFARE')}
-          className="cursor-pointer bg-white dark:bg-[#131B38] p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-indigo-400 dark:hover:border-indigo-400/50 hover:shadow-md transition group"
+          className="cursor-pointer bg-white dark:bg-[#131B38] p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs hover:border-indigo-400 dark:hover:border-indigo-400/50 hover:shadow-md transition group min-w-0"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -673,7 +673,7 @@ export default function AdminDashboard() {
       )}
 
       {/* ── Primary Navigation Workspaces (DCO Statutory Workspaces) ── */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-[#1E294B] text-xs font-bold overflow-x-auto">
+      <div className="flex items-center gap-1 sm:gap-2 border-b border-gray-200 dark:border-[#1E294B] text-xs font-bold overflow-x-auto max-w-full pb-1 min-w-0">
         {[
           {
             key: 'DCO_APPROVAL',
@@ -869,7 +869,7 @@ export default function AdminDashboard() {
                     className="bg-white dark:bg-[#131B38] rounded-2xl border border-gray-200 dark:border-[#1E294B] shadow-xs overflow-hidden"
                   >
                     {/* Federation Header Bar */}
-                    <div className="bg-linear-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-5">
+                    <div className="bg-slate-900 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-5">
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -2653,7 +2653,20 @@ export default function AdminDashboard() {
 
                         <td className="p-3">
                           <span className="font-semibold text-gray-800 block">{w.district}</span>
-                          <span className="text-[10px] text-gray-500">{w.cooperative_name || 'District Federation'}</span>
+                          <div className="mt-0.5 space-y-0.5">
+                            {w.is_independent || !w.society_id ? (
+                              <span className="inline-block text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                                Independent Artisan
+                              </span>
+                            ) : (
+                              <span className="inline-block text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 border border-purple-200">
+                                {w.society_name || 'Society Member'}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-gray-500 block truncate max-w-[150px]">
+                              {w.cooperative_name || 'District Federation'}
+                            </span>
+                          </div>
                         </td>
 
                         <td className="p-3">
@@ -3441,8 +3454,8 @@ export default function AdminDashboard() {
           MODAL: OFFICIAL REGISTRATION CERTIFICATE (GOVT OF ODISHA)
          ───────────────────────────────────────────────────────────── */}
       {viewingCertificate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full border-8 border-double border-amber-600/60 p-8 text-slate-900 relative flex flex-col space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto border-4 sm:border-8 border-double border-amber-600/60 p-5 sm:p-8 text-slate-900 relative flex flex-col space-y-5 my-auto">
             <button
               type="button"
               onClick={() => setViewingCertificate(null)}

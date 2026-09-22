@@ -108,9 +108,13 @@ export default function Login() {
       if (u.admin_type === 'DCO_REGISTRAR') {
         const ok = from.startsWith('/admin') || from.startsWith('/dco');
         navigate(ok ? from : '/admin/dashboard', { replace: true });
+      } else if (u.admin_type === 'FEDERATION_HEAD') {
+        const ok = from.startsWith('/apex') || from.startsWith('/federation/tenders') || from.startsWith('/institutional-tenders');
+        navigate(ok ? from : '/apex/dashboard', { replace: true });
       } else {
-        const ok = from.startsWith('/federation') || from.startsWith('/tenders') || from.startsWith('/institutional-tenders');
-        navigate(ok ? from : '/federation/portal', { replace: true });
+        // Primary Society Admin (SOCIETY_ADMIN)
+        const ok = from.startsWith('/society') || from.startsWith('/federation');
+        navigate(ok ? from : '/society/dashboard', { replace: true });
       }
     } else if (u.role === 'WORKER') {
       navigate(from.startsWith('/worker') ? from : '/worker/dashboard', { replace: true });
@@ -403,7 +407,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('phoneOrEmailPlaceholder', 'Phone or Email (e.g. 9876543210)')}
+                  placeholder={t('phoneOrEmailPlaceholder', 'Phone Number or Email')}
                   className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 bg-white text-base sm:text-[17px] text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/5 font-semibold"
                   style={{ fontFamily: 'inherit' }}
                 />

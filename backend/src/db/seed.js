@@ -6,7 +6,7 @@ async function seed() {
   console.log('🚀 Ensuring database schema is fully migrated...');
   await migrate();
 
-  const salt = bcrypt.hashSync('password123', 10);
+  const salt = bcrypt.hashSync('demo123', 10);
 
   console.log('🧹 Clearing all existing tables...');
   await query(`
@@ -785,29 +785,27 @@ async function seed() {
 
   // ── Dedicated Federation, DCO & Society Admins (IDs 145+) ──
   const adminUsers = [
-    // 1. Apex Federation Head (Statewide jurisdiction across all 3 districts)
+    // 1. Apex Federation Head (Statewide jurisdiction across all districts)
     ['Shri Arun Kumar Pattnaik (State Apex Federation Head)', 'fedhead@demo.local', '9876543400', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'State Cooperative Complex, Unit-8, Bhubaneswar', '751012', 20.2900, 85.8200, 1, 'FEDERATION_HEAD', 'Odisha State Apex Federation Head & Secretary', null],
 
     // 2. District Cooperative Officers (DCOs / District Registrars)
-    // Khordha DCO & Alias
     ['Shri Debendra Nayak (Khordha DCO & District Registrar)', 'dco.khordha@demo.local', '9876543401', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'District Cooperative Office, Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Khordha', null],
-    ['Shri Debendra Nayak (Admin Alias)', 'admin@demo.local', '9876543411', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'District Cooperative Office, Saheed Nagar, Bhubaneswar', '751007', 20.2880, 85.8420, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Khordha', null],
-
-    // Cuttack DCO & Alias
     ['Smt. Laxmi Devi (Cuttack DCO & District Registrar)', 'dco.cuttack@demo.local', '9876543402', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'District Cooperative Office, Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Cuttack', null],
-    ['Smt. Laxmi Devi (Admin2 Alias)', 'admin2@demo.local', '9876543412', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'District Cooperative Office, Buxi Bazar, Cuttack', '753001', 20.4620, 85.8830, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Cuttack', null],
-
-    // Puri DCO & Alias
     ['Shri Alok Mohapatra (Puri DCO & District Registrar)', 'dco.puri@demo.local', '9876543403', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'District Cooperative Office, VIP Road, Puri', '752002', 19.8120, 85.8320, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Puri', null],
-    ['Shri Alok Mohapatra (Admin3 Alias)', 'admin3@demo.local', '9876543413', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'District Cooperative Office, VIP Road, Puri', '752002', 19.8120, 85.8320, 1, 'DCO_REGISTRAR', 'District Cooperative Officer & Registrar, Puri', null],
 
-    // 3. Society Admins / Secretaries
+    // 3. Society Admins / Secretaries (All 12 Primary Societies)
     ['Bikash Mohanty (Secretary - Shramik Kalyan Samiti)', 'society.khordha@demo.local', '9876543404', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751001', 20.2650, 85.8450, 1, 'SOCIETY_ADMIN', 'Secretary, Shramik Kalyan Labour Cooperative Samiti', 1],
-    ['Bikash Mohanty (Secretary Alias 1)', 'society.khordha1@demo.local', '9876543414', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Saheed Nagar, Bhubaneswar', '751001', 20.2650, 85.8450, 1, 'SOCIETY_ADMIN', 'Secretary, Shramik Kalyan Labour Cooperative Samiti', 1],
+    ['Rabindra Nath Jena (Secretary - Kalinga Shramik)', 'society.khandagiri@demo.local', '9876543407', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Khandagiri Square, Bhubaneswar', '751030', 20.2588, 85.7865, 1, 'SOCIETY_ADMIN', 'Secretary, Kalinga Shramik Seva Sahakari Samiti', 2],
+    ['Manoranjan Mishra (Secretary - Ekamra Artisan)', 'society.oldtown@demo.local', '9876543408', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Ratha Danda, Old Town, Bhubaneswar', '751002', 20.2405, 85.8340, 1, 'SOCIETY_ADMIN', 'Secretary, Ekamra Multi-Trade Artisan Cooperative', 3],
+    ['Subrat Kumar Dash (Secretary - Patia Tech-Artisan)', 'society.patia@demo.local', '9876543409', salt, 'COOPERATIVE_ADMIN', 'Khordha', 'Bhubaneswar', 'Infocity Road, Patia, Bhubaneswar', '751024', 20.3540, 85.8190, 1, 'SOCIETY_ADMIN', 'Secretary, Chandaka-Patia Tech-Artisan Cooperative Samiti', 4],
     ['Pratap Rout (Secretary - Utkal Shilpi Seva Samiti)', 'society.cuttack@demo.local', '9876543405', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Badambadi Colony, Cuttack', '753012', 20.4550, 85.8750, 1, 'SOCIETY_ADMIN', 'Secretary, Utkal Shilpi Seva Sahakari Samiti', 5],
-    ['Pratap Rout (Secretary Alias 2)', 'society.cuttack1@demo.local', '9876543415', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Badambadi Colony, Cuttack', '753012', 20.4550, 85.8750, 1, 'SOCIETY_ADMIN', 'Secretary, Utkal Shilpi Seva Sahakari Samiti', 5],
+    ['Kishore Chandra Behera (Secretary - Mahanadi Shilpi)', 'society.madhupatna@demo.local', '9876543410', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Madhupatna Square, Cuttack', '753010', 20.4490, 85.8920, 1, 'SOCIETY_ADMIN', 'Secretary, Mahanadi Shilpi Sahakari Samiti', 6],
+    ['Ashok Kumar Samal (Secretary - Barabati Urban Crafts)', 'society.cda@demo.local', '9876543411', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'CDA Sector 9, Cuttack', '753014', 20.4850, 85.8350, 1, 'SOCIETY_ADMIN', 'Secretary, Barabati Urban Crafts & Maintenance Cooperative', 7],
+    ['Purna Chandra Sahoo (Secretary - Silver City Guild)', 'society.silvercity@demo.local', '9876543412', salt, 'COOPERATIVE_ADMIN', 'Cuttack', 'Cuttack', 'Buxi Bazar Heritage Lane, Cuttack', '753001', 20.4630, 85.8840, 1, 'SOCIETY_ADMIN', 'Secretary, Silver City Artisan Guild Cooperative', 8],
     ['Bibhuti Bhusan Sahoo (President - Jagannath Nirman)', 'society.puri@demo.local', '9876543406', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'VIP Road, Near Bus Stand, Puri', '752002', 19.8050, 85.8200, 1, 'SOCIETY_ADMIN', 'President, Jagannath Nirman Sahakari Federation', 9],
-    ['Bibhuti Bhusan Sahoo (President Alias 3)', 'society.puri1@demo.local', '9876543416', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'VIP Road, Near Bus Stand, Puri', '752002', 19.8050, 85.8200, 1, 'SOCIETY_ADMIN', 'President, Jagannath Nirman Sahakari Federation', 9],
+    ['Gopinath Mohapatra (Secretary - Konark Karigar)', 'society.konark@demo.local', '9876543413', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Konark', 'Sun Temple Commercial Plaza, Konark', '752111', 19.8876, 86.0945, 1, 'SOCIETY_ADMIN', 'Secretary, Konark Karigar Sahakari Samiti', 10],
+    ['Damodar Pradhan (Secretary - Srikshetra Coastal)', 'society.seabeach@demo.local', '9876543414', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Puri', 'Sea Beach Road, Baliapanda, Puri', '752001', 19.7980, 85.8250, 1, 'SOCIETY_ADMIN', 'Secretary, Srikshetra Coastal Facility Cooperative Samiti', 11],
+    ['Laxmidhar Swain (Secretary - Brahmagiri Rural)', 'society.brahmagiri@demo.local', '9876543415', salt, 'COOPERATIVE_ADMIN', 'Puri', 'Brahmagiri', 'Chilika Lake Road, Brahmagiri', '752001', 19.8000, 85.6700, 1, 'SOCIETY_ADMIN', 'Secretary, Brahmagiri Rural Artisan & Craft Cooperative', 12],
   ];
 
   users.push(...adminUsers);

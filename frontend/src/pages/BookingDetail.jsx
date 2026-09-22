@@ -6,7 +6,7 @@ import {
   Calendar, Clock, MapPin, User, Building2, Star, ShieldCheck,
   CheckCircle2, AlertTriangle, ArrowLeft, Phone, Mail, FileText,
   CreditCard, Sparkles, RefreshCw, XCircle, ChevronRight, Award,
-  HeartHandshake, HelpCircle, Wrench, ShieldAlert, Camera
+  HeartHandshake, HelpCircle, Wrench, ShieldAlert, Camera, Lock
 } from 'lucide-react';
 import PaymentModal from '../components/PaymentModal';
 import TaxInvoiceModal from '../components/TaxInvoiceModal';
@@ -140,7 +140,7 @@ export default function BookingDetail() {
   const currentStepIdx = TIMELINE_STEPS.findIndex((s) => s.status === booking.status);
 
   return (
-    <div className="container py-8 max-w-5xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Breadcrumb & Action bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
         <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export default function BookingDetail() {
             onClick={() => setShowInvoiceModal(true)}
             className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs font-bold bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
           >
-            <FileText size={14} className="text-amber-700" /> Print Form IV Bill
+            <FileText size={14} className="text-amber-700" /> View Bill
           </button>
           <button
             onClick={() => setShowLineageModal(true)}
@@ -224,57 +224,82 @@ export default function BookingDetail() {
           SECURITY HANDSHAKE OTP CARDS (ONLY FOR ACTIVE JOBS)
          ───────────────────────────────────────────────────────────── */}
       {!isCompleted && !isCancelled && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
-              ? 'bg-emerald-50/60 border-emerald-300'
-              : 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-900/10'
-            }`}>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase text-blue-900 flex items-center gap-1">
-                <ShieldCheck size={14} /> 1. Arrival OTP Handshake
-              </span>
-              {booking.status === 'IN_PROGRESS' ? (
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
-                  ✓ Verified On-Site
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
-                  Pending Arrival
-                </span>
-              )}
+        booking.status === 'REQUESTED' || !booking.arrival_otp ? (
+          <div className="p-4 bg-amber-50/90 rounded-2xl border border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0">
+                <Lock size={20} />
+              </div>
+              <div>
+                <div className="font-bold text-sm text-amber-950 flex items-center gap-2">
+                  <span>Security Arrival OTP Locked</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 uppercase">
+                    Awaiting Artisan Acceptance
+                  </span>
+                </div>
+                <p className="text-xs text-amber-800/90 mt-0.5">
+                  To protect security, your 4-digit Arrival OTP will be generated automatically the moment an artisan accepts your work request.
+                </p>
+              </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <span className="text-2xl font-mono font-extrabold text-blue-950 tracking-wider">
-                {booking.arrival_otp || '4821'}
-              </span>
-              <p className="text-[11px] text-gray-600">
-                Share this 4-digit code with the artisan upon arrival to start the work session.
-              </p>
+            <div className="text-[11px] font-semibold text-amber-900 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200 shrink-0 self-start sm:self-auto flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping inline-block" />
+              <span>Live polling active</span>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
+                ? 'bg-emerald-50/60 border-emerald-300'
+                : 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-900/10'
+              }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase text-blue-900 flex items-center gap-1">
+                  <ShieldCheck size={14} /> 1. Arrival OTP Handshake
+                </span>
+                {booking.status === 'IN_PROGRESS' ? (
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
+                    ✓ Verified On-Site
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                    Pending Arrival
+                  </span>
+                )}
+              </div>
+              <div className="mt-2 flex items-baseline gap-3">
+                <span className="text-2xl font-mono font-extrabold text-blue-950 tracking-wider">
+                  {booking.arrival_otp}
+                </span>
+                <p className="text-[11px] text-gray-600">
+                  Share this 4-digit code with the artisan upon arrival to start the work session.
+                </p>
+              </div>
+            </div>
 
-          <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
-              ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/10'
-              : 'bg-gray-50 border-gray-200 opacity-60'
-            }`}>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase text-emerald-900 flex items-center gap-1">
-                <ShieldCheck size={14} /> 2. Completion OTP Handshake
-              </span>
-              <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                Give Once Satisfied
-              </span>
-            </div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <span className="text-2xl font-mono font-extrabold text-emerald-950 tracking-wider">
-                {booking.completion_otp || '9156'}
-              </span>
-              <p className="text-[11px] text-gray-600">
-                Only give this code to the artisan when work is complete to confirm satisfaction and arm your 30-Day Guarantee.
-              </p>
+            <div className={`p-4 rounded-xl border transition ${booking.status === 'IN_PROGRESS'
+                ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/10'
+                : 'bg-gray-50 border-gray-200 opacity-60'
+              }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase text-emerald-900 flex items-center gap-1">
+                  <ShieldCheck size={14} /> 2. Completion OTP Handshake
+                </span>
+                <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                  Give Once Satisfied
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-3">
+                <span className="text-2xl font-mono font-extrabold text-emerald-950 tracking-wider">
+                  {booking.completion_otp}
+                </span>
+                <p className="text-[11px] text-gray-600">
+                  Only give this code to the artisan when work is complete to confirm satisfaction and arm your 30-Day Guarantee.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
       {/* ─────────────────────────────────────────────────────────────

@@ -5,13 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
   ShieldCheck, AlertTriangle, CheckCircle2, Star, MapPin,
-  Calendar, Clock, User, ArrowRight, ArrowLeft, Zap, Check,
+  Calendar, Clock, User, Users, ArrowRight, ArrowLeft, Zap, Check,
   Info, Sparkles, Building2, HelpCircle, Layers, ShieldAlert, Award,
   Search, X, Wrench, Droplets, Hammer, Paintbrush, SprayCan,
   LogIn, CheckSquare, Square, Navigation, Radio, Compass, Car,
-  Snowflake, Wind, Flower2, HeartPulse, Settings
+  Snowflake, Wind, Flower2, HeartPulse, Settings, LocateFixed, Lock, Phone
 } from 'lucide-react';
 import LiveRouteMap from '../components/LiveRouteMap';
+import { useLocationContext } from '../context/LocationContext';
 
 export default function BookService() {
   const { t } = useLanguage();
@@ -30,12 +31,12 @@ export default function BookService() {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [autoAssign, setAutoAssign] = useState(true);
 
-  // Phase 1 Search & Problem Matching state
+  // Step 1 Search & Problem Matching state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState('ALL');
   const [matchedDiagnosis, setMatchedDiagnosis] = useState(null);
 
-  // Form states (Phase 2)
+  // Form states (Step 2)
   const [formData, setFormData] = useState({
     district: user?.district || 'Khordha',
     societyId: '',
@@ -50,31 +51,35 @@ export default function BookService() {
     notes: '',
   });
 
+  const {
+    selectedLocation,
+    isUsingCurrentLocation,
+    isDetectingLocation,
+    detectCurrentLocation,
+  } = useLocationContext();
+
+  // Sync with GPS current location detection if user taps current location
+  useEffect(() => {
+    if (selectedLocation && isUsingCurrentLocation) {
+      setFormData((prev) => ({
+        ...prev,
+        district: selectedLocation.district,
+        societyId: '',
+        city: selectedLocation.city,
+        address: selectedLocation.name ? `${selectedLocation.name}, Central Sector` : prev.address,
+        pincode: selectedLocation.pincode || prev.pincode,
+      }));
+    }
+  }, [selectedLocation, isUsingCurrentLocation]);
+
   const handleDistrictChange = (dist) => {
-    const socs = societies.filter((s) => s.district.toLowerCase() === dist.toLowerCase());
-    const first = socs[0];
     setFormData((prev) => ({
       ...prev,
       district: dist,
-      societyId: first ? String(first.id) : '',
-      city: first?.city || (dist === 'Cuttack' ? 'Cuttack' : dist === 'Puri' ? 'Puri' : 'Bhubaneswar'),
-      address: first?.address || prev.address,
-      pincode: first?.pincode || (dist === 'Cuttack' ? '753001' : dist === 'Puri' ? '752001' : '751001'),
+      societyId: '',
+      city: dist === 'Cuttack' ? 'Cuttack' : dist === 'Puri' ? 'Puri' : 'Bhubaneswar',
+      pincode: dist === 'Cuttack' ? '753001' : dist === 'Puri' ? '752001' : '751001',
     }));
-  };
-
-  const handleSocietyChange = (socId) => {
-    const soc = societies.find((s) => String(s.id) === String(socId));
-    if (soc) {
-      setFormData((prev) => ({
-        ...prev,
-        societyId: String(soc.id),
-        district: soc.district,
-        city: soc.city || prev.city,
-        address: soc.address || prev.address,
-        pincode: soc.pincode || prev.pincode,
-      }));
-    }
   };
 
   // Dynamic 60-minute emergency time window from current time
@@ -110,6 +115,24 @@ export default function BookService() {
   const [quickLoginLoading, setQuickLoginLoading] = useState(false);
   const [showRouteMap, setShowRouteMap] = useState(false);
   const [customerCoords, setCustomerCoords] = useState({ lat: 20.3540, lng: 85.8170 });
+
+  // Live polling in Step 4 to auto-refresh booking when worker accepts
+  useEffect(() => {
+    if (currentStep !== 4 || !createdBooking?.id || createdBooking?.arrival_otp) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.getBookingById(createdBooking.id);
+        if (res?.booking && (res.booking.arrival_otp || res.booking.worker_id)) {
+          setCreatedBooking(res.booking);
+        }
+      } catch (err) {
+        console.warn('Live polling booking update error:', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [currentStep, createdBooking?.id, createdBooking?.arrival_otp]);
 
   // Advanced Semantic & Synonym Dictionary for Indian Civic & Home Repair Trades
   const REPAIR_SYNONYMS = {
@@ -531,6 +554,8 @@ export default function BookService() {
         }
       }
 
+      const effectiveSquadSize = formData.isBulkOrder ? Math.max(1, parseInt(formData.squadSize, 10) || 1) : 1;
+
       // Customer has no authority to choose worker; order broadcasts to nearby pool
       const payload = {
         service_id: selectedService.id,
@@ -542,7 +567,7 @@ export default function BookService() {
         pincode: formData.pincode,
         is_emergency: formData.isEmergency,
         is_bulk_order: formData.isBulkOrder,
-        squad_size: formData.squadSize || 1,
+        squad_size: effectiveSquadSize,
         notes: formData.notes || 'Standard booking',
       };
 
@@ -563,11 +588,12 @@ export default function BookService() {
   const welfareFundPct = selectedSoc?.welfare_fund_share_pct ? Number(selectedSoc.welfare_fund_share_pct) : 2.0;
   const platformUpkeepPct = selectedSoc?.platform_upkeep_share_pct ? Number(selectedSoc.platform_upkeep_share_pct) : 5.0;
 
+  const effectiveSquadSize = formData.isBulkOrder ? Math.max(1, parseInt(formData.squadSize, 10) || 1) : 1;
   const serviceEffectivePrice = Number(selectedService?.price || selectedService?.base_price) || 0;
   const singleUnitLabor = selectedService
     ? (formData.isEmergency ? Math.max(Math.round(serviceEffectivePrice * 1.2), 499) : serviceEffectivePrice)
     : 0;
-  const rawBasePrice = singleUnitLabor * (formData.squadSize || 1);
+  const rawBasePrice = singleUnitLabor * effectiveSquadSize;
 
   const bulkDiscount = formData.isBulkOrder ? Math.round(rawBasePrice * 0.15) : 0;
   const totalEstimated = Math.max(0, rawBasePrice - bulkDiscount);
@@ -576,7 +602,7 @@ export default function BookService() {
   const platformFee = Math.round(totalEstimated * (welfareFundPct / 100)); // Cooperative Welfare Fund
 
   return (
-    <div className="container py-8 max-w-5xl mx-auto px-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header with Mode Switcher */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5">
@@ -670,7 +696,7 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 1: PROBLEM SEARCH & SERVICE SELECTION (Minimal & Fast)
+          STEP 1: PROBLEM SEARCH & SERVICE SELECTION (Minimal & Fast)
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 1 && (
         <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm space-y-5">
@@ -875,7 +901,9 @@ export default function BookService() {
                     </div>
 
                     <div className="pt-2.5 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <span className="text-slate-500 text-[11px] font-medium">{svc.available_workers || 3} {t('verifiedArtisans')}</span>
+                      <span className={`text-[11px] font-medium ${(svc.available_workers ?? 0) > 0 ? 'text-slate-500' : 'text-amber-600'}`}>
+                        {svc.available_workers ?? 0} {t('verifiedArtisans')}
+                      </span>
                       <span className="font-black text-[#0F294A] text-sm font-mono">₹{svc.base_price}</span>
                     </div>
                   </div>
@@ -903,13 +931,13 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 2: QUOTE, BULK CONTRACT & SLOTTING
+          STEP 2: QUOTE, BULK CONTRACT & SLOTTING
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 2 && (
         <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-900">Phase 2: Transparent Quote & Slot</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-900">Step 2: Service Configuration & Schedule</span>
               <h2 className="text-lg font-bold text-gray-900">Configure Service Order & Schedule</h2>
               <p className="text-xs text-gray-500">Service: <strong className="text-blue-950">{selectedService?.name}</strong> (₹{selectedService?.base_price})</p>
             </div>
@@ -922,24 +950,79 @@ export default function BookService() {
           </div>
 
           <form onSubmit={handleStep2Next} className="space-y-4">
-            {/* Bulk / Society Contract Discount Toggle */}
-            <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/40 flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="bulk-toggle"
-                checked={formData.isBulkOrder}
-                onChange={(e) => setFormData({ ...formData, isBulkOrder: e.target.checked })}
-                className="h-4 w-4 mt-0.5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
-              />
-              <label htmlFor="bulk-toggle" className="cursor-pointer">
-                <div className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
-                  <Building2 size={14} className="text-indigo-700" />
-                  Institutional / Apartment Society Bulk Contract (15% Cooperative Discount)
+            {/* Bulk / Society Contract Discount Toggle & Dynamic Worker Headcount */}
+            <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/40 space-y-3">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="bulk-toggle"
+                  checked={formData.isBulkOrder}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setFormData((prev) => ({
+                      ...prev,
+                      isBulkOrder: isChecked,
+                      squadSize: isChecked ? (Number(prev.squadSize) > 1 ? prev.squadSize : 2) : 1,
+                    }));
+                  }}
+                  className="h-4 w-4 mt-0.5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300 cursor-pointer"
+                />
+                <label htmlFor="bulk-toggle" className="cursor-pointer">
+                  <div className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <Building2 size={14} className="text-indigo-700" />
+                    Institutional / Apartment Society Bulk Contract (15% Cooperative Discount)
+                  </div>
+                  <p className="text-[11px] text-gray-600 mt-0.5">
+                    Check this for residential society bulk maintenance or institutional facility orders to automatically apply the state cooperative master contract discount.
+                  </p>
+                </label>
+              </div>
+
+              {/* Workers Needed - Activated strictly upon institutional booking selection */}
+              {formData.isBulkOrder && (
+                <div className="pt-3 border-t border-indigo-200/80 space-y-2">
+                  <label htmlFor="workers-needed" className="block text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <Users size={14} className="text-indigo-700" />
+                    How many workers needed? *
+                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="relative w-full sm:w-44">
+                      <input
+                        id="workers-needed"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={formData.squadSize}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '') {
+                            setFormData((prev) => ({ ...prev, squadSize: '' }));
+                          } else {
+                            const val = parseInt(raw, 10);
+                            setFormData((prev) => ({
+                              ...prev,
+                              squadSize: isNaN(val) ? '' : Math.max(1, Math.min(100, val)),
+                            }));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!formData.squadSize || Number(formData.squadSize) < 1) {
+                            setFormData((prev) => ({ ...prev, squadSize: 1 }));
+                          }
+                        }}
+                        placeholder="Enter count (e.g. 5)"
+                        className="w-full pl-3.5 pr-16 py-2 bg-white text-slate-900 border border-indigo-300 rounded-xl font-bold text-xs focus:ring-2 focus:ring-indigo-600 focus:outline-none shadow-xs"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                        workers
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-indigo-900/80 leading-relaxed">
+                      Enter the required artisan deployment headcount. Cooperative federation will dispatch a synchronized squad with fair rotational allocation.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-gray-600 mt-0.5">
-                  Check this for residential society bulk maintenance or institutional facility orders to automatically apply the state cooperative master contract discount.
-                </p>
-              </label>
+              )}
             </div>
 
             {/* Emergency Priority Toggle */}
@@ -968,58 +1051,23 @@ export default function BookService() {
               </label>
             </div>
 
-            {/* Squad Size & Multi-Worker Allocation */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/80 space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <User size={15} className="text-[#0F294A]" />
-                  Artisan Squad Deployment Headcount
-                </label>
-                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900">
-                  {formData.squadSize === 1 ? '1 Solo Artisan' : `${formData.squadSize} Artisans Squad`}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                Choose squad size according to workload. Multi-worker squads are synchronized and dispatched together with fair rotational allocation.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                {[
-                  { size: 1, label: '1 Solo', sub: 'Standard Job', icon: '👤' },
-                  { size: 2, label: '2 Pair', sub: 'Heavy / Dual', icon: '👥' },
-                  { size: 3, label: '3 Crew', sub: 'Renovation', icon: '🛠️' },
-                  { size: 4, label: '4 Squad', sub: 'Commercial', icon: '🏗️' },
-                ].map((item) => {
-                  const isSelected = (formData.squadSize || 1) === item.size;
-                  return (
-                    <button
-                      key={item.size}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, squadSize: item.size })}
-                      className={`p-2.5 rounded-xl border text-left transition ${
-                        isSelected
-                          ? 'border-[#0F294A] bg-white ring-2 ring-[#0F294A] shadow-xs'
-                          : 'border-slate-200 bg-white/60 hover:bg-white hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">{item.icon}</span>
-                        {isSelected && <Check size={14} className="text-[#0F294A] stroke-[3]" />}
-                      </div>
-                      <div className={`text-xs font-bold mt-1 ${isSelected ? 'text-[#0F294A]' : 'text-slate-800'}`}>
-                        {item.label}
-                      </div>
-                      <div className="text-[10px] text-slate-500">{item.sub}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  District Jurisdiction *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    District *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={detectCurrentLocation}
+                    disabled={isDetectingLocation}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-lg transition shadow-2xs cursor-pointer"
+                    title="Detect GPS Current Location"
+                  >
+                    <LocateFixed size={12} className={isDetectingLocation ? 'animate-spin text-blue-700' : 'text-blue-700'} />
+                    <span>{isDetectingLocation ? 'Detecting...' : isUsingCurrentLocation ? '📍 Current Location' : 'Current Location'}</span>
+                  </button>
+                </div>
                 <select
                   value={formData.district}
                   onChange={(e) => handleDistrictChange(e.target.value)}
@@ -1033,47 +1081,6 @@ export default function BookService() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Local Cooperative Society & Locality *
-                </label>
-                <select
-                  value={formData.societyId}
-                  onChange={(e) => handleSocietyChange(e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
-                >
-                  <option value="">-- Select Local Cooperative Society --</option>
-                  {societies
-                    .filter((s) => s.district.toLowerCase() === formData.district.toLowerCase())
-                    .map((soc) => (
-                      <option key={soc.id} value={soc.id}>
-                        {soc.name} ({soc.address ? soc.address.split(',')[0] : soc.city})
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            {formData.societyId && (
-              <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Building2 size={16} className="text-blue-900 shrink-0" />
-                  <span>
-                    Assigned Cooperative Society: <strong>{societies.find((s) => String(s.id) === String(formData.societyId))?.name}</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] bg-blue-900 text-white font-bold px-2 py-0.5 rounded uppercase">
-                    DCO Monitored
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    PIN: {societies.find((s) => String(s.id) === String(formData.societyId))?.pincode}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   City / Locality *
                 </label>
                 <input
@@ -1082,7 +1089,23 @@ export default function BookService() {
                   placeholder="e.g. Saheed Nagar, Patia, Badambadi, Grand Road"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs bg-white font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Street Address / Flat / Landmark *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Plot 42, Near Cooperative Bank / DAV Public School"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
                 />
               </div>
 
@@ -1096,23 +1119,9 @@ export default function BookService() {
                   placeholder="e.g. 751001"
                   value={formData.pincode}
                   onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs font-mono"
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs font-mono"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                Street Address / Flat / Landmark *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Plot 42, Near Cooperative Bank / DAV Public School"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-900 text-xs"
-              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1205,14 +1214,14 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 3: REVIEW ORDER & BROADCAST DISPATCH
+          STEP 3: REVIEW ORDER & BROADCAST DISPATCH
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 3 && (
         <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-900">
-                Phase 3: Smart Broadcast Dispatch & Transparent Escrow Tariff
+                Step 3: Smart Broadcast Dispatch & Transparent Escrow Tariff
               </span>
               <h2 className="text-lg font-bold text-gray-900">Review Order & Confirm Broadcast Dispatch</h2>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -1265,7 +1274,7 @@ export default function BookService() {
               customerAddress={`${formData.address}, ${formData.city}`}
               customerCoords={customerCoords}
               allNearbyWorkers={recommendedWorkers}
-              title={`Nearby Verified Artisans Radar (${recommendedWorkers.length || 'Active'} Artisans in Local Area)`}
+              title={`Nearby Verified Artisans Radar (${recommendedWorkers.length} ${recommendedWorkers.length === 1 ? 'Artisan' : 'Artisans'} in Local Area)`}
             />
           )}
 
@@ -1280,15 +1289,15 @@ export default function BookService() {
                   </span>
                 </div>
                 <div className="text-gray-600">{selectedService?.description}</div>
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
-                    👥 Squad Size: {formData.squadSize || 1} {Number(formData.squadSize) > 1 ? 'Artisans' : 'Artisan'}
-                  </span>
-                  {selectedSoc && (
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      Society: {selectedSoc.name}
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  {formData.isBulkOrder && effectiveSquadSize > 1 && (
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">
+                      👥 Institutional Squad: {effectiveSquadSize} Artisans
                     </span>
                   )}
+                  <span className="text-[11px] text-blue-950 font-medium bg-blue-50/80 px-2.5 py-1 rounded-md border border-blue-200 inline-flex items-center gap-1">
+                    🏛️ Cooperative Society: Assigned automatically upon artisan acceptance
+                  </span>
                 </div>
                 {formData.isBulkOrder && (
                   <div className="text-indigo-700 font-bold text-[11px]">
@@ -1342,7 +1351,9 @@ export default function BookService() {
                 <div className="space-y-2.5 text-xs border-b border-white/15 pb-4 mb-4">
                   <div className="flex justify-between">
                     <span className="text-blue-200">
-                      Regulated Tariff ({formData.squadSize || 1} {Number(formData.squadSize) > 1 ? 'Artisans' : 'Artisan'}):
+                      {formData.isBulkOrder && effectiveSquadSize > 1
+                        ? `Regulated Institutional Tariff (${effectiveSquadSize} Artisans):`
+                        : 'Regulated Base Tariff:'}
                     </span>
                     <span className="font-bold font-mono">₹{rawBasePrice}</span>
                   </div>
@@ -1426,7 +1437,7 @@ export default function BookService() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          PHASE 4: SUCCESS WITH BROADCAST STATUS & OTPS
+          STEP 4: SUCCESS WITH BROADCAST STATUS & OTPS
          ───────────────────────────────────────────────────────────── */}
       {currentStep === 4 && createdBooking && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-emerald-200 shadow-sm max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
@@ -1446,31 +1457,70 @@ export default function BookService() {
             </div>
           </div>
 
-          {/* Broadcast Status Alert */}
-          <div className="p-4 bg-amber-50/80 rounded-xl border border-amber-300 text-xs text-amber-950 flex items-center gap-3">
-            <Radio size={20} className="text-amber-700 animate-pulse shrink-0" />
-            <div>
-              <strong>Dispatching to Nearest Available Artisan:</strong> Your order is currently ringing on nearby verified artisans' dashboards in <strong>{createdBooking.location_city || formData.city}</strong>. The first artisan who accepts will be assigned immediately.
+          {/* Status & Artisan / Cooperative Details */}
+          {!createdBooking.arrival_otp ? (
+            <div className="p-5 bg-amber-50/90 rounded-2xl border border-amber-300 text-amber-950 space-y-3 max-w-lg mx-auto text-center shadow-xs">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs border border-amber-300">
+                <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping inline-block" />
+                <span>Awaiting Artisan Acceptance</span>
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-amber-950">
+                  Cooperative Society & Security OTP Locked
+                </h3>
+                <p className="text-xs text-amber-800/90 leading-relaxed">
+                  Your service order is currently broadcasting to nearby certified artisans in <strong>{createdBooking.location_city || formData.city}</strong>. The moment an artisan accepts, their <strong>registered Cooperative Society</strong> and your confidential <strong>Security Arrival OTP</strong> will be revealed right here.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-900 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200 shadow-2xs">
+                <Radio size={13} className="text-amber-600 animate-pulse" />
+                <span>Listening for artisan claim (updates automatically)...</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4 max-w-lg mx-auto">
+              {/* Assigned Artisan & Cooperative Details Card */}
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-300 text-xs text-emerald-950 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-emerald-900 flex items-center gap-1.5">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    Artisan Accepted & Assigned!
+                  </span>
+                  <span className="font-mono text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded font-bold">
+                    {createdBooking.worker_code || 'COOP-ARTISAN'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-200/70 text-[11px]">
+                  <div>
+                    <span className="text-emerald-700 block font-semibold">Assigned Artisan:</span>
+                    <strong className="text-emerald-950 text-xs">{createdBooking.worker_name}</strong>
+                  </div>
+                  <div>
+                    <span className="text-emerald-700 block font-semibold">Registered Cooperative:</span>
+                    <strong className="text-emerald-950 text-xs">{createdBooking.cooperative_name || 'Labour Cooperative Society'}</strong>
+                  </div>
+                </div>
+              </div>
 
-          {/* OTP Cards for Customer */}
-          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-            <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
-              <span className="text-[10px] font-bold text-blue-900 uppercase">Arrival OTP</span>
-              <div className="text-xl font-bold font-mono text-blue-950 mt-1">
-                {createdBooking.arrival_otp || '4821'}
+              {/* OTP Cards for Customer */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
+                  <span className="text-[10px] font-bold text-blue-900 uppercase">Arrival OTP</span>
+                  <div className="text-2xl font-extrabold font-mono text-blue-950 mt-1 tracking-wider">
+                    {createdBooking.arrival_otp}
+                  </div>
+                  <span className="text-[9px] text-gray-500">Give upon artisan arrival</span>
+                </div>
+                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+                  <span className="text-[10px] font-bold text-emerald-900 uppercase">Completion OTP</span>
+                  <div className="text-2xl font-extrabold font-mono text-emerald-950 mt-1 tracking-wider">
+                    {createdBooking.completion_otp}
+                  </div>
+                  <span className="text-[9px] text-gray-500">Give after work is finished</span>
+                </div>
               </div>
-              <span className="text-[9px] text-gray-500">Give upon artisan arrival</span>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
-              <span className="text-[10px] font-bold text-emerald-900 uppercase">Completion OTP</span>
-              <div className="text-xl font-bold font-mono text-emerald-950 mt-1">
-                {createdBooking.completion_otp || '9156'}
-              </div>
-              <span className="text-[9px] text-gray-500">Give after work is finished</span>
-            </div>
-          </div>
+          )}
 
           {/* Live Dispatch & Route Map */}
           <LiveRouteMap

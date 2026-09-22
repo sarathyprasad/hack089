@@ -7,10 +7,10 @@ import {
   HelpCircle, ChevronRight, Home, Wrench, Search, PlusCircle,
   FileText, CheckCircle2, UserCheck, Bell, ExternalLink,
   FileCheck, Scale, Landmark, Users, IndianRupee, Compass, Layers, GraduationCap, DollarSign,
-  Globe, ChevronDown, Check
+  Globe, ChevronDown, Check, Package, Hammer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 
 export default function PortalLayout() {
@@ -216,26 +216,43 @@ export default function PortalLayout() {
         };
       }
 
-      // Labour Cooperative Federation (Apex & Society Admin)
-      const fedNav = [
-        { to: '/federation/portal?tab=apex', label: 'Apex Federation Desk', icon: Building2 },
-        { to: '/federation/tenders', label: 'Institutional Tenders & Bids', icon: Briefcase },
-        { to: '/federation/portal?tab=mobility', label: 'Inter-Society Mobility', icon: Compass },
-        { to: '/federation/portal?tab=tools', label: 'Tool & Machinery Bank', icon: Wrench },
-        { to: '/federation/portal?tab=procurement', label: 'Bulk Material Procurement', icon: Layers },
-        { to: '/federation/portal?tab=ncct', label: 'NCCT Skills Academy', icon: GraduationCap },
-        { to: '/federation/portal?tab=treasurer', label: 'Treasurer & Dividends', icon: DollarSign },
-        { to: '/federation/portal?tab=insurance', label: 'Group Insurance & Relief', icon: ShieldCheck },
+      if (isApex) {
+        const apexNav = [
+          { to: '/apex/dashboard?tab=overview', label: '1. Statewide Hierarchy & Audit', icon: Building2 },
+          { to: '/apex/dashboard?tab=mobility', label: '2. AI Demand & Mutual Aid', icon: Compass },
+          { to: '/federation/tenders', label: '3. Institutional Tenders & Bids', icon: Briefcase },
+          { to: '/apex/dashboard?tab=procurement', label: '4. Wholesale Bulk Procurement', icon: Package },
+          { to: '/apex/dashboard?tab=treasury', label: '5. Apex Treasury & Welfare Pool', icon: DollarSign },
+          { to: '/find-worker', label: dict.navFindWorker, icon: Search },
+          { to: '/help', label: dict.navHelpdesk, icon: HelpCircle },
+        ];
+        return {
+          title: 'State Apex Federation Head',
+          sub: 'Odisha Apex Inter-District Coordination & Tenders',
+          badge: 'Apex Federation Head',
+          badgeClass: 'bg-amber-100 text-amber-950 border-amber-300',
+          dict,
+          navItems: apexNav,
+        };
+      }
+
+      // Primary Society Admin (SOCIETY_ADMIN)
+      const societyNav = [
+        { to: '/society/dashboard?tab=workers', label: '1. Member Artisans & KYC', icon: Users },
+        { to: '/society/dashboard?tab=operations', label: '2. Local Work Orders & Dispatches', icon: Briefcase },
+        { to: '/society/dashboard?tab=tools', label: '3. Society Tool Bank Depot', icon: Hammer },
+        { to: '/society/dashboard?tab=treasury', label: '4. Society Treasury & Loans', icon: DollarSign },
+        { to: '/society/dashboard?tab=disputes', label: '5. 30-Day Guarantee Mediation', icon: ShieldAlert },
         { to: '/find-worker', label: dict.navFindWorker, icon: Search },
         { to: '/help', label: dict.navHelpdesk, icon: HelpCircle },
       ];
       return {
-        title: isApex ? 'State Apex Federation Head' : 'Labour Cooperative Federation',
-        sub: isApex ? 'Apex Inter-District Coordination & Tenders' : 'Primary Society & Federation Operations',
-        badge: isApex ? 'Apex Federation' : 'Society Federation',
+        title: 'Primary Labour Cooperative Society',
+        sub: `${user?.district || 'District'} Primary Society Operations & Local Governance`,
+        badge: 'Society Secretary',
         badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
         dict,
-        navItems: fedNav,
+        navItems: societyNav,
       };
     }
     if (isWorker) {
@@ -271,18 +288,13 @@ export default function PortalLayout() {
   const roleConfig = getRoleConfig();
   const dict = roleConfig.dict;
 
-  const LANGUAGES = [
-    { code: 'EN', label: 'English', native: 'English' },
-    { code: 'HI', label: 'Hindi', native: 'हिंदी' },
-    { code: 'OR', label: 'Odia', native: 'ଓଡ଼ିଆ' },
-    { code: 'BN', label: 'Bengali', native: 'বাংলা' },
-    { code: 'TE', label: 'Telugu', native: 'తెలుగు' },
-  ];
+  const LANGUAGES = SUPPORTED_LANGUAGES;
 
   const getFormattedRole = () => {
     if (user?.admin_type === 'DCO_REGISTRAR') return 'District Registrar (DCO)';
     if (user?.admin_type === 'FEDERATION_HEAD') return 'Apex Federation Head';
-    if (user?.role === 'COOPERATIVE_ADMIN') return 'District Registrar';
+    if (user?.admin_type === 'SOCIETY_ADMIN') return 'Society Secretary';
+    if (user?.role === 'COOPERATIVE_ADMIN') return 'Society Secretary';
     if (user?.role === 'FEDERATION_ADMIN') return 'Federation Director';
     if (user?.role === 'WORKER') return 'Registered Artisan';
     if (user?.role === 'CUSTOMER' || user?.role === 'CITIZEN') return 'Citizen Member';
@@ -408,7 +420,7 @@ export default function PortalLayout() {
                 <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                   Select Language
                 </div>
-                <div className="py-1">
+                <div className="py-1 max-h-72 overflow-y-auto">
                   {LANGUAGES.map((item) => {
                     const isSelected = lang === item.code;
                     return (
@@ -583,19 +595,19 @@ export default function PortalLayout() {
 
           {/* Sidebar Footer: Helpline */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/70 dark:border-slate-700/60 text-xs">
-              <div className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-0.5 text-[11px]">
-                <PhoneCall size={12} className="text-blue-600" />
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-0.5 text-[11px]">
+                <PhoneCall size={12} className="text-blue-600 dark:text-blue-400" />
                 <span>{dict.helplineTitle}</span>
               </div>
-              <div className="text-[11px] text-slate-500 font-mono">
+              <div className="text-xs text-slate-800 dark:text-slate-200 font-bold font-mono">
                 1800-345-7788
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50/60 transition cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/60 dark:hover:bg-rose-950/40 transition cursor-pointer"
             >
               <LogOut size={13} />
               <span>{t('signOutBtn')}</span>

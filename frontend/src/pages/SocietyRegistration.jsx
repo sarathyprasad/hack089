@@ -28,6 +28,7 @@ export default function SocietyRegistration() {
     password: 'demo123',
     registered_phone: '',
     district: 'Khordha',
+    federation_id: '',
     city: 'Bhubaneswar',
     address: '',
     pincode: '751001',
@@ -37,6 +38,53 @@ export default function SocietyRegistration() {
     cooperative_bank_name: 'District Central Cooperative Bank',
     bank_ifsc: '',
   });
+
+  // Regional Federations list for the selected district
+  const [districtFederations, setDistrictFederations] = useState([]);
+  const [loadingFederations, setLoadingFederations] = useState(false);
+  const [availableDistricts, setAvailableDistricts] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadDistricts() {
+      try {
+        const res = await api.getDistricts({ is_portal_active: 1 });
+        if (isMounted && res.success && res.districts && res.districts.length > 0) {
+          setAvailableDistricts(res.districts);
+        }
+      } catch (err) {
+        console.error('Failed to load registered districts in SocietyRegistration:', err);
+      }
+    }
+    loadDistricts();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFederations() {
+      setLoadingFederations(true);
+      try {
+        const res = await api.getPublicFederations(formData.district);
+        if (isMounted && res.success) {
+          setDistrictFederations(res.federations || []);
+          // If a federation was selected but it does not belong to this district, reset it
+          if (formData.federation_id && formData.federation_id !== 'STANDALONE') {
+            const exists = (res.federations || []).some((f) => String(f.id) === String(formData.federation_id));
+            if (!exists) {
+              setFormData((prev) => ({ ...prev, federation_id: '' }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load federations:', err);
+      } finally {
+        if (isMounted) setLoadingFederations(false);
+      }
+    }
+    loadFederations();
+    return () => { isMounted = false; };
+  }, [formData.district]);
 
   // DCO Approvals Queue State
   const [dcoQueue, setDcoQueue] = useState([]);
@@ -464,10 +512,44 @@ export default function SocietyRegistration() {
                     onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                     className="w-full p-2.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-900"
                   >
-                    <option value="Khordha">Khordha (Bhubaneswar)</option>
-                    <option value="Cuttack">Cuttack</option>
-                    <option value="Puri">Puri</option>
+                    {availableDistricts.length > 0 ? (
+                      availableDistricts.map((d) => (
+                        <option key={d.name} value={d.name}>
+                          {d.name} {d.headquarters ? `(${d.headquarters})` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Khordha">Khordha (Bhubaneswar)</option>
+                        <option value="Cuttack">Cuttack</option>
+                        <option value="Puri">Puri</option>
+                      </>
+                    )}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <span>Affiliated Regional Federation (Optional)</span>
+                    {loadingFederations && <span className="text-[10px] text-blue-600 font-normal">Loading...</span>}
+                  </label>
+                  <select
+                    value={formData.federation_id}
+                    onChange={(e) => setFormData({ ...formData, federation_id: e.target.value })}
+                    className="w-full p-2.5 border border-blue-300 rounded-lg text-xs bg-blue-50/40 text-blue-950 font-medium focus:ring-2 focus:ring-blue-900"
+                  >
+                    <option value="">-- None (Standalone Independent Primary Society) --</option>
+                    {districtFederations.map((fed) => (
+                      <option key={fed.id} value={fed.id}>
+                        {fed.name} ({fed.registration_number})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[10px] text-gray-500 mt-1 block">
+                    {formData.federation_id
+                      ? `This society will affiliate under ${districtFederations.find((f) => String(f.id) === String(formData.federation_id))?.name || 'the selected federation'} to access regional tenders, pooled welfare, and tool libraries.`
+                      : 'Forming as a standalone independent primary society. Can affiliate with a regional federation later after DCO registration.'}
+                  </span>
                 </div>
 
                 <div>
@@ -868,6 +950,7 @@ export default function SocietyRegistration() {
                   <div className="space-y-1 text-gray-700">
                     <p><strong>Name:</strong> {formData.name}</p>
                     <p><strong>District:</strong> {formData.district} ({formData.city})</p>
+                    <p><strong>Affiliated Federation:</strong> {formData.federation_id ? (districtFederations.find((f) => String(f.id) === String(formData.federation_id))?.name || 'Affiliated Regional Federation') : 'None (Standalone Independent Primary Society)'}</p>
                     <p><strong>Email:</strong> {formData.registered_email}</p>
                     <p><strong>Phone:</strong> {formData.registered_phone}</p>
                     <p><strong>Initial Capital:</strong> ₹{formData.initial_capital_balance.toLocaleString()} ({formData.cooperative_bank_name})</p>

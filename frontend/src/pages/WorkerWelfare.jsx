@@ -65,7 +65,7 @@ export default function WorkerWelfare() {
   const { worker, welfareRecords, availableSchemes, cooperativeLevyShare, pocNotice } = welfareData || {};
 
   return (
-    <div className="container py-8 max-w-5xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Back to Worker Dashboard */}
       <div className="mb-6">
         <Link

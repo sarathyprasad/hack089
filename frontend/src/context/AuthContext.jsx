@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 export const DEMO_ACCOUNTS = {
   CUSTOMER: { email: 'customer@demo.local', password: 'demo123', label: 'Customer (Ananya Patel)' },
   WORKER: { email: 'ramesh.w@demo.local', password: 'demo123', label: 'Worker (Ramesh Kumar - Electrician)' },
-  ADMIN: { email: 'admin@demo.local', password: 'demo123', label: 'Cooperative Admin (Arun Pattnaik)' },
+  ADMIN: { email: 'fedhead@demo.local', password: 'demo123', label: 'Apex Federation Head (Arun Pattnaik)' },
 };
 
 export function AuthProvider({ children }) {

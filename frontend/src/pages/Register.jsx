@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { api } from '../services/api';
 import {
   User, UserPlus, UserCheck, Briefcase, Mail, Lock, Phone, MapPin, Building2,
   AlertCircle, ShieldCheck, Award, Wrench, FileText, CheckCircle2,
@@ -111,7 +112,98 @@ export default function Register() {
     emergencyContactPhone: '',
     emergencyContactRelation: 'Spouse',
     acceptedUndertaking: false,
+
+    // Worker Affiliation: Primary Cooperative Society (Mandatory)
+    affiliationType: 'SOCIETY',
+    society_id: '',
   });
+
+  const [societiesList, setSocietiesList] = useState([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(false);
+  const [availableDistricts, setAvailableDistricts] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadDistricts() {
+      try {
+        const res = await api.getDistricts({ is_portal_active: 1 });
+        if (isMounted && res.success && res.districts && res.districts.length > 0) {
+          setAvailableDistricts(res.districts);
+        }
+      } catch (err) {
+        console.error('Failed to load registered districts:', err);
+      }
+    }
+    loadDistricts();
+    return () => { isMounted = false; };
+  }, []);
+
+  const DISTRICT_FALLBACK_SOCIETIES = {
+    Khordha: [
+      { id: 1, name: 'Shramik Kalyan Labour Cooperative Samiti', society_code: 'SOC-OD-2024-001' },
+      { id: 2, name: 'Kalinga Shramik Seva Sahakari Samiti', society_code: 'SOC-OD-2026-004' },
+      { id: 3, name: 'Ekamra Multi-Trade Artisan Cooperative', society_code: 'SOC-OD-2024-007' },
+      { id: 4, name: 'Chandaka-Patia Tech-Artisan Cooperative Samiti', society_code: 'SOC-OD-2026-008' },
+    ],
+    Cuttack: [
+      { id: 5, name: 'Utkal Shilpi Seva Sahakari Samiti', society_code: 'SOC-OD-2024-002' },
+      { id: 6, name: 'Mahanadi Shilpi Sahakari Samiti', society_code: 'SOC-OD-2026-005' },
+      { id: 7, name: 'Barabati Urban Crafts & Maintenance Cooperative', society_code: 'SOC-OD-2024-009' },
+      { id: 8, name: 'Silver City Artisan Guild Cooperative', society_code: 'SOC-OD-2026-010' },
+    ],
+    Puri: [
+      { id: 9, name: 'Jagannath Nirman Sahakari Federation', society_code: 'SOC-OD-2026-003' },
+      { id: 10, name: 'Konark Karigar Sahakari Samiti', society_code: 'SOC-OD-2024-006' },
+      { id: 11, name: 'Srikshetra Coastal Facility Cooperative Samiti', society_code: 'SOC-OD-2024-011' },
+      { id: 12, name: 'Brahmagiri Rural Artisan & Craft Cooperative', society_code: 'SOC-OD-2026-012' },
+    ],
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSocieties() {
+      if (role !== 'WORKER') return;
+      setLoadingSocieties(true);
+      try {
+        const res = await api.getSocietiesList({ district: formData.district });
+        if (isMounted) {
+          let list = [];
+          if (res.success && res.societies && res.societies.length > 0) {
+            list = res.societies;
+          } else {
+            list = DISTRICT_FALLBACK_SOCIETIES[formData.district] || DISTRICT_FALLBACK_SOCIETIES['Khordha'];
+          }
+          setSocietiesList(list);
+          if (list.length > 0) {
+            setFormData((prev) => ({
+              ...prev,
+              society_id: prev.society_id && list.some((s) => String(s.id) === String(prev.society_id))
+                ? prev.society_id
+                : String(list[0].id),
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load societies for worker registration:', err);
+        if (isMounted) {
+          const fallbackList = DISTRICT_FALLBACK_SOCIETIES[formData.district] || DISTRICT_FALLBACK_SOCIETIES['Khordha'];
+          setSocietiesList(fallbackList);
+          if (fallbackList.length > 0) {
+            setFormData((prev) => ({
+              ...prev,
+              society_id: prev.society_id && fallbackList.some((s) => String(s.id) === String(prev.society_id))
+                ? prev.society_id
+                : String(fallbackList[0].id),
+            }));
+          }
+        }
+      } finally {
+        if (isMounted) setLoadingSocieties(false);
+      }
+    }
+    loadSocieties();
+    return () => { isMounted = false; };
+  }, [formData.district, role]);
 
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -144,6 +236,9 @@ export default function Register() {
     if (formData.password.length < 6) return 'Password must be at least 6 characters.';
     if (formData.password !== formData.confirmPassword) return 'Passwords do not match.';
     if (!formData.address.trim()) return 'Please provide your residential address for police & federation records.';
+    if (role === 'WORKER' && !formData.society_id) {
+      return 'Please select your local Primary Cooperative Society from the list.';
+    }
     return null;
   };
 
@@ -198,14 +293,17 @@ export default function Register() {
 
     if (err) {
       setLocalError(err);
+      window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
     setWizardStep((prev) => prev + 1);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
     setLocalError('');
     setWizardStep((prev) => Math.max(1, prev - 1));
+    window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
   // Handle Submission (Customer 1-step or Worker Final step)
@@ -283,6 +381,8 @@ export default function Register() {
         emergencyContactName: formData.emergencyContactName,
         emergencyContactPhone: formData.emergencyContactPhone,
         emergencyContactRelation: formData.emergencyContactRelation,
+        affiliation_type: formData.affiliationType,
+        society_id: formData.affiliationType === 'SOCIETY' ? formData.society_id : null,
       });
 
       if (role === 'WORKER') {
@@ -490,7 +590,7 @@ export default function Register() {
             </div>
             <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full bg-linear-to-r from-emerald-600 to-teal-500 transition-all duration-400 rounded-full"
+                className="h-full bg-emerald-600 bg-gradient-to-r from-emerald-600 to-teal-500 transition-all duration-400 rounded-full"
                 style={{ width: `${wizardStep * 25}%` }}
               />
             </div>
@@ -552,7 +652,7 @@ export default function Register() {
                 Worker Accreditation Dossier Submitted
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mt-1 leading-relaxed">
-                Your application has been forwarded to the <strong>{formData.district} District Labour Cooperative Federation Officer</strong> for physical & credential verification.
+                Your application has been forwarded to your chosen Primary Cooperative Society (<strong>{societiesList.find((s) => String(s.id) === String(formData.society_id))?.name || `${formData.district} Labour Cooperative`}</strong>) for physical & skill credential verification.
               </p>
             </div>
 
@@ -571,36 +671,47 @@ export default function Register() {
                 <span className="font-bold text-emerald-800">{formData.primaryTrade}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Assigned Cooperative:</span>
-                <span className="font-semibold text-slate-800">{formData.district} Labour Cooperative</span>
+                <span className="text-slate-500">Chosen Cooperative Society:</span>
+                <span className="font-semibold text-blue-900">
+                  {societiesList.find((s) => String(s.id) === String(formData.society_id))?.name || `${formData.district} Labour Cooperative`}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Approval Authority:</span>
+                <span className="font-bold text-emerald-900">
+                  {societiesList.find((s) => String(s.id) === String(formData.society_id))?.name || 'Primary Cooperative Society'} (Primary Society)
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-blue-50/80 border border-blue-200 text-[11px] text-blue-900 leading-snug">
+                ⚖️ <strong>Statutory Division:</strong> The approval authority for artisans is the registered <strong>Primary Cooperative Society</strong> you chose. (The DCO is the approval authority for Societies, while the Society evaluates &amp; approves its member artisans).
               </div>
               <div className="flex justify-between border-t border-slate-200 pt-2">
-                <span className="text-slate-500">Current Status:</span>
+                <span className="text-slate-500">Current Process Stage:</span>
                 <span className="gov-stamp text-amber-800 border-amber-400 bg-amber-50">
-                  ⏳ UNDER ADMINISTRATIVE REVIEW
+                  ⏳ STEP 2 OF 4: PRIMARY SOCIETY KYC SCRUTINY
                 </span>
               </div>
             </div>
 
             {/* Next Steps Roadmap */}
             <div className="text-left text-xs text-slate-700 bg-blue-50/60 p-4 rounded-xl border border-blue-200 max-w-lg mx-auto space-y-2">
-              <strong className="text-blue-950 block">Accreditation Verification Roadmap:</strong>
+              <strong className="text-blue-950 block">Accreditation Verification Roadmap (4 Stages):</strong>
               <div className="space-y-1.5 text-[11px] text-slate-600">
                 <div className="flex items-center gap-2 text-emerald-800 font-semibold">
                   <Check size={14} className="text-emerald-700" />
-                  <span>1. Digital Form & KYC Submission: Completed</span>
+                  <span>Stage 1. Digital Form &amp; KYC Submission: Completed ✓</span>
                 </div>
-                <div className="flex items-center gap-2 text-blue-900 font-semibold">
-                  <Clock size={14} className="text-amber-600" />
-                  <span>2. Trade Skill Certificate & Aadhaar Audit: In Progress</span>
+                <div className="flex items-center gap-2 text-blue-900 font-bold bg-white/70 p-1.5 rounded-lg border border-amber-300">
+                  <Clock size={14} className="text-amber-600 animate-pulse" />
+                  <span>Stage 2. Primary Society Document &amp; KYC Audit: In Progress</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                   <span className="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block text-center text-[9px]">3</span>
-                  <span>3. Cooperative Admin Physical Approval & Worker Badge Issuance</span>
+                  <span>Stage 3. Physical Trade Skill &amp; Tool Inspection by Society Committee</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                   <span className="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block text-center text-[9px]">4</span>
-                  <span>4. Activation on Live Dispatch Map & Duty Console</span>
+                  <span>Stage 4. Final Management Committee Resolution &amp; Badge Issuance</span>
                 </div>
               </div>
             </div>
@@ -699,7 +810,7 @@ export default function Register() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  District (Cooperative Federation) <span className="text-red-500">*</span>
+                  District <span className="text-red-500">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <Landmark size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
@@ -709,11 +820,19 @@ export default function Register() {
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
                   >
-                    <option value="Khordha">Khordha (Bhubaneswar Metro Federation)</option>
-                    <option value="Cuttack">Cuttack District Cooperative Society</option>
-                    <option value="Puri">Puri Coastal Labour Cooperative</option>
-                    <option value="Ganjam">Ganjam (Berhampur Labour Society)</option>
-                    <option value="Sambalpur">Sambalpur Regional Directorate</option>
+                    {availableDistricts.length > 0 ? (
+                      availableDistricts.map((d) => (
+                        <option key={d.name} value={d.name}>
+                          {d.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Khordha">Khordha</option>
+                        <option value="Cuttack">Cuttack</option>
+                        <option value="Puri">Puri</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -812,24 +931,86 @@ export default function Register() {
               </div>
             </div>
 
+            {/* Row 5: Mandatory Worker Primary Cooperative Society Selection */}
+            {role === 'WORKER' && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3 shadow-2xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Building2 size={20} />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-black text-blue-950 uppercase tracking-wider">
+                      Designated Primary Cooperative Society <span className="text-red-500">*</span>
+                    </label>
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                      Every skilled artisan must be registered with a local primary cooperative society in <strong>{formData.district}</strong> for accident insurance, trade accreditation & dispatch management.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <span>Select Your Local Society ({formData.district} District)</span>
+                    {loadingSocieties ? (
+                      <span className="text-blue-700 font-semibold flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                        Fetching societies...
+                      </span>
+                    ) : (
+                      <span className="text-emerald-700 font-semibold">
+                        {societiesList.length} Societies Available
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative flex items-center">
+                    <Building2 size={16} className="absolute left-3.5 text-blue-900 pointer-events-none" />
+                    <select
+                      name="society_id"
+                      value={formData.society_id}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 border-2 border-blue-300 bg-white rounded-xl focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-xs sm:text-sm font-bold text-slate-900 transition-all outline-none shadow-xs cursor-pointer"
+                    >
+                      {societiesList.map((soc) => (
+                        <option key={soc.id} value={soc.id}>
+                          {soc.name} ({soc.society_code || `SOC-${soc.id}`})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-medium text-blue-900 bg-white/80 p-2 rounded-lg border border-blue-200">
+                  <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                  <span>⚖️ <strong>Statutory Approval Authority:</strong> Your artisan application will be evaluated, credentialed, and directly approved by this Primary Cooperative Society (not the DCO).</span>
+                </div>
+              </div>
+            )}
+
+            {localError && role === 'WORKER' && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2 shadow-2xs">
+                <AlertCircle size={16} className="shrink-0 text-red-600" />
+                <span className="font-medium">{localError}</span>
+              </div>
+            )}
+
             <div className="pt-2">
               {role === 'WORKER' ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-extrabold text-white bg-emerald-700 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
                 >
-                  <span>Proceed to Step 2: Trade Skills & Tools</span>
-                  <ChevronRight size={17} />
+                  <span className="text-white drop-shadow-xs">Proceed to Step 2: Trade Skills &amp; Tools</span>
+                  <ChevronRight size={18} className="text-white" />
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleSubmit}
-                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold text-white bg-linear-to-r from-blue-900 to-slate-900 hover:from-blue-950 hover:to-black flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-extrabold text-white bg-blue-900 bg-gradient-to-r from-blue-900 to-slate-900 hover:from-blue-950 hover:to-black flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  {loading ? 'Creating Citizen Account...' : 'Register as Citizen →'}
+                  <span className="text-white drop-shadow-xs">{loading ? 'Creating Citizen Account...' : 'Register as Citizen →'}</span>
                 </button>
               )}
             </div>
@@ -850,6 +1031,9 @@ export default function Register() {
                 <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
                   Societies & Federations affiliate with State & regional federations (like <strong>LCF</strong>) for operational coordination, subsidized NCCT training, and access to large institutional public contracts.
                 </p>
+                <div className="mt-2 text-[11px] font-semibold text-amber-900 bg-amber-100/70 p-2 rounded-lg border border-amber-300">
+                  ⚖️ <strong>Statutory Approval Authority:</strong> All Primary Cooperative Society registrations and charters are subject to legal scrutiny, audit, and statutory approval by the <strong>District Cooperative Officer (DCO) & Registrar of Cooperative Societies</strong>.
+                </div>
               </div>
             </div>
 
@@ -938,11 +1122,19 @@ export default function Register() {
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white rounded-xl focus:outline-none focus:border-blue-900 focus:ring-4 focus:ring-blue-900/10 text-sm font-semibold text-slate-900 transition-all outline-none shadow-2xs cursor-pointer"
                     >
-                      <option value="Khordha">Khordha District</option>
-                      <option value="Cuttack">Cuttack District</option>
-                      <option value="Puri">Puri District</option>
-                      <option value="Ganjam">Ganjam District</option>
-                      <option value="Sambalpur">Sambalpur District</option>
+                      {availableDistricts.length > 0 ? (
+                        availableDistricts.map((d) => (
+                          <option key={d.name} value={d.name}>
+                            {d.name} District
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="Khordha">Khordha District</option>
+                          <option value="Cuttack">Cuttack District</option>
+                          <option value="Puri">Puri District</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -1100,9 +1292,9 @@ export default function Register() {
                   type="button"
                   disabled={loading}
                   onClick={handleSubmit}
-                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold bg-linear-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-extrabold bg-amber-600 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  {loading ? 'Registering Society / Federation...' : 'Register Society / Federation & Enter Portal →'}
+                  <span className="text-white drop-shadow-xs">{loading ? 'Registering Society / Federation...' : 'Register Society / Federation & Enter Portal →'}</span>
                 </button>
               </div>
             </div>
@@ -1274,10 +1466,10 @@ export default function Register() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
+                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-extrabold text-white bg-emerald-700 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
               >
-                <span>Step 3: Certifications & Skill Credentials →</span>
-                <ChevronRight size={16} />
+                <span className="text-white drop-shadow-xs">Step 3: Certifications &amp; Skill Credentials →</span>
+                <ChevronRight size={16} className="text-white" />
               </button>
             </div>
           </div>
@@ -1417,10 +1609,10 @@ export default function Register() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
+                className="py-3 px-6 rounded-xl text-xs sm:text-sm font-extrabold text-white bg-emerald-700 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer"
               >
-                <span>Step 4: Statutory KYC & Bank →</span>
-                <ChevronRight size={16} />
+                <span className="text-white drop-shadow-xs">Step 4: Statutory KYC &amp; Bank →</span>
+                <ChevronRight size={16} className="text-white" />
               </button>
             </div>
           </div>
@@ -1656,9 +1848,9 @@ export default function Register() {
                 type="button"
                 disabled={loading}
                 onClick={handleSubmit}
-                className="py-3.5 px-6 rounded-xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
+                className="py-3.5 px-6 rounded-xl text-xs sm:text-sm font-extrabold text-white bg-emerald-700 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 flex items-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
               >
-                {loading ? 'Submitting Application...' : 'Submit Accreditation Application →'}
+                <span className="text-white drop-shadow-xs">{loading ? 'Submitting Application...' : 'Submit Accreditation Application →'}</span>
               </button>
             </div>
           </div>

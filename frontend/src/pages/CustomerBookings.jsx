@@ -265,8 +265,13 @@ export default function CustomerBookings() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-amber-700 font-semibold text-[11px] flex items-center gap-1">
-                        <Clock size={13} /> Matching in progress...
+                      <div className="space-y-0.5">
+                        <div className="text-amber-700 font-semibold text-[11px] flex items-center gap-1">
+                          <Clock size={13} /> Awaiting artisan acceptance...
+                        </div>
+                        <div className="text-slate-500 text-[10px]">
+                          Coop & OTP revealed upon acceptance
+                        </div>
                       </div>
                     )}
                   </div>
@@ -320,7 +325,7 @@ export default function CustomerBookings() {
                         className="btn btn-secondary btn-sm text-xs font-bold text-blue-900 border-blue-300 hover:bg-blue-50 flex items-center gap-1"
                       >
                         <FileText size={14} />
-                        <span>Form IV Tax Bill</span>
+                        <span>{t('btnPrintBill') || 'View Bill'}</span>
                       </button>
                     )}
                   </div>

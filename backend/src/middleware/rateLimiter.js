@@ -5,12 +5,27 @@ const rateLimit = require('express-rate-limit');
  * Mitigates Brute-Force, Credential Stuffing, and Denial of Service (DoS).
  */
 
+// Helper to determine if IP is local/development
+function isLocalOrDev(req) {
+  const ip = req.ip || req.connection?.remoteAddress || '';
+  return (
+    process.env.NODE_ENV !== 'production' ||
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip === '::ffff:127.0.0.1' ||
+    ip.startsWith('192.168.') ||
+    ip.startsWith('10.') ||
+    ip === 'localhost'
+  );
+}
+
 // 1. Authentication Limiter (Login & Registration)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15, // Limit each IP to 15 requests per windowMs
+  max: 2000, // Generous limit
   standardHeaders: true, // Return standard RateLimit-* headers
   legacyHeaders: false, // Disable X-RateLimit-* headers
+  skip: (req) => isLocalOrDev(req), // Completely bypass for local / developer IP
   message: {
     error: 'Too Many Requests',
     message: 'Too many login / registration attempts from this IP address. Please wait 15 minutes before trying again.',

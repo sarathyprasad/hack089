@@ -128,6 +128,7 @@ async function migrate() {
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS aadhaar_hash TEXT;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS police_verification_expiry DATE;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS verification_badge VARCHAR(50) DEFAULT 'STANDARD';
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS verification_step INTEGER DEFAULT 2;
 
     -- =============================================
     -- Skills
@@ -715,9 +716,38 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_denylist_hash ON token_denylist(token_hash);
     CREATE INDEX IF NOT EXISTS idx_toolkit_trade ON mandatory_toolkits(trade_category);
     CREATE INDEX IF NOT EXISTS idx_toolkit_orders_worker ON worker_toolkit_orders(worker_id);
+
+    -- =============================================
+    -- State Cooperative Operational Districts Registry
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS districts (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      state TEXT DEFAULT 'Odisha',
+      headquarters TEXT,
+      regional_zone TEXT,
+      status VARCHAR(50) DEFAULT 'ACTIVE',
+      dco_office_name TEXT,
+      dco_officer_name TEXT,
+      nodal_phone TEXT,
+      nodal_email TEXT,
+      is_portal_active INTEGER DEFAULT 1,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
   `;
 
   await query(ddl);
+
+  // Seed default core operational districts if not present
+  await query(`
+    INSERT INTO districts (name, state, headquarters, regional_zone, status, dco_office_name, dco_officer_name, nodal_phone, nodal_email, is_portal_active)
+    VALUES
+      ('Khordha', 'Odisha', 'Bhubaneswar', 'Central Urban Zone', 'ACTIVE', 'Khordha District Cooperative Office', 'Shri Debendra Nayak (DCO)', '0674-2548891', 'dco.khordha@coop.od.in', 1),
+      ('Cuttack', 'Odisha', 'Cuttack', 'Mahanadi Commercial Zone', 'ACTIVE', 'Cuttack District Cooperative Office', 'Smt. Prangya Paramita (DCO)', '0671-2316700', 'dco.cuttack@coop.od.in', 1),
+      ('Puri', 'Odisha', 'Puri', 'Coastal Pilgrim Zone', 'ACTIVE', 'Puri District Cooperative Office', 'Shri Biswajit Mishra (DCO)', '06752-224420', 'dco.puri@coop.od.in', 1)
+    ON CONFLICT (name) DO NOTHING;
+  `);
 
   // Enforce dual work requirements: Both VERIFIED and VERIFIED_EQUIPPED toolkit required to work
   await query(`
@@ -729,6 +759,15 @@ async function migrate() {
     UPDATE workers
     SET availability = 'OFFLINE'
     WHERE verification_status != 'VERIFIED' OR toolkit_compliance != 'VERIFIED_EQUIPPED';
+
+    -- Initialize verification_step
+    UPDATE workers
+    SET verification_step = 4
+    WHERE verification_status = 'VERIFIED' AND (verification_step IS NULL OR verification_step < 4);
+
+    UPDATE workers
+    SET verification_step = 2
+    WHERE verification_status = 'PENDING' AND verification_step IS NULL;
   `);
 
   console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and dual work compliance ready.');

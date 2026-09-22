@@ -15,10 +15,13 @@ async function getWorkerDashboard(req, res) {
     // Find worker record
     const workerRes = await query(`
       SELECT w.*, u.name, u.email, u.phone, u.district, u.city, u.address, u.pincode,
-             c.name as cooperative_name, c.registration_number as cooperative_reg, c.contact_phone as cooperative_phone
+             c.name as cooperative_name, c.registration_number as cooperative_reg, c.contact_phone as cooperative_phone,
+             s.name as society_name, s.society_code,
+             (w.society_id IS NULL) as is_independent
       FROM workers w
       JOIN users u ON w.user_id = u.id
       JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies s ON w.society_id = s.id
       WHERE w.user_id = $1
     `, [userId]);
 
@@ -316,17 +319,25 @@ async function handleJobAction(req, res) {
         });
       }
 
+      // Generate 4-digit Security OTPs upon worker acceptance
+      const arrivalOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      const completionOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
       // First-to-Accept atomic claim: only claim if booking is still REQUESTED & unassigned (or MATCHED to this worker)
       const claimRes = await query(`
         UPDATE bookings
-        SET status = 'ACCEPTED', worker_id = $1, updated_at = CURRENT_TIMESTAMP
+        SET status = 'ACCEPTED',
+            worker_id = $1,
+            arrival_otp = COALESCE(arrival_otp, $3),
+            completion_otp = COALESCE(completion_otp, $4),
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
           AND (
             (status = 'REQUESTED' AND worker_id IS NULL)
             OR (status = 'MATCHED' AND worker_id = $1)
           )
         RETURNING *
-      `, [worker.id, bookingId]);
+      `, [worker.id, bookingId, arrivalOtp, completionOtp]);
       if (claimRes.rows.length === 0) {
         return res.status(409).json({
           error: 'Order Already Claimed',

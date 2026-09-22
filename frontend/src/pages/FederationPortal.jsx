@@ -361,12 +361,19 @@ export default function FederationPortal() {
   });
   const [viewingArogyaCard, setViewingArogyaCard] = useState(null);
 
-  const fetchPortalData = async () => {
+  const isApex = user?.admin_type === 'FEDERATION_HEAD';
+  const isSocietyAdmin = user?.admin_type === 'SOCIETY_ADMIN';
+  const [selectedSocietyId, setSelectedSocietyId] = useState(
+    user?.admin_type === 'FEDERATION_HEAD' ? 'apex' : (user?.society_id || 1)
+  );
+
+  const fetchPortalData = async (targetSocId) => {
+    const socId = targetSocId !== undefined ? targetSocId : selectedSocietyId;
     setLoading(true);
     try {
       const [adminRes, treasRes] = await Promise.all([
-        api.getFederationAdminDashboard(1),
-        api.getFederationTreasurerDashboard(1),
+        api.getFederationAdminDashboard(socId),
+        api.getFederationTreasurerDashboard(socId),
       ]);
       if (adminRes.success) setAdminData(adminRes.data);
       if (treasRes.success) setTreasurerData(treasRes.data);
@@ -387,7 +394,9 @@ export default function FederationPortal() {
       navigate('/customer/bookings', { replace: true });
       return;
     }
-    fetchPortalData();
+    const initialSoc = user?.admin_type === 'FEDERATION_HEAD' ? 'apex' : (user?.society_id || 1);
+    setSelectedSocietyId(initialSoc);
+    fetchPortalData(initialSoc);
   }, [user]);
 
   const copyToClipboard = (text, label) => {
@@ -667,6 +676,7 @@ export default function FederationPortal() {
 
   const kpis = treasurerData?.kpis || {};
   const society = treasurerData?.society || adminData?.society || {};
+  const societiesList = adminData?.societiesList || treasurerData?.societiesList || [];
   const isGate1Cleared = Boolean(society?.is_nlcf_affiliated && society?.dco_linked);
 
   return (
@@ -677,28 +687,62 @@ export default function FederationPortal() {
       <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-900 border border-blue-200/60">
-                <Building2 size={12} className="text-blue-700" />
-                <span>Labour Cooperative Federation</span>
-              </span>
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              {isApex ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
+                  <Landmark size={12} className="text-amber-700" />
+                  <span>State Apex Federation Head Council</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-900 border border-blue-200/60">
+                  <Building2 size={12} className="text-blue-700" />
+                  <span>Primary Labour Cooperative Society</span>
+                </span>
+              )}
               {isGate1Cleared && (
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>NLCF Affiliated • Apex</span>
+                  <span>NLCF Affiliated • Apex Hub</span>
                 </span>
               )}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              {society.name || 'Odisha State Labour Cooperative Federation (Apex)'}
+              {isApex && selectedSocietyId === 'apex'
+                ? 'Odisha State Labour Cooperative Federation (Apex)'
+                : (society.name || (isApex ? 'Odisha State Labour Cooperative Federation (Apex)' : 'Primary Labour Cooperative Samiti'))}
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Odisha Statewide Federation Hub • Inter-Society Mobility & Resource Management
+              {isApex
+                ? selectedSocietyId === 'apex'
+                  ? 'Statewide Apex Federation Console • Inter-District Coordination & Tenders (Khordha, Cuttack & Puri)'
+                  : `Inspecting Member Society: ${society.name} • ${society.district || 'District'} Jurisdiction`
+                : `${society.district || user?.district || 'District'} Primary Society Operations & Member Administration`}
             </p>
           </div>
 
-          {/* Clean Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Clean Action & Territory Switcher Buttons */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {isApex && (
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Scope:</span>
+                <select
+                  value={selectedSocietyId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setSelectedSocietyId(newId);
+                    fetchPortalData(newId);
+                  }}
+                  className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer pr-1"
+                >
+                  <option value="apex">🏛️ Statewide Apex Overview</option>
+                  {societiesList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      🏢 {s.name} ({s.district})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <button
               onClick={() => setShowWorkerModal(true)}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-1.5 shadow-xs cursor-pointer"

@@ -92,7 +92,7 @@ export default function PaymentModal({ isOpen = true, booking, onClose, onPaymen
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
-                <span className="font-bold text-emerald-700">✓ PAID (FORM IV UPDATED)</span>
+                <span className="font-bold text-emerald-700">✓ PAID (TAX INVOICE UPDATED)</span>
               </div>
             </div>
 

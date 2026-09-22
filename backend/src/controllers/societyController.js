@@ -34,6 +34,7 @@ async function registerSociety(req, res) {
       documents = [],
       admin_name,
       password = 'demo123',
+      federation_id,
     } = req.body;
 
     // 1. Validation: Name & Email
@@ -58,31 +59,27 @@ async function registerSociety(req, res) {
     }
 
     // Check if society email already exists
-    const existing = await query('SELECT id, tracking_id FROM societies WHERE registered_email = $1', [registered_email]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({
-        error: 'A society with this registered email address already exists.',
-        tracking_id: existing.rows[0].tracking_id,
-      });
+    const existingSoc = await query('SELECT id FROM societies WHERE registered_email = $1', [registered_email]);
+    if (existingSoc.rows.length > 0) {
+      return res.status(400).json({ error: 'A cooperative society with this registered official email already exists.' });
     }
 
-    // Flowchart Step: Create a new Account (Email Id, Password)
-    const applicantName = admin_name || founding_members[0]?.full_name || 'Society Founder';
-    const hashedPassword = await bcrypt.hash(password || 'demo123', 10);
-
-    let userRecord = null;
-    const userExists = await query('SELECT id, name, email, phone, role, admin_type, designation FROM users WHERE email = $1', [registered_email]);
+    // Create or Link Applicant User Account (Page 1)
+    const applicantName = admin_name || `Chief Promoter, ${name}`;
+    let userRecord;
+    const userExists = await query('SELECT id FROM users WHERE email = $1', [registered_email]);
     if (userExists.rows.length === 0) {
+      const hashedPassword = await bcrypt.hash(password, 10);
       const userRes = await query(
-        `INSERT INTO users (name, email, phone, password, role, admin_type, designation, district, city, address, pincode, is_active)
-         VALUES ($1, $2, $3, $4, 'COOPERATIVE_ADMIN', 'SOCIETY_ADMIN', $5, $6, $7, $8, $9, 1)
-         RETURNING id, name, email, phone, role, admin_type, designation`,
+        `INSERT INTO users (name, email, phone, role, password_hash, designation, district, city, address, pincode)
+         VALUES ($1, $2, $3, 'COOPERATIVE_ADMIN', $4, $5, $6, $7, $8, $9)
+         RETURNING id, name, email, phone, role`,
         [
           applicantName,
           registered_email,
           registered_phone || '9876543000',
           hashedPassword,
-          `President / Secretary, ${name}`,
+          `Chief Promoter, ${name}`,
           district,
           city || district,
           address || `${district} Main Road`,
@@ -97,9 +94,17 @@ async function registerSociety(req, res) {
     const trackingId = generateTrackingId();
     const societyCode = `SOC-${district.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
 
-    // Lookup federation for this district
-    const coopRes = await query('SELECT id FROM cooperatives WHERE LOWER(district) = LOWER($1) LIMIT 1', [district]);
-    const federationId = coopRes.rows[0]?.id || null;
+    // Affiliation with Federation: Optional during initial formation
+    let federationId = null;
+    if (federation_id && federation_id !== 'STANDALONE' && federation_id !== 'NONE' && federation_id !== '') {
+      const parsedId = parseInt(federation_id, 10);
+      if (!isNaN(parsedId)) {
+        const fedCheck = await query('SELECT id FROM cooperatives WHERE id = $1', [parsedId]);
+        if (fedCheck.rows.length > 0) {
+          federationId = fedCheck.rows[0].id;
+        }
+      }
+    }
 
     // Insert Society
     const societyResult = await query(
@@ -258,11 +263,11 @@ async function getSocietiesList(req, res) {
 
     if (district && district !== 'ALL') {
       params.push(district);
-      sql += ` AND s.district = $${params.length}`;
+      sql += ` AND LOWER(s.district) = LOWER($${params.length})`;
     }
     if (status && status !== 'ALL') {
       params.push(status);
-      sql += ` AND s.status = $${params.length}`;
+      sql += ` AND UPPER(s.status) = UPPER($${params.length})`;
     }
     if (federation_id) {
       params.push(parseInt(federation_id, 10));
@@ -388,6 +393,253 @@ async function getFederationsOverview(req, res) {
   } catch (err) {
     console.error('Get Federations Overview Error:', err);
     return res.status(500).json({ error: 'Failed to retrieve federations overview.' });
+  }
+}
+
+/**
+ * GET /api/societies/federations
+ * Public endpoint to list regional federations (optionally filtered by district)
+ */
+async function getFederationsList(req, res) {
+  try {
+    const { district } = req.query;
+    let sql = 'SELECT id, name, district, registration_number, contact_email, contact_phone, status FROM cooperatives WHERE 1=1';
+    const params = [];
+
+    if (district && district !== 'ALL') {
+      params.push(district);
+      sql += ` AND LOWER(district) = LOWER($${params.length})`;
+    }
+
+    sql += ' ORDER BY id ASC';
+    const result = await query(sql, params);
+    return res.json({ success: true, federations: result.rows });
+  } catch (err) {
+    console.error('Get Federations List Error:', err);
+    return res.status(500).json({ error: 'Failed to retrieve federations list.' });
+  }
+}
+
+/**
+ * POST /api/societies/federations
+ * Apex Federation Head / State Body registers a new Regional Cooperative Federation
+ */
+async function createFederation(req, res) {
+  try {
+    const {
+      name,
+      district,
+      city,
+      address,
+      contact_phone,
+      contact_email,
+      description,
+      local_area,
+      jurisdiction_zone,
+      capital_reserve = 500000.0,
+      cooperative_bank_name = 'District Central Cooperative Bank',
+      bank_account_no,
+      bank_ifsc,
+    } = req.body;
+
+    if (!name || !district) {
+      return res.status(400).json({ error: 'Federation Name and District are required.' });
+    }
+
+    const year = new Date().getFullYear();
+    const districtCode = district.toUpperCase().slice(0, 3);
+    const randCode = Math.floor(100 + Math.random() * 900);
+    const registrationNumber = `FED-${districtCode}-${year}-${randCode}`;
+
+    const insertSql = `
+      INSERT INTO cooperatives (
+        name, registration_number, district, city, address,
+        contact_phone, contact_email, description, local_area,
+        jurisdiction_zone, status, dco_approval_status,
+        capital_reserve, cooperative_bank_name, bank_account_no, bank_ifsc
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ACTIVE', 'APPROVED', $11, $12, $13, $14)
+      RETURNING *
+    `;
+
+    const result = await query(insertSql, [
+      name,
+      registrationNumber,
+      district,
+      city || district,
+      address || `${district} Regional Cooperative Complex`,
+      contact_phone || '0674-2540000',
+      contact_email || `contact@${district.toLowerCase()}.coop.od.in`,
+      description || `Regional Labour Cooperative Federation for ${district} district.`,
+      local_area || `${district} Municipal & Rural Wards`,
+      jurisdiction_zone || `${district} Zonal Jurisdiction`,
+      parseFloat(capital_reserve) || 500000.0,
+      cooperative_bank_name,
+      bank_account_no || `COOP-${districtCode}-${randCode}001`,
+      bank_ifsc || 'OSCB0001001',
+    ]);
+
+    return res.status(201).json({
+      success: true,
+      message: `Regional Cooperative Federation "${name}" registered successfully by the Apex Body! Registration No: ${registrationNumber}`,
+      federation: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Create Federation Error:', err);
+    return res.status(500).json({ error: 'Failed to create regional federation.' });
+  }
+}
+
+/**
+ * GET /api/societies/districts
+ * List all operational districts (Public & Apex)
+ */
+async function getDistrictsList(req, res) {
+  try {
+    const { status } = req.query;
+    let sql = 'SELECT * FROM districts WHERE 1=1';
+    const params = [];
+    if (status && status !== 'ALL') {
+      params.push(status);
+      sql += ` AND UPPER(status) = UPPER($${params.length})`;
+    }
+    sql += ' ORDER BY id ASC';
+    const result = await query(sql, params);
+    return res.json({ success: true, districts: result.rows });
+  } catch (err) {
+    console.error('Get Districts Error:', err);
+    return res.status(500).json({ error: 'Failed to retrieve operational districts.' });
+  }
+}
+
+/**
+ * POST /api/societies/districts
+ * Apex Federation Head registers a new district where the portal is made operational
+ */
+async function createDistrict(req, res) {
+  try {
+    const {
+      name,
+      state = 'Odisha',
+      headquarters,
+      regional_zone,
+      dco_office_name,
+      dco_officer_name,
+      nodal_phone,
+      nodal_email,
+      is_portal_active = 1,
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'District name is required.' });
+    }
+
+    const trimmedName = name.trim();
+
+    // Check if district already registered
+    const existing = await query('SELECT id, name FROM districts WHERE LOWER(name) = LOWER($1)', [trimmedName]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: `District "${trimmedName}" is already registered in the operational directory.` });
+    }
+
+    const insertSql = `
+      INSERT INTO districts (
+        name, state, headquarters, regional_zone, status,
+        dco_office_name, dco_officer_name, nodal_phone, nodal_email, is_portal_active
+      ) VALUES ($1, $2, $3, $4, 'ACTIVE', $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+
+    const result = await query(insertSql, [
+      trimmedName,
+      state || 'Odisha',
+      headquarters || trimmedName,
+      regional_zone || `${trimmedName} Regional Zone`,
+      dco_office_name || `${trimmedName} District Cooperative Office`,
+      dco_officer_name || `District Cooperative Officer (${trimmedName})`,
+      nodal_phone || '0674-2540000',
+      nodal_email || `dco.${trimmedName.toLowerCase()}@coop.od.in`,
+      is_portal_active ? 1 : 0,
+    ]);
+
+    // Also auto-create a default primary society & regional federation so workers & citizens can immediately book
+    const districtCode = trimmedName.toUpperCase().slice(0, 3);
+    const year = new Date().getFullYear();
+    const fedName = `${trimmedName} District Labour Cooperative Federation`;
+    const fedRegNo = `FED-${districtCode}-${year}-001`;
+
+    await query(`
+      INSERT INTO cooperatives (
+        name, registration_number, district, city, address,
+        status, dco_approval_status, capital_reserve, cooperative_bank_name
+      ) VALUES ($1, $2, $3, $4, $5, 'ACTIVE', 'APPROVED', 500000.0, 'District Central Cooperative Bank')
+      ON CONFLICT (registration_number) DO NOTHING;
+    `, [fedName, fedRegNo, trimmedName, headquarters || trimmedName, `${trimmedName} Main Cooperative Bhavan`]);
+
+    const fedRes = await query('SELECT id FROM cooperatives WHERE registration_number = $1', [fedRegNo]);
+    const fedId = fedRes.rows[0]?.id || null;
+
+    const socName = `${trimmedName} Shramik Seva Sahakari Samiti`;
+    const socCode = `SOC-${districtCode}-${year}-001`;
+    const trackId = `SS-SOC-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    await query(`
+      INSERT INTO societies (
+        name, society_code, tracking_id, registered_email, district, city, address,
+        status, timeline_stage, federation_id, is_nlcf_affiliated, initial_capital_balance
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'ACTIVE', 9, $8, 1, 25000.0)
+      ON CONFLICT DO NOTHING;
+    `, [socName, socCode, trackId, `contact@${trimmedName.toLowerCase()}.coop.od.in`, trimmedName, headquarters || trimmedName, `Cooperative Bhavan, ${trimmedName}`, fedId]);
+
+    return res.status(201).json({
+      success: true,
+      message: `District "${trimmedName}" successfully registered & enabled for online portal services! Primary cooperative and federation infrastructure initialized.`,
+      district: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Create District Error:', err);
+    return res.status(500).json({ error: 'Failed to register operational district.' });
+  }
+}
+
+/**
+ * PATCH /api/societies/districts/:id/toggle
+ * Toggle portal availability for a district
+ */
+async function toggleDistrictPortal(req, res) {
+  try {
+    const { id } = req.params;
+    const { is_portal_active, status } = req.body;
+    const updates = [];
+    const params = [id];
+
+    if (is_portal_active !== undefined) {
+      params.push(is_portal_active ? 1 : 0);
+      updates.push(`is_portal_active = $${params.length}`);
+    }
+    if (status !== undefined) {
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+
+    const result = await query(
+      `UPDATE districts SET ${updates.join(', ')} WHERE id = $1 RETURNING *`,
+      params
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'District not found.' });
+    }
+
+    return res.json({
+      success: true,
+      message: `District "${result.rows[0].name}" portal availability updated.`,
+      district: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Toggle District Error:', err);
+    return res.status(500).json({ error: 'Failed to update district status.' });
   }
 }
 
@@ -823,6 +1075,11 @@ module.exports = {
   registerSociety,
   getSocietyByTrackingId,
   getSocietiesList,
+  getFederationsList,
+  createFederation,
+  getDistrictsList,
+  createDistrict,
+  toggleDistrictPortal,
   getFederationsOverview,
   updateSocietyTimelineStage,
   getPendingSocietiesForDco,
@@ -831,4 +1088,5 @@ module.exports = {
   updateSocietyGovernance,
   createOrUpdateInquiry,
 };
+
 

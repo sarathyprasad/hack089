@@ -112,9 +112,9 @@ async function createBooking(req, res) {
     const bookingCode = `BKG-2026-${uniqueSuffix}`;
     const invoiceNum = `INV-2026-${uniqueSuffix}`;
 
-    // Generate 4-digit Security OTPs
-    const arrivalOtp = generate4DigitOtp();
-    const completionOtp = generate4DigitOtp();
+    // Security OTPs are NULL upon creation; generated only when worker accepts the work order
+    const arrivalOtp = null;
+    const completionOtp = null;
 
     const todayDate = scheduled_date || new Date().toISOString().split('T')[0];
     const defaultTime = scheduled_time || '10:00 AM';
@@ -271,7 +271,8 @@ async function getBookings(req, res) {
              w.worker_code, w.rating as worker_rating, w.tier as worker_tier,
              w.latitude as worker_latitude, w.longitude as worker_longitude, w.service_area as worker_service_area,
              u_master.name as paired_master_name,
-             c.name as cooperative_name,
+             soc.name as society_name, soc.registration_number as society_reg,
+             c.name as federation_name, c.name as cooperative_name,
              p.status as payment_status, p.transaction_id,
              r.rating as user_review_rating, r.comment as user_review_comment
       FROM bookings b
@@ -281,7 +282,8 @@ async function getBookings(req, res) {
       LEFT JOIN users u_work ON w.user_id = u_work.id
       LEFT JOIN workers w_master ON b.paired_master_worker_id = w_master.id
       LEFT JOIN users u_master ON w_master.user_id = u_master.id
-      LEFT JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies soc ON w.society_id = soc.id
+      LEFT JOIN cooperatives c ON (soc.federation_id = c.id OR w.cooperative_id = c.id)
       LEFT JOIN payments p ON p.booking_id = b.id
       LEFT JOIN reviews r ON r.booking_id = b.id
     `;
@@ -398,7 +400,8 @@ async function getBookingById(req, res) {
              w.worker_code, w.rating as worker_rating, w.tier as worker_tier, w.experience_years as worker_experience,
              w.latitude as worker_latitude, w.longitude as worker_longitude, w.service_area as worker_service_area,
              u_master.name as paired_master_name, u_master.phone as paired_master_phone,
-             c.name as cooperative_name, c.contact_phone as cooperative_phone, c.registration_number as cooperative_reg
+             soc.name as society_name, soc.registration_number as society_reg, soc.district as society_district, COALESCE(soc.city, c.local_area, 'Urban Zone') as society_local_area,
+             c.name as federation_name, c.name as cooperative_name, c.contact_phone as cooperative_phone, c.registration_number as cooperative_reg
       FROM bookings b
       LEFT JOIN services s ON b.service_id = s.id
       LEFT JOIN users u_cust ON b.customer_id = u_cust.id
@@ -406,7 +409,8 @@ async function getBookingById(req, res) {
       LEFT JOIN users u_work ON w.user_id = u_work.id
       LEFT JOIN workers w_master ON b.paired_master_worker_id = w_master.id
       LEFT JOIN users u_master ON w_master.user_id = u_master.id
-      LEFT JOIN cooperatives c ON w.cooperative_id = c.id
+      LEFT JOIN societies soc ON w.society_id = soc.id
+      LEFT JOIN cooperatives c ON (soc.federation_id = c.id OR w.cooperative_id = c.id)
       WHERE ${whereClause}
     `, [queryVal]);
 
@@ -1047,12 +1051,23 @@ async function updateBookingStatus(req, res) {
       updateWorkerId = workerId;
     }
 
+    const newArrivalOtp = (status === 'ACCEPTED' && !booking.arrival_otp)
+      ? generate4DigitOtp()
+      : booking.arrival_otp;
+    const newCompletionOtp = (status === 'ACCEPTED' && !booking.completion_otp)
+      ? generate4DigitOtp()
+      : booking.completion_otp;
+
     const updateRes = await query(`
       UPDATE bookings
-      SET status = $1, worker_id = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      SET status = $1,
+          worker_id = $2,
+          arrival_otp = $3,
+          completion_otp = $4,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
       RETURNING *
-    `, [status, updateWorkerId, req.params.id]);
+    `, [status, updateWorkerId, newArrivalOtp, newCompletionOtp, req.params.id]);
 
     // Manage worker availability status based on booking status transition
     if (updateWorkerId) {

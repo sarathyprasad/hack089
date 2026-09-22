@@ -9,7 +9,8 @@ import {
   Calendar, Clock, MapPin, Phone, Building2, Award, Zap,
   TrendingUp, IndianRupee, HeartPulse, RefreshCw, Check, X, Play,
   Volume2, VolumeX, ShieldAlert, Camera, Plus, Wrench, Shield,
-  Package, CreditCard, Truck, Info, ShoppingBag, ChevronDown, ChevronUp
+  Package, CreditCard, Truck, Info, ShoppingBag, ChevronDown, ChevronUp,
+  Minimize2, Maximize2
 } from 'lucide-react';
 
 export default function WorkerDashboard() {
@@ -58,6 +59,7 @@ export default function WorkerDashboard() {
   // Real-Time First-to-Accept Broadcast Dispatch Pool States
   const [dismissedJobIds, setDismissedJobIds] = useState([]);
   const [lastAlertedJobId, setLastAlertedJobId] = useState(null);
+  const [isBroadcastDocked, setIsBroadcastDocked] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState(null); // { type: 'success' | 'error', message: '' }
   const [error, setError] = useState(null);
 
@@ -421,85 +423,147 @@ export default function WorkerDashboard() {
         </div>
       )}
       {/* ── PENDING / REJECTED VERIFICATION STATUS BANNER ── */}
-      {worker?.verification_status === 'PENDING' && (
-        <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shrink-0 shadow-sm">
-                ⏳
+      {worker?.verification_status === 'PENDING' && (() => {
+        const step = worker?.verification_step || 2;
+        const stepTitles = {
+          1: 'Digital Dossier Submitted & Logged',
+          2: 'Primary Society Document & KYC Scrutiny',
+          3: 'Physical Trade Skill & Tool Inspection',
+          4: 'Final Committee Resolution & Badge Issuance'
+        };
+        const currentTitle = stepTitles[step] || 'Primary Society Review';
+
+        return (
+          <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shrink-0 shadow-sm">
+                  ⏳
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded bg-amber-200 text-amber-950 border border-amber-300">
+                      Step {step} of 4: {currentTitle}
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 mt-1">
+                    Application Reference: <span className="font-mono text-blue-950">{worker?.application_no || 'APP-OD-2026-PENDING'}</span>
+                  </h2>
+                  <p className="text-xs text-slate-600">
+                    Statutory Authority: <strong>{worker?.society_name || worker?.cooperative_name || 'Primary Cooperative Society'}</strong>
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded bg-amber-200 text-amber-950 border border-amber-300">
-                  Accreditation Under Administrative Review
+              <div className="text-left sm:text-right">
+                <span className="text-[11px] font-semibold text-amber-800 block">
+                  Primary Trade: <strong>{worker?.primary_trade || 'Skilled Artisan'}</strong>
                 </span>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 mt-1">
-                  Application Reference: <span className="font-mono text-blue-950">{worker?.application_no || 'APP-OD-2026-PENDING'}</span>
-                </h2>
-                <p className="text-xs text-slate-600">
-                  Assigned to: <strong>{worker?.cooperative_name || 'District Labour Cooperative Federation'}</strong>
+                <span className="text-[10px] text-slate-500 block mt-0.5">
+                  {step === 2 && 'Primary Society committee is auditing your submitted KYC & certificates.'}
+                  {step === 3 && 'Visit your Primary Society center with your tools for physical inspection.'}
+                  {step === 4 && 'Management committee resolution in progress for badge issuance.'}
+                </span>
+              </div>
+            </div>
+
+            {/* 4-Step Dynamic Verification Timeline */}
+            <div className="pt-3 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-300 text-emerald-950">
+                <div className="font-bold flex items-center gap-1.5 text-[11px]">
+                  <CheckCircle2 size={14} className="text-emerald-700" />
+                  <span>1. Digital Dossier</span>
+                </div>
+                <p className="text-[10px] text-emerald-800 mt-1">Submitted &amp; Logged in State Register</p>
+              </div>
+
+              <div className={`p-3 rounded-xl border ${
+                step === 2
+                  ? 'bg-amber-100/90 border-amber-400 text-amber-950 ring-2 ring-amber-400/30'
+                  : step > 2
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                  : 'bg-white/60 border-slate-200 text-slate-500'
+              }`}>
+                <div className="font-bold flex items-center gap-1.5 text-[11px]">
+                  {step > 2 ? (
+                    <CheckCircle2 size={14} className="text-emerald-700" />
+                  ) : (
+                    <Clock size={14} className="text-amber-700 animate-pulse" />
+                  )}
+                  <span>2. Society KYC Scrutiny</span>
+                </div>
+                <p className="text-[10px] mt-1 text-slate-700">
+                  {step > 2 ? 'Documents & KYC Verified' : `Under audit by ${worker?.society_name || 'Primary Society'}`}
+                </p>
+              </div>
+
+              <div className={`p-3 rounded-xl border ${
+                step === 3
+                  ? 'bg-amber-100/90 border-amber-400 text-amber-950 ring-2 ring-amber-400/30'
+                  : step > 3
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                  : 'bg-white/60 border-slate-200 text-slate-500'
+              }`}>
+                <div className="font-bold flex items-center gap-1.5 text-[11px]">
+                  {step > 3 ? (
+                    <CheckCircle2 size={14} className="text-emerald-700" />
+                  ) : step === 3 ? (
+                    <Clock size={14} className="text-amber-700 animate-pulse" />
+                  ) : (
+                    <span className="w-3.5 h-3.5 rounded-full border border-slate-400 inline-block text-center text-[9px]">3</span>
+                  )}
+                  <span>3. Physical Tool &amp; Skill</span>
+                </div>
+                <p className="text-[10px] mt-1 text-slate-700">
+                  {step > 3 ? 'Tools & Skill Certified' : step === 3 ? 'Physical check at Society Workshop' : 'Scheduled after document review'}
+                </p>
+              </div>
+
+              <div className={`p-3 rounded-xl border ${
+                step === 4
+                  ? 'bg-amber-100/90 border-amber-400 text-amber-950 ring-2 ring-amber-400/30'
+                  : 'bg-white/60 border-slate-200 text-slate-500'
+              }`}>
+                <div className="font-bold flex items-center gap-1.5 text-[11px]">
+                  {step === 4 ? (
+                    <Clock size={14} className="text-amber-700 animate-pulse" />
+                  ) : (
+                    <span className="w-3.5 h-3.5 rounded-full border border-slate-400 inline-block text-center text-[9px]">4</span>
+                  )}
+                  <span>4. Committee Resolution</span>
+                </div>
+                <p className="text-[10px] mt-1 text-slate-700">
+                  {step === 4 ? 'Accreditation resolution in progress' : 'Badge issuance & live dispatch activation'}
                 </p>
               </div>
             </div>
-            <div className="text-left sm:text-right">
-              <span className="text-[11px] font-semibold text-amber-800 block">
-                Primary Trade: <strong>{worker?.primary_trade || 'Skilled Artisan'}</strong>
-              </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">
-                Dispatch console will activate upon District Officer approval.
+
+            {/* Guidance Alert based on current step */}
+            <div className="p-3 bg-white/80 rounded-xl border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+              <span className="font-bold text-amber-800">📌 Current Action:</span>
+              <span>
+                {step === 2 && `Your designated Primary Cooperative Society (${worker?.society_name || 'Assigned Society'}) is currently auditing your Aadhaar, PAN, Bank Details, and Trade Qualifications. You do not need to take any action right now.`}
+                {step === 3 && `Your documents have passed KYC scrutiny! Please report to your Primary Cooperative Society (${worker?.society_name || 'Assigned Society'}) office/workshop with your trade tools for physical verification and kit inspection.`}
+                {step === 4 && `Your physical tool and trade verification has been approved! The society management committee is recording the formal resolution to issue your digital artisan badge and activate your live work dispatch console.`}
               </span>
             </div>
           </div>
-
-          {/* 4-Step Verification Timeline */}
-          <div className="pt-3 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 bg-white/80 rounded-xl border border-emerald-300 text-emerald-950">
-              <div className="font-bold flex items-center gap-1.5 text-[11px]">
-                <CheckCircle2 size={14} className="text-emerald-700" />
-                <span>1. Digital Dossier</span>
-              </div>
-              <p className="text-[10px] text-emerald-800 mt-1">Submitted & Logged in State Register</p>
-            </div>
-
-            <div className="p-3 bg-amber-100/80 rounded-xl border border-amber-400 text-amber-950">
-              <div className="font-bold flex items-center gap-1.5 text-[11px]">
-                <Clock size={14} className="text-amber-700" />
-                <span>2. Trade Skill & KYC Audit</span>
-              </div>
-              <p className="text-[10px] text-amber-800 mt-1">Under verification by Federation SPIO</p>
-            </div>
-
-            <div className="p-3 bg-white/60 rounded-xl border border-slate-200 text-slate-500">
-              <div className="font-bold flex items-center gap-1.5 text-[11px]">
-                <span className="w-3.5 h-3.5 rounded-full border border-slate-400 inline-block text-center text-[9px]">3</span>
-                <span>3. Officer Approval</span>
-              </div>
-              <p className="text-[10px] text-slate-400 mt-1">Accreditation Badge & Code Issuance</p>
-            </div>
-
-            <div className="p-3 bg-white/60 rounded-xl border border-slate-200 text-slate-500">
-              <div className="font-bold flex items-center gap-1.5 text-[11px]">
-                <span className="w-3.5 h-3.5 rounded-full border border-slate-400 inline-block text-center text-[9px]">4</span>
-                <span>4. Live Dispatch</span>
-              </div>
-              <p className="text-[10px] text-slate-400 mt-1">Available for customer work orders</p>
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {worker?.verification_status === 'REJECTED' && (
         <div className="p-5 bg-red-50 rounded-2xl border-2 border-red-300 shadow-sm space-y-2 text-xs text-red-900">
           <div className="flex items-center gap-2">
             <AlertTriangle size={20} className="text-red-600 shrink-0" />
             <strong className="text-sm font-bold text-red-950">
-              Application Disapproved by District Cooperative Officer
+              Application Disapproved by Primary Cooperative Society
             </strong>
           </div>
           <p className="text-xs text-red-800">
-            <strong>Reason for Rejection:</strong> {worker?.rejection_reason || 'Trade certificate or KYC records could not be verified.'}
+            <strong>Reason for Rejection:</strong> {worker?.rejection_reason || 'Trade certificate or KYC records could not be verified by society committee.'}
           </p>
           <p className="text-[11px] text-red-700">
-            Please contact your District Labour Cooperative Federation SPIO at <strong>1800-345-6789</strong> or visit Lok Seva Bhawan for re-verification.
+            Please contact your Primary Cooperative Society ({worker?.society_name || 'Assigned Society'}) or Cooperative Secretariat for re-verification.
           </p>
         </div>
       )}
@@ -596,8 +660,19 @@ export default function WorkerDashboard() {
               </div>
 
               <div className="text-xs text-gray-600 mt-1 flex items-center gap-3 flex-wrap">
-                <span className="flex items-center gap-1 font-medium">
-                  <Building2 size={13} className="text-blue-900" /> {worker?.cooperative_name}
+                <span className="flex items-center gap-1.5 font-medium">
+                  {worker?.is_independent || !worker?.society_id ? (
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
+                      Independent Freelance Artisan
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-purple-50 text-purple-900 border border-purple-200">
+                      Primary Society: {worker?.society_name || 'Affiliated'}
+                    </span>
+                  )}
+                  <span className="text-gray-500 text-[11px] flex items-center gap-1">
+                    <Building2 size={13} className="text-blue-900" /> {worker?.cooperative_name}
+                  </span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
@@ -692,37 +767,37 @@ export default function WorkerDashboard() {
 
         {/* 4-KPI Summary Banner */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-          <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-200">
-            <span className="text-[10px] font-bold uppercase text-blue-900">Total Lifetime Payouts</span>
-            <div className="text-lg font-bold font-mono text-blue-950 mt-0.5">
+          <div className="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 shadow-2xs">
+            <span className="text-[10px] font-black uppercase text-blue-900 tracking-wider">Total Lifetime Payouts</span>
+            <div className="text-xl font-black font-mono text-blue-950 mt-0.5">
               ₹{worker?.total_earnings?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-gray-500">93% Direct Wallet Payout</span>
+            <span className="text-[11px] text-blue-800 font-bold block mt-0.5">93% Direct Wallet Payout</span>
           </div>
 
-          <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200">
-            <span className="text-[10px] font-bold uppercase text-emerald-900">Completed Orders</span>
-            <div className="text-lg font-bold font-mono text-emerald-950 mt-0.5">
+          <div className="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 shadow-2xs">
+            <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">Completed Orders</span>
+            <div className="text-xl font-black font-mono text-emerald-950 mt-0.5">
               {worker?.total_jobs_completed || 0} Gigs
             </div>
-            <span className="text-[10px] text-emerald-700 font-semibold">100% On-Time Rate</span>
+            <span className="text-[11px] text-emerald-800 font-bold block mt-0.5">100% On-Time Rate</span>
           </div>
 
-          <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-200">
-            <span className="text-[10px] font-bold uppercase text-amber-900">Artisan Rating</span>
-            <div className="text-lg font-bold text-amber-950 mt-0.5 flex items-center gap-1">
-              <Star size={16} className="text-amber-500 fill-amber-500" />
+          <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200 shadow-2xs">
+            <span className="text-[10px] font-black uppercase text-amber-950 tracking-wider">Artisan Rating</span>
+            <div className="text-xl font-black text-amber-950 mt-0.5 flex items-center gap-1">
+              <Star size={17} className="text-amber-500 fill-amber-500" />
               {worker?.rating > 0 ? worker.rating.toFixed(1) : '4.8'}
             </div>
-            <span className="text-[10px] text-gray-500">({worker?.total_reviews || 0} reviews)</span>
+            <span className="text-[11px] text-amber-900 font-bold block mt-0.5">({worker?.total_reviews || 0} reviews)</span>
           </div>
 
-          <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200">
-            <span className="text-[10px] font-bold uppercase text-indigo-900">Merit Points</span>
-            <div className="text-lg font-bold font-mono text-indigo-950 mt-0.5">
+          <div className="p-3.5 bg-indigo-50/80 rounded-xl border border-indigo-200 shadow-2xs">
+            <span className="text-[10px] font-black uppercase text-indigo-950 tracking-wider">Merit Points</span>
+            <div className="text-xl font-black font-mono text-indigo-950 mt-0.5">
               {worker?.merit_points || 100} pts
             </div>
-            <span className="text-[10px] text-indigo-700 font-semibold">Tier: {worker?.tier || 'MASTER'}</span>
+            <span className="text-[11px] text-indigo-800 font-bold block mt-0.5">Tier: {worker?.tier || 'MASTER'}</span>
           </div>
         </div>
       </div>
@@ -806,7 +881,7 @@ export default function WorkerDashboard() {
                 {/* 5-Step Execution Handshake Action Buttons for Worker */}
                 <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-200 space-y-3">
                   <div className="text-xs font-bold text-blue-950 flex items-center justify-between">
-                    <span>Phase 4 Job Execution Handshakes</span>
+                    <span>Job Execution Handshakes</span>
                     <span className="text-[10px] text-blue-800 font-normal">Protocol compliant</span>
                   </div>
 
@@ -1726,22 +1801,27 @@ export default function WorkerDashboard() {
       {/* ─────────────────────────────────────────────────────────────
           REAL-TIME BROADCAST INCOMING JOB POPUP (FIRST-TO-ACCEPT)
          ───────────────────────────────────────────────────────────── */}
-      {broadcastJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-400 space-y-5 relative overflow-hidden">
+      {broadcastJob && !isBroadcastDocked && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsBroadcastDocked(true);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/45 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div className="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border-2 border-amber-400 space-y-2.5 relative my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
             {/* Ambient Pulse Glow */}
-            <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shrink-0 shadow-sm animate-bounce">
+            <div className="flex items-start justify-between gap-3 relative z-10 pb-1 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0 shadow-sm animate-bounce">
                   ⚡
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300">
                       🚨 Live Dispatch Broadcast
                     </span>
                     {broadcastJob.is_emergency ? (
@@ -1750,130 +1830,220 @@ export default function WorkerDashboard() {
                       </span>
                     ) : null}
                   </div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-slate-950 mt-1">
+                  <h3 className="text-base sm:text-lg font-black text-slate-950 mt-0.5 leading-tight">
                     {broadcastJob.service_name}
                   </h3>
-                  <p className="text-xs text-slate-500 font-mono">
+                  <p className="text-[11px] text-slate-800 font-mono font-black mt-0.5">
                     Ref: {broadcastJob.booking_code}
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setDismissedJobIds((prev) => [...prev, broadcastJob.id])}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition"
-                title="Dismiss"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsBroadcastDocked(true)}
+                  className="p-1.5 text-slate-600 hover:text-slate-950 rounded-lg hover:bg-slate-100 transition cursor-pointer flex items-center gap-1 text-xs font-bold border border-slate-200"
+                  title="Minimize / Dock to corner so you can see and use the dashboard"
+                >
+                  <Minimize2 size={15} />
+                  <span className="hidden sm:inline">Dock ↘</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDismissedJobIds((prev) => [...prev, broadcastJob.id])}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                  title="Dismiss"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Broadcast Policy Banner with Acceptance Window */}
-            <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1.5">
+            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-300 text-xs text-amber-950 space-y-1">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="flex items-center gap-1.5 font-bold">
-                  <Zap size={15} className="text-amber-600 shrink-0" />
+                <span className="flex items-center gap-1.5 font-extrabold text-amber-950 text-xs">
+                  <Zap size={14} className="text-amber-600 shrink-0" />
                   <span>First-to-Accept Rule</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-200/80 text-amber-900 border border-amber-300">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-200 text-amber-950 border border-amber-400">
                   ⏱️ {broadcastJob.is_emergency ? '10-Min Emergency Limit' : '30-Min Standard Limit'}
                 </span>
               </div>
-              <p className="text-[11px] text-amber-900">
-                The first qualified artisan to accept claims the booking. If unaccepted within the window, the order auto-cancels automatically.
+              <p className="text-[11px] font-semibold text-amber-900 leading-snug">
+                The first qualified artisan to accept claims the booking. If unaccepted within the window, the order auto-cancels.
               </p>
             </div>
 
             {/* Order Details Grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-[10px] text-slate-500 font-bold uppercase block">📍 Customer Location</span>
-                <div className="font-bold text-slate-900 mt-0.5">{broadcastJob.location_city}</div>
-                <div className="text-[11px] text-slate-600 line-clamp-1">{broadcastJob.location_address}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-300/80 space-y-0.5">
+                <span className="text-[10px] text-slate-700 font-black uppercase tracking-wider block">📍 Customer Location</span>
+                <div className="font-black text-slate-950 text-xs sm:text-sm">{broadcastJob.location_city}</div>
+                <div className="text-[11px] text-slate-800 font-bold leading-snug break-words">{broadcastJob.location_address}</div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-[10px] text-slate-500 font-bold uppercase block">📅 Scheduled Slot</span>
-                <div className="font-bold text-slate-900 mt-0.5">{broadcastJob.scheduled_date}</div>
-                <div className="text-[11px] text-blue-900 font-semibold">{broadcastJob.scheduled_time}</div>
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-300/80 space-y-0.5">
+                <span className="text-[10px] text-slate-700 font-black uppercase tracking-wider block">📅 Scheduled Slot</span>
+                <div className="font-black text-slate-950 text-xs sm:text-sm">{broadcastJob.scheduled_date}</div>
+                <div className="text-[11px] text-blue-950 font-black bg-blue-100 px-2 py-0.5 rounded-md inline-block mt-0.5 border border-blue-200">{broadcastJob.scheduled_time}</div>
               </div>
             </div>
 
             {/* Net Labour Payout Card */}
-            <div className="p-4 bg-gradient-to-r from-emerald-950 to-teal-950 rounded-2xl text-white flex items-center justify-between shadow-md">
-              <div>
-                <span className="text-[10px] font-bold uppercase text-emerald-300 tracking-wider">
+            <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 text-white flex items-center justify-between shadow-md border border-emerald-700/60">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-black uppercase text-emerald-300 tracking-wider block">
                   Net Labour Payout (93% Direct Share)
                 </span>
-                <div className="text-2xl font-black font-mono text-amber-400 mt-0.5">
+                <div className="text-2xl sm:text-3xl font-black font-mono text-amber-300 drop-shadow-xs">
                   ₹{broadcastJob.amount}
                 </div>
-                <span className="text-[10px] text-emerald-200">
-                  Instant escrow release upon completion
+                <span className="text-[11px] font-bold text-emerald-300 flex items-center gap-1 mt-0.5">
+                  <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                  <span>Instant escrow release upon OTP completion</span>
                 </span>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] text-slate-300 block">Category:</span>
-                <span className="text-xs font-bold text-white">{broadcastJob.service_category}</span>
+              <div className="text-right pl-3 border-l border-emerald-800/80">
+                <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wider block">Trade</span>
+                <span className="text-xs sm:text-sm font-black text-amber-300 block mt-0.5">{broadcastJob.service_category}</span>
               </div>
             </div>
 
             {broadcastJob.notes && (
-              <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                <strong>Customer Note:</strong> {broadcastJob.notes}
+              <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-950">
+                <strong className="font-extrabold text-blue-950 block text-[11px]">📝 Customer Note:</strong>
+                <p className="font-bold text-slate-900 mt-0.5 text-xs leading-snug">{broadcastJob.notes}</p>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleVoiceAlert(broadcastJob)}
-                className={`btn btn-secondary btn-sm text-xs flex items-center justify-center gap-1.5 w-full sm:w-auto ${
-                  isSpeaking && activeSpeakingId === `job-${broadcastJob.id}` ? 'bg-amber-400 text-slate-950 border-amber-500 font-bold' : ''
-                }`}
-                title="Listen or Stop audio announcement"
-              >
-                {isSpeaking && activeSpeakingId === `job-${broadcastJob.id}` ? (
-                  <>
-                    <VolumeX size={15} className="text-red-700" />
-                    <span>Stop Voice</span>
-                  </>
-                ) : (
-                  <>
-                    <Volume2 size={15} />
-                    <span>Listen</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                disabled={actionBusyId === broadcastJob.id}
-                onClick={() => handleAction(broadcastJob.id, 'DECLINE')}
-                className="btn btn-secondary btn-sm text-xs flex-1 w-full sm:w-auto hover:text-red-700 hover:border-red-300 transition flex items-center justify-center gap-1"
-              >
-                <X size={14} /> Decline (Zero Penalty)
-              </button>
-
+            {/* Actions: 2-Tier Layout so all buttons & words are 100% visible and unclipped */}
+            <div className="pt-1 space-y-2">
+              {/* Primary Action Button: Full Width */}
               <button
                 type="button"
                 disabled={actionBusyId === broadcastJob.id}
                 onClick={() => handleAction(broadcastJob.id, 'ACCEPT')}
-                className="btn btn-primary btn-sm text-xs font-extrabold flex-2 w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 py-2.5"
+                className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer disabled:opacity-50"
               >
                 {actionBusyId === broadcastJob.id ? (
                   <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
                 ) : (
                   <>
-                    <Check size={16} /> ⚡ ACCEPT & CLAIM ORDER NOW
+                    <Check size={18} className="stroke-[3]" />
+                    <span>⚡ ACCEPT &amp; CLAIM ORDER NOW</span>
                   </>
                 )}
               </button>
+
+              {/* Secondary Actions Row: Listen & Decline */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleVoiceAlert(broadcastJob)}
+                  className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isSpeaking && activeSpeakingId === `job-${broadcastJob.id}`
+                      ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                  }`}
+                  title="Listen or Stop audio announcement"
+                >
+                  {isSpeaking && activeSpeakingId === `job-${broadcastJob.id}` ? (
+                    <>
+                      <VolumeX size={14} className="text-red-700" />
+                      <span>Stop Voice</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 size={14} className="text-blue-900" />
+                      <span>Listen to Dispatch</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={actionBusyId === broadcastJob.id}
+                  onClick={() => handleAction(broadcastJob.id, 'DECLINE')}
+                  className="py-2 px-3 rounded-lg text-xs font-bold border border-slate-300 bg-white hover:bg-red-50 hover:text-red-700 hover:border-red-300 text-slate-700 transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs"
+                >
+                  <X size={14} />
+                  <span>Decline (Zero Penalty)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating Bottom-Right Dock Widget when broadcast is minimized (Keeps dashboard 100% uncovered) */}
+      {broadcastJob && isBroadcastDocked && (
+        <aside
+          aria-label="Active Dispatch Alert"
+          className="fixed bottom-4 right-4 z-50 max-w-md w-[calc(100vw-2rem)] bg-slate-950 text-white p-3 rounded-2xl shadow-2xl border-2 border-amber-400 flex items-center justify-between gap-2.5 backdrop-blur-md animate-in slide-in-from-bottom duration-200"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-base shrink-0 shadow-xs animate-bounce">
+              ⚡
+            </div>
+            <div className="min-w-0 pr-1">
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-400 text-slate-950">
+                  {broadcastJob.is_emergency ? '🚨 60-Min Emergency' : 'Live Dispatch'}
+                </span>
+                <span className="text-[10px] font-mono text-emerald-300 font-bold">₹{broadcastJob.amount}</span>
+              </div>
+              <div className="font-black text-xs text-white truncate max-w-[160px] sm:max-w-[200px]">
+                {broadcastJob.service_name}
+              </div>
+              <div className="text-[10px] text-slate-300 font-medium truncate">
+                📍 {broadcastJob.location_city}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              disabled={actionBusyId === broadcastJob.id}
+              onClick={() => handleAction(broadcastJob.id, 'ACCEPT')}
+              className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs flex items-center gap-1 shadow-md transition cursor-pointer disabled:opacity-50"
+              title="Claim this booking now"
+            >
+              <Check size={13} className="stroke-[3]" />
+              <span>Accept</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleVoiceAlert(broadcastJob)}
+              className="p-1.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white transition cursor-pointer"
+              title="Listen to details"
+            >
+              <Volume2 size={15} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsBroadcastDocked(false)}
+              className="p-1.5 rounded-xl bg-slate-800 text-amber-300 hover:bg-slate-700 transition cursor-pointer flex items-center gap-0.5 text-xs font-bold"
+              title="Expand to full details view"
+            >
+              <Maximize2 size={15} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDismissedJobIds((prev) => [...prev, broadcastJob.id])}
+              className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              title="Dismiss"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </aside>
       )}
     </div>
   );

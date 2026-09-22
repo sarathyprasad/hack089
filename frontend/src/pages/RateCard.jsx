@@ -383,9 +383,9 @@ export default function RateCard() {
         }
 
         .rc-container {
-          max-width: 960px;
+          max-width: 1280px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 0 24px;
         }
 
         /* ── Hero ── */

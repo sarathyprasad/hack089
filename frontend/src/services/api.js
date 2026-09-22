@@ -30,7 +30,12 @@ export async function request(endpoint, options = {}) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
-    const error = new Error(data.message || data.error || 'Request failed');
+    const fallbackMsg = response.status >= 500 
+      ? 'Backend server temporarily unreachable. Please retry.' 
+      : response.status === 404
+      ? 'Requested endpoint not found.'
+      : 'Request failed';
+    const error = new Error(data.message || data.error || fallbackMsg);
     error.status = response.status;
     error.data = data;
     throw error;
@@ -152,6 +157,15 @@ export const api = {
   getPartsCatalog: (tradeCategory) =>
     request(`/governance/parts-catalog${tradeCategory ? `?tradeCategory=${encodeURIComponent(tradeCategory)}` : ''}`),
 
+  // ── Federation Head Tariff Administration ──
+  getAllServicesAdmin: () => request('/governance/admin/services'),
+  createService: (data) => request('/governance/admin/services', { method: 'POST', body: data }),
+  updateService: (id, data) => request(`/governance/admin/services/${id}`, { method: 'PUT', body: data }),
+  deleteService: (id) => request(`/governance/admin/services/${id}`, { method: 'DELETE' }),
+  createPart: (data) => request('/governance/admin/parts-catalog', { method: 'POST', body: data }),
+  updatePart: (id, data) => request(`/governance/admin/parts-catalog/${id}`, { method: 'PUT', body: data }),
+  deletePart: (id) => request(`/governance/admin/parts-catalog/${id}`, { method: 'DELETE' }),
+
   // AI Assistant Chatbot
   sendAIChat: (message, history = [], language = 'EN') =>
     request('/smart-features/ai-chat', {
@@ -178,6 +192,27 @@ export const api = {
     }),
   getPendingSocietiesForDco: () =>
     request('/societies/pending/dco'),
+  getPublicFederations: (district = '') =>
+    request(`/societies/federations${district ? `?district=${encodeURIComponent(district)}` : ''}`),
+  createFederation: (data) =>
+    request('/societies/federations', {
+      method: 'POST',
+      body: data,
+    }),
+  getDistricts: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/societies/districts${query ? `?${query}` : ''}`);
+  },
+  createDistrict: (data) =>
+    request('/societies/districts', {
+      method: 'POST',
+      body: data,
+    }),
+  toggleDistrictPortal: (id, data) =>
+    request(`/societies/districts/${id}/toggle`, {
+      method: 'PATCH',
+      body: data,
+    }),
   getFederationsOverview: (district = '') =>
     request(`/societies/federation-overview${district ? `?district=${encodeURIComponent(district)}` : ''}`),
   dcoReviewSociety: (id, data) =>
@@ -186,11 +221,10 @@ export const api = {
       body: data,
     }),
 
-  // Federation Dual-Console Management (Pages 3 & 4)
-  getFederationAdminDashboard: (societyId = 1) =>
-    request(`/federation/admin-dashboard?societyId=${societyId}`),
-  getFederationTreasurerDashboard: (societyId = 1) =>
-    request(`/federation/treasurer-dashboard?societyId=${societyId}`),
+  getFederationAdminDashboard: (societyId = '') =>
+    request(`/federation/admin-dashboard${societyId !== undefined && societyId !== null && societyId !== '' ? `?societyId=${societyId}` : ''}`),
+  getFederationTreasurerDashboard: (societyId = '') =>
+    request(`/federation/treasurer-dashboard${societyId !== undefined && societyId !== null && societyId !== '' ? `?societyId=${societyId}` : ''}`),
   applyNcctTraining: (data) =>
     request('/federation/ncct/apply', {
       method: 'POST',
@@ -228,4 +262,22 @@ export const api = {
 
   // Stats
   getDbStats: () => request('/db/stats'),
+
+  // Cooperative Admin & Worker Verification
+  getAdminDashboard: () => request('/admin/dashboard'),
+  getAdminWorkers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/admin/workers${query ? `?${query}` : ''}`);
+  },
+  verifyWorker: (workerId, status, rejectionReason = '', verificationStep = null) =>
+    request(`/admin/workers/${workerId}/verify`, {
+      method: 'PUT',
+      body: { status, rejectionReason, verificationStep },
+    }),
+  getAdminBookings: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/admin/bookings${query ? `?${query}` : ''}`);
+  },
+  getAdminAuditLogs: () => request('/admin/audit-logs'),
 };
+

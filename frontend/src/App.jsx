@@ -38,6 +38,8 @@ const WorkerWelfare = lazy(() => import('./pages/WorkerWelfare'));
 
 // Admin Pages (Lazy Loaded)
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ApexDashboard = lazy(() => import('./pages/ApexDashboard'));
+const SocietyDashboard = lazy(() => import('./pages/SocietyDashboard'));
 
 // Protected Route Guard Helper with Strict Single-Role & Admin-Type Isolation
 function ProtectedRoute({ children, allowedRoles, allowedAdminTypes }) {
@@ -57,10 +59,11 @@ function ProtectedRoute({ children, allowedRoles, allowedAdminTypes }) {
   }
 
   if (!user) {
-    const isFederationPath = location.pathname.includes('/federation') || location.pathname.includes('/tenders');
+    const isApexPath = location.pathname.includes('/apex');
+    const isSocietyPath = location.pathname.includes('/society') || location.pathname.includes('/federation') || location.pathname.includes('/tenders');
     const isDcoPath = location.pathname.includes('/admin') || location.pathname.includes('/dco');
     const isWorkerPath = location.pathname.includes('/worker');
-    const targetRole = (isFederationPath || isDcoPath) ? 'admin' : isWorkerPath ? 'worker' : 'customer';
+    const targetRole = (isApexPath || isSocietyPath || isDcoPath) ? 'admin' : isWorkerPath ? 'worker' : 'customer';
     return <Navigate to={`/login?role=${targetRole}`} replace state={{ from: location }} />;
   }
 
@@ -74,21 +77,24 @@ function ProtectedRoute({ children, allowedRoles, allowedAdminTypes }) {
       if (user.admin_type === 'DCO_REGISTRAR') {
         return <Navigate to="/admin/dashboard" replace />;
       }
-      return <Navigate to="/federation/portal" replace />;
+      if (user.admin_type === 'FEDERATION_HEAD') {
+        return <Navigate to="/apex/dashboard" replace />;
+      }
+      return <Navigate to="/society/dashboard" replace />;
     }
     return <Navigate to="/customer/bookings" replace />;
   }
 
-  // Strict Admin Type Isolation (DCO vs Federation)
+  // Strict Admin Type Isolation (DCO vs Apex Head vs Society Admin)
   if (allowedAdminTypes && user.role === 'COOPERATIVE_ADMIN') {
     const userAdminType = user.admin_type || 'SOCIETY_ADMIN';
     if (!allowedAdminTypes.includes(userAdminType)) {
       if (userAdminType === 'DCO_REGISTRAR') {
-        // DCO attempted to access Federation portal -> route to DCO dashboard
         return <Navigate to="/admin/dashboard" replace state={{ accessDeniedNotice: 'DCO_ONLY' }} />;
+      } else if (userAdminType === 'FEDERATION_HEAD') {
+        return <Navigate to="/apex/dashboard" replace state={{ accessDeniedNotice: 'APEX_ONLY' }} />;
       } else {
-        // Federation/Society admin attempted to access DCO portal -> route to Federation portal
-        return <Navigate to="/federation/portal" replace state={{ accessDeniedNotice: 'FEDERATION_ONLY' }} />;
+        return <Navigate to="/society/dashboard" replace state={{ accessDeniedNotice: 'SOCIETY_ONLY' }} />;
       }
     }
   }
@@ -166,7 +172,27 @@ function AppRoutes() {
           }
         />
 
-        {/* Federation Command Console - Strictly for FEDERATION_HEAD & SOCIETY_ADMIN only */}
+        {/* Apex Federation Head Console - Strictly for FEDERATION_HEAD */}
+        <Route
+          path="/apex/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['COOPERATIVE_ADMIN']} allowedAdminTypes={['FEDERATION_HEAD']}>
+              <ApexDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Primary Society Operations Console - Strictly for SOCIETY_ADMIN */}
+        <Route
+          path="/society/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['COOPERATIVE_ADMIN']} allowedAdminTypes={['SOCIETY_ADMIN']}>
+              <SocietyDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Backward Compatibility Alias for /federation/portal */}
         <Route
           path="/federation/portal"
           element={
