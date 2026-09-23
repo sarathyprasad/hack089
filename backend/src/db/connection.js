@@ -1,8 +1,86 @@
 const { Pool, Client } = require('pg');
 const path = require('path');
 
-// Ensure .env is loaded
+// Ensure .env is loaded from backend directory and root directory
+require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
+
+/**
+ * Safely normalizes PostgreSQL connection URIs, ensuring that special characters
+ * in passwords (e.g. '@', '#', '%', '!', '&', '$', '?') are properly percent-encoded for pg.
+ * Especially crucial for Supabase passwords containing special characters.
+ */
+function normalizePostgresUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+  const trimmed = rawUrl.trim();
+  const match = trimmed.match(/^(postgres(?:ql)?:\/\/)(.*)$/);
+  if (!match) return trimmed;
+
+  const proto = match[1];
+  const rest = match[2];
+
+  const lastAt = rest.lastIndexOf('@');
+  if (lastAt === -1) return trimmed; // No credentials in URL
+
+  const authPart = rest.substring(0, lastAt);
+  const hostPart = rest.substring(lastAt + 1);
+
+  const firstColon = authPart.indexOf(':');
+  if (firstColon === -1) return trimmed; // Username only
+
+  const rawUser = authPart.substring(0, firstColon);
+  const rawPass = authPart.substring(firstColon + 1);
+
+  let safeUser = rawUser;
+  let safePass = rawPass;
+  try {
+    // Decode first to prevent double-encoding, then cleanly encode
+    safeUser = encodeURIComponent(decodeURIComponent(rawUser));
+    safePass = encodeURIComponent(decodeURIComponent(rawPass));
+  } catch (_) {
+    safeUser = encodeURIComponent(rawUser);
+    safePass = encodeURIComponent(rawPass);
+  }
+
+  return `${proto}${safeUser}:${safePass}@${hostPart}`;
+}
+
+/**
+ * Retrieves and normalizes the database connection URL from all common environment variables
+ * supported by Vercel, Supabase, Neon, and Render.
+ */
+function getResolvedConnectionString() {
+  const rawUrl =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.SUPABASE_DATABASE_URL ||
+    process.env.SUPABASE_DB_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING;
+
+  if (rawUrl) {
+    return normalizePostgresUrl(rawUrl);
+  }
+  return null;
+}
+
+/**
+ * Detects if a host name belongs to a remote managed database (Supabase, AWS, Render, etc.)
+ */
+function isRemoteHost(host) {
+  if (!host) return false;
+  const h = host.toLowerCase();
+  return (
+    h.includes('supabase') ||
+    h.includes('pooler') ||
+    h.includes('amazonaws.com') ||
+    h.includes('render.com') ||
+    h.includes('neon.tech') ||
+    h.includes('cockroachlabs.cloud') ||
+    (h !== 'localhost' && h !== '127.0.0.1' && h !== '::1')
+  );
+}
 
 const config = {
   user: process.env.PGUSER || process.env.DB_USER || 'postgres',
@@ -12,23 +90,24 @@ const config = {
   port: parseInt(process.env.PGPORT || process.env.DB_PORT || '5432', 10),
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 10000,
 };
 
-// If a full DATABASE_URL is provided, use it
-if (process.env.DATABASE_URL) {
-  config.connectionString = process.env.DATABASE_URL;
+const resolvedConnectionString = getResolvedConnectionString();
+if (resolvedConnectionString) {
+  config.connectionString = resolvedConnectionString;
 }
 
-let pool;
+let pool = global.__pg_pool || null;
 
 /**
  * Ensure the target PostgreSQL database exists.
  * If not, connects to default 'postgres' database and creates it.
  */
 async function ensureDatabaseExists() {
-  // If running with a remote managed DATABASE_URL (e.g. Render, Supabase, Neon), skip local DDL
-  if (process.env.DATABASE_URL) {
+  const connStr = getResolvedConnectionString();
+  // If running with a remote managed DATABASE_URL (e.g. Supabase, Render, Neon) or remote host, skip local DDL
+  if (connStr || isRemoteHost(config.host)) {
     return;
   }
 
@@ -70,33 +149,45 @@ async function ensureDatabaseExists() {
  */
 function getPool() {
   if (!pool) {
-    if (process.env.DATABASE_URL) {
+    const connStr = getResolvedConnectionString();
+    const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY);
+    const maxConnections = parseInt(process.env.DB_MAX_CONNECTIONS || (isServerless ? '3' : '10'), 10);
+
+    if (connStr) {
+      const isSupabaseOrRemote = isRemoteHost(connStr) || connStr.includes('sslmode=require');
       pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-        max: 20,
+        connectionString: connStr,
+        ssl: isSupabaseOrRemote ? { rejectUnauthorized: false } : (process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false),
+        max: maxConnections,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
       });
+      console.log(`📦 PostgreSQL Pool initialized with connection string (Remote/Supabase: ${isSupabaseOrRemote}, max: ${maxConnections})`);
     } else {
+      const isRemote = isRemoteHost(config.host) || process.env.PGSSLMODE === 'require';
       pool = new Pool({
         user: config.user,
         host: config.host,
         password: config.password,
         database: config.database,
         port: config.port,
-        ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false,
-        max: 20,
+        ssl: isRemote ? { rejectUnauthorized: false } : false,
+        max: maxConnections,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 5000,
+        connectionTimeoutMillis: 10000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
       });
+      console.log(`📦 PostgreSQL Pool initialized for database: ${config.database} @ ${config.host}:${config.port} (SSL: ${isRemote})`);
     }
 
     pool.on('error', (err) => {
       console.error('⚠️ Unexpected error on idle PostgreSQL client:', err.message);
     });
 
-    console.log(`📦 PostgreSQL Pool initialized for database: ${config.database} @ ${config.host}:${config.port}`);
+    global.__pg_pool = pool;
   }
   return pool;
 }
@@ -150,5 +241,8 @@ module.exports = {
   query,
   closeDb,
   ensureDatabaseExists,
-  config
+  config,
+  normalizePostgresUrl,
+  getResolvedConnectionString
 };
+

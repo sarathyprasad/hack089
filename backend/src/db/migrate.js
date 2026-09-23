@@ -1,12 +1,17 @@
 const { query, ensureDatabaseExists } = require('./connection');
 
+let migrationPromise = null;
+
 /**
  * Create all PostgreSQL database tables and apply schema migrations for 7-Phase Workflow.
  */
 async function migrate() {
-  await ensureDatabaseExists();
+  if (migrationPromise) return migrationPromise;
 
-  const ddl = `
+  migrationPromise = (async () => {
+    await ensureDatabaseExists();
+
+    const ddl = `
     -- =============================================
     -- Cooperatives
     -- =============================================
@@ -770,7 +775,10 @@ async function migrate() {
     WHERE verification_status = 'PENDING' AND verification_step IS NULL;
   `);
 
-  console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and dual work compliance ready.');
+    console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and dual work compliance ready.');
+  })();
+
+  return migrationPromise;
 }
 
 if (require.main === module) {
