@@ -47,6 +47,41 @@ function normalizePostgresUrl(rawUrl) {
 }
 
 /**
+ * Automatically rewrites direct Supabase connections (db.<ref>.supabase.co:5432),
+ * which are IPv6-only and fail on Vercel/serverless with "ENOTFOUND", into the IPv4
+ * Supavisor Connection Pooler URL (aws-0-<region>.pooler.supabase.com:6543).
+ */
+function resolveSupabaseDirectToPooler(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+  const lastAt = rawUrl.lastIndexOf('@');
+  if (lastAt === -1) return rawUrl;
+  const hostAndRest = rawUrl.substring(lastAt + 1);
+  const authAndProto = rawUrl.substring(0, lastAt);
+
+  const hostMatch = hostAndRest.match(/^db\.([a-z0-9]+)\.supabase\.co(?::\d+)?(\/.*)?$/i);
+  if (hostMatch) {
+    const projectRef = hostMatch[1];
+    const pathAndQuery = hostMatch[2] || '/postgres';
+    const region = process.env.SUPABASE_REGION || 'ap-south-1';
+
+    const protoIndex = authAndProto.indexOf('://') + 3;
+    const proto = authAndProto.substring(0, protoIndex);
+    const credentials = authAndProto.substring(protoIndex);
+    const firstColon = credentials.indexOf(':');
+    if (firstColon !== -1) {
+      let user = credentials.substring(0, firstColon);
+      const pass = credentials.substring(firstColon + 1);
+      if (!user.includes('.')) {
+        user = `${user}.${projectRef}`;
+      }
+      const poolerHost = `aws-0-${region}.pooler.supabase.com:6543`;
+      return `${proto}${user}:${pass}@${poolerHost}${pathAndQuery}`;
+    }
+  }
+  return rawUrl;
+}
+
+/**
  * Retrieves and normalizes the database connection URL from all common environment variables
  * supported by Vercel, Supabase, Neon, and Render.
  */
@@ -60,7 +95,8 @@ function getResolvedConnectionString() {
     process.env.POSTGRES_URL_NON_POOLING;
 
   if (rawUrl) {
-    return normalizePostgresUrl(rawUrl);
+    const poolerUrl = resolveSupabaseDirectToPooler(rawUrl);
+    return normalizePostgresUrl(poolerUrl);
   }
   return null;
 }
@@ -140,7 +176,7 @@ async function ensureDatabaseExists() {
   } finally {
     try {
       await adminClient.end();
-    } catch (_) {}
+    } catch (_) { }
   }
 }
 

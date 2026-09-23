@@ -124,7 +124,7 @@ async function getServices(req, res) {
       };
     });
 
-    res.json({ 
+    res.json({
       services: formattedServices,
       district: district || 'ALL',
       society_id: selectedSocId || null,
