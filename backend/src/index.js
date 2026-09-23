@@ -53,6 +53,7 @@ app.use(cors({
     
     if (
       allowedOrigins.includes(origin) ||
+      origin.includes('vercel.app') ||
       origin.includes('ngrok') ||
       origin.includes('loca.lt') ||
       origin.startsWith('http://localhost:') ||
