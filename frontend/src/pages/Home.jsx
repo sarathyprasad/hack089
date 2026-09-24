@@ -573,9 +573,6 @@ export default function Home() {
                       <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Fixed Base</span>
                       <span className="font-black text-slate-950 text-base font-mono">{cat.starting}</span>
                     </div>
-                    <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      {cat.count} verified pros
-                    </span>
                   </div>
 
                   <Link

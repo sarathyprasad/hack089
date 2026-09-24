@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Zap, Droplets, Hammer, Paintbrush, SprayCan, Flower2,
   HeartPulse, Car, Wrench, Home as HomeIcon, Settings, AlertTriangle,
-  Search, Users, ArrowRight, ShieldCheck, CheckCircle2, Clock,
+  Search, ArrowRight, ShieldCheck, CheckCircle2, Clock,
   Mic, MicOff, IndianRupee, X, Snowflake, Wind, Layers,
   MapPin, Building2, ChevronDown, Check, Sparkles, PhoneCall, Calendar,
   BarChart3, Info, SlidersHorizontal, CheckSquare
@@ -258,13 +258,6 @@ export default function Services() {
               <Layers size={15} className="text-emerald-600" />
               <span>Catalog & Area Prices</span>
             </div>
-            <Link
-              to={`/book-service?district=${encodeURIComponent(selectedDistrict !== 'ALL' ? selectedDistrict : 'Khordha')}&area_id=${selectedAreaId}`}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition-all font-semibold"
-            >
-              <Zap size={15} className="text-amber-500" />
-              <span>Instant Dispatch Wizard →</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -546,17 +539,8 @@ export default function Services() {
                       </div>
                     </div>
 
-                    {/* Worker Availability & Duration */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
-                      <div className="flex items-center gap-1.5">
-                        <Users
-                          size={13}
-                          className={(service.available_workers ?? 0) > 0 ? "text-emerald-600" : "text-amber-500"}
-                        />
-                        <span className={(service.available_workers ?? 0) > 0 ? "text-gray-600" : "text-amber-700 font-medium"}>
-                          <strong>{service.available_workers ?? 0}</strong> {(service.available_workers ?? 0) === 1 ? 'Artisan' : 'Artisans'} in {activeLocation?.city || 'this area'}
-                        </span>
-                      </div>
+                    {/* Split Details */}
+                    <div className="flex items-center justify-end text-xs text-gray-500 pt-1">
                       <button
                         type="button"
                         onClick={() => setTariffModalService(service)}
