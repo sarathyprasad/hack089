@@ -78,6 +78,8 @@ async function migrate() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_type VARCHAR(50) DEFAULT 'SOCIETY_ADMIN';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS designation TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS society_id INTEGER;
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('CUSTOMER', 'WORKER', 'COOPERATIVE_ADMIN', 'FEDERATION', 'DCO', 'ADMIN'));
 
     -- =============================================
     -- Workers (extends Users with role='WORKER')
@@ -109,6 +111,9 @@ async function migrate() {
     );
 
     -- Ensure newly introduced columns exist in workers if table was already created
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS cooperative_id INTEGER;
+    ALTER TABLE workers ADD COLUMN IF NOT EXISTS federation_id INTEGER DEFAULT 1;
+    ALTER TABLE workers ALTER COLUMN federation_id DROP NOT NULL;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS tier VARCHAR(50) DEFAULT 'BRONZE';
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS merit_points INTEGER DEFAULT 100;
     ALTER TABLE workers ADD COLUMN IF NOT EXISTS strike_count INTEGER DEFAULT 0;
@@ -268,6 +273,9 @@ async function migrate() {
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS declined_worker_ids TEXT DEFAULT '';
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cooperative_fee REAL DEFAULT 0.0;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS platform_fee REAL DEFAULT 0.0;
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS total_amount REAL DEFAULT 0.0;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS squad_size INTEGER DEFAULT 1;
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS squad_worker_ids TEXT DEFAULT '';
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS transit_compensation_fee REAL DEFAULT 50.0;
@@ -773,6 +781,51 @@ async function migrate() {
     UPDATE workers
     SET verification_step = 2
     WHERE verification_status = 'PENDING' AND verification_step IS NULL;
+    -- =============================================
+    -- Performance Indexes for Sub-Millisecond Queries
+    -- =============================================
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+    CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+    CREATE INDEX IF NOT EXISTS idx_users_district ON users(district);
+    CREATE INDEX IF NOT EXISTS idx_workers_user_id ON workers(user_id);
+    CREATE INDEX IF NOT EXISTS idx_workers_society_id ON workers(society_id);
+    CREATE INDEX IF NOT EXISTS idx_workers_cooperative_id ON workers(cooperative_id);
+    CREATE INDEX IF NOT EXISTS idx_workers_status_avail ON workers(verification_status, availability);
+    CREATE INDEX IF NOT EXISTS idx_workers_rating ON workers(rating DESC);
+    CREATE INDEX IF NOT EXISTS idx_worker_skills_worker_id ON worker_skills(worker_id);
+    CREATE INDEX IF NOT EXISTS idx_worker_skills_skill_id ON worker_skills(skill_id);
+    CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);
+    CREATE INDEX IF NOT EXISTS idx_services_category ON services(category);
+    CREATE INDEX IF NOT EXISTS idx_services_active ON services(is_active);
+    CREATE INDEX IF NOT EXISTS idx_bookings_customer_id ON bookings(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_bookings_worker_id ON bookings(worker_id);
+    CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+    CREATE INDEX IF NOT EXISTS idx_bookings_scheduled_date ON bookings(scheduled_date);
+    CREATE INDEX IF NOT EXISTS idx_reviews_worker_id ON reviews(worker_id);
+    CREATE INDEX IF NOT EXISTS idx_societies_district ON societies(district);
+    CREATE INDEX IF NOT EXISTS idx_societies_status ON societies(status);
+    -- =============================================
+    -- Saved Addresses (Customer Address Book)
+    -- =============================================
+    CREATE TABLE IF NOT EXISTS saved_addresses (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      label TEXT NOT NULL DEFAULT 'Home',
+      full_address TEXT NOT NULL,
+      district TEXT,
+      city TEXT,
+      pincode TEXT,
+      landmark TEXT,
+      latitude REAL,
+      longitude REAL,
+      is_default INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_saved_addresses_user_id ON saved_addresses(user_id);
   `);
 
     console.log('✅ PostgreSQL migration complete — 7-Phase schema, tables, and dual work compliance ready.');

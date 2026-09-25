@@ -13,7 +13,7 @@ const SESSION_STORAGE_KEY = 'prithvi_fix_ai_chat_session';
 
 const INITIAL_GREETING = {
   role: 'assistant',
-  content: `👋 **Namaste! I am Sahayak AI**, your official **Prithvi Fix** Virtual Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Cooperative 93-2-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **30-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
+  content: `👋 **Namaste! I am Prithvi AI**, your official **Prithvi Fix** Cooperative Intelligence Assistant.\n\nI can help you with:\n• 🛠️ **Service Booking & Diagnostic Matching**\n• 💰 **Cooperative 93-2-5 Transparent Tariffs**\n• 🔐 **2-Stage Security OTP Handshakes**\n• 🛡️ **30-Day Free Repair Guarantee**\n• 👷 **Artisan Registration & Cooperative Welfare**\n\nHow can I help you today?`,
   suggestions: [
     'How does the 93-2-5 tariff split work?',
     'Book an Electrician or Plumber',
@@ -270,7 +270,7 @@ export default function AIChatBot() {
             aria-label="Open Prithvi Fix AI Assistant"
           >
             <Sparkles size={14} className="text-amber-400" />
-            <span>Sahayak AI</span>
+            <span>Prithvi AI</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </button>
         </div>
@@ -290,14 +290,14 @@ export default function AIChatBot() {
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden border border-amber-400/80 shrink-0">
-                  <img src="/logo-emblem.png" alt="Sahayak AI" className="w-full h-full object-contain" />
+                  <img src="/logo-emblem.png" alt="Prithvi AI" className="w-full h-full object-contain" />
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F294A]"></span>
               </div>
 
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-extrabold text-sm text-white">Sahayak AI</h3>
+                  <h3 className="font-extrabold text-sm text-white">Prithvi AI</h3>
                   <span className="text-[9px] font-medium bg-white/10 text-slate-200 px-1.5 py-0.5 rounded border border-white/15">
                     Cooperative Portal
                   </span>
@@ -445,7 +445,7 @@ export default function AIChatBot() {
                     <span className="w-2 h-2 rounded-full bg-blue-900 animate-bounce [animation-delay:0.2s]"></span>
                     <span className="w-2 h-2 rounded-full bg-blue-900 animate-bounce [animation-delay:0.4s]"></span>
                   </span>
-                  <span className="text-[11px] font-medium text-gray-600">Sahayak AI is retrieving platform intelligence...</span>
+                  <span className="text-[11px] font-medium text-gray-600">Prithvi AI is retrieving platform intelligence...</span>
                 </div>
               </div>
             )}

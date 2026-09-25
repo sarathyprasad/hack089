@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
@@ -73,11 +74,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning', 'x-requested-with'],
 }));
 
+// Response compression (gzip/brotli)
+app.use(compression());
+
 // General API Rate Limiting to prevent DoS
 app.use('/api', generalLimiter);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body Parsing with expanded limit for camera photo defect diagnosis
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Logging - only in development
 if (process.env.NODE_ENV !== 'production') {
@@ -101,6 +106,7 @@ const localizationRoutes = require('./routes/localization');
 const governanceRoutes = require('./routes/governance');
 const societiesRoutes = require('./routes/societies');
 const federationRoutes = require('./routes/federation');
+const profileRoutes = require('./routes/profile');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
@@ -116,6 +122,7 @@ app.use('/api/localization', localizationRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api/societies', societiesRoutes);
 app.use('/api/federation', federationRoutes);
+app.use('/api/profile', profileRoutes);
 
 // ---------------------
 // Health Check
@@ -166,6 +173,82 @@ app.get('/api/db/stats', async (req, res) => {
   } catch (err) {
     res.status(500).json({ status: 'error', database: 'PostgreSQL error', message: err.message });
   }
+});
+
+// ---------------------
+// Static APK Downloads Portal
+// ---------------------
+const apksDir = path.join(__dirname, '..', '..', 'apks');
+app.use('/apks', express.static(apksDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.apk')) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment');
+    }
+  }
+}));
+
+app.get('/download', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prithvi Fix — Android APK Downloads</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0b1120; color: #f8fafc; padding: 24px 16px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; max-width: 480px; width: 100%; padding: 28px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    h1 { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; text-align: center; }
+    .sub { font-size: 13px; color: #94a3b8; text-align: center; margin-bottom: 24px; }
+    .badge { display: inline-block; background: #059669; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; margin-bottom: 12px; }
+    .btn { display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; text-decoration: none; color: #fff; transition: all 0.2s ease; }
+    .btn:hover, .btn:active { background: #1e293b; border-color: #3b82f6; transform: translateY(-1px); }
+    .btn.citizen { border-left: 4px solid #16a34a; }
+    .btn.worker { border-left: 4px solid #f97316; }
+    .btn.admin { border-left: 4px solid #3b82f6; }
+    .btn-title { font-size: 15px; font-weight: 700; }
+    .btn-desc { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+    .btn-icon { background: #334155; border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .tip { font-size: 12px; color: #64748b; line-height: 1.5; margin-top: 20px; text-align: center; background: #0f172a; padding: 12px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="text-align: center;"><span class="badge">Prithvi Fix Cooperative Suite</span></div>
+    <h1>Install Android Apps</h1>
+    <p class="sub">Download directly to your Android device</p>
+
+    <a href="/apks/PrithviFix_Citizen.apk" class="btn citizen" download="PrithviFix_Citizen.apk">
+      <div>
+        <div class="btn-title">1. Prithvi Fix Citizen</div>
+        <div class="btn-desc">Posters, AI fault scanner & bookings (59 MB)</div>
+      </div>
+      <div class="btn-icon">🏠</div>
+    </a>
+
+    <a href="/apks/PrithviFix_Worker.apk" class="btn worker" download="PrithviFix_Worker.apk">
+      <div>
+        <div class="btn-title">2. Prithvi Fix Shramik</div>
+        <div class="btn-desc">Dark/Light mode, SOS radar & toolkits (54 MB)</div>
+      </div>
+      <div class="btn-icon">⚡</div>
+    </a>
+
+    <a href="/apks/PrithviFix_Admin.apk" class="btn admin" download="PrithviFix_Admin.apk">
+      <div>
+        <div class="btn-title">3. Prithvi Fix Sahakari</div>
+        <div class="btn-desc">Federation registrar & live telemetry (55 MB)</div>
+      </div>
+      <div class="btn-icon">🏛️</div>
+    </a>
+
+    <div class="tip">
+      💡 <strong>Installation Note:</strong> When prompted by Chrome, tap <em>"Download anyway"</em>, then open the downloaded file and tap <em>"Install"</em> (enable "Allow from this source" if asked).
+    </div>
+  </div>
+</body>
+</html>`);
 });
 
 // ---------------------

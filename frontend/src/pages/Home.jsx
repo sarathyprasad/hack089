@@ -332,21 +332,21 @@ export default function Home() {
           {/* Subtle Trust Badge */}
           <div className="scroll-reveal inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-900 text-xs font-semibold tracking-wide shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span>Verified Artisans • Fixed Tariffs</span>
+            <span>{t('heroTrustBadge', 'Verified Artisans • Fixed Tariffs')}</span>
           </div>
 
           {/* Punchy, Clear Headline */}
           <h1 className="scroll-reveal text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.14] text-slate-950">
-            Expert Repairs.{' '}
+            {t('heroHeadline1', 'Expert Repairs.')}{' '}
             <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-blue-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
-              Fixed Rates.
+              {t('heroHeadline2', 'Fixed Rates.')}
             </span>
           </h1>
 
           {/* Simple, Minimal Subtitle */}
           <p className="scroll-reveal text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-lg mx-auto font-normal">
-            Certified electricians, plumbers &amp; mechanics with 30-day warranty and zero surge pricing.
+            {t('heroSubheadline', 'Certified electricians, plumbers & mechanics with 30-day warranty and zero surge pricing.')}
           </p>
 
           {/* Minimalist Floating Search Capsule with Scale entrance */}
@@ -438,7 +438,7 @@ export default function Home() {
                 <Search className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="What needs repair? (e.g. tap leaking, fan sparking, AC cooling)..."
+                  placeholder={t('searchRepairPlaceholder', 'What needs repair? (e.g. tap leaking, fan sparking, AC cooling)...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-900 placeholder:text-slate-400 rounded-xl text-xs sm:text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
@@ -447,7 +447,7 @@ export default function Home() {
                   type="button"
                   onClick={handleVoiceSearch}
                   className={`absolute right-3 p-1 rounded-lg ${isListeningMic ? 'text-red-600 bg-red-50 animate-pulse' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200/60'}`}
-                  title="Voice Search"
+                  title={t('voiceSearch', 'Voice Search')}
                 >
                   {isListeningMic ? <MicOff size={16} /> : <Mic size={16} />}
                 </button>
@@ -458,7 +458,7 @@ export default function Home() {
                 type="submit"
                 className="w-full sm:w-auto bg-[#0F294A] hover:bg-blue-900 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
               >
-                <span>Find Service</span>
+                <span>{t('findServiceBtn', 'Find Service')}</span>
                 <ArrowRight size={15} />
               </button>
             </form>
@@ -468,22 +468,22 @@ export default function Home() {
           <div className="scroll-reveal pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-600 font-semibold border-t border-slate-200/80 max-w-2xl mx-auto">
             <div className="flex items-center gap-1.5 text-emerald-700">
               <ShieldCheck size={16} className="text-emerald-600" />
-              <span>100% Skill Verified</span>
+              <span>{t('skillVerified100', '100% Skill Verified')}</span>
             </div>
             <div className="flex items-center gap-1.5 text-amber-700">
               <CheckCircle2 size={16} className="text-amber-600" />
-              <span>Zero Surge Pricing</span>
+              <span>{t('zeroSurgePricing', 'Zero Surge Pricing')}</span>
             </div>
             <div className="flex items-center gap-1.5 text-blue-700">
               <Sparkles size={16} className="text-blue-600" />
-              <span>30-Day Free Warranty</span>
+              <span>{t('freeWarranty30Day', '30-Day Free Warranty')}</span>
             </div>
             <a
               href="tel:18003457788"
               className="flex items-center gap-1.5 text-slate-700 hover:text-blue-900 transition font-bold pl-2 border-l border-slate-200"
             >
               <PhoneCall size={13} className="text-emerald-600" />
-              <span>Toll-Free: <strong className="font-mono text-slate-900">1800-345-7788</strong></span>
+              <span>{t('tollFreeLabelWithNum', 'Toll-Free: 1800-345-7788')}</span>
             </a>
           </div>
 
@@ -496,24 +496,24 @@ export default function Home() {
       <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="scroll-reveal text-center max-w-2xl mx-auto mb-8">
           <span className="inline-block text-[11px] font-bold text-blue-900 uppercase tracking-wider px-3 py-1 bg-blue-50 rounded-full mb-2 border border-blue-200">
-            Regulated Tariffs
+            {t('regulatedTariffsBadge', 'Regulated Tariffs')}
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Standardized Trade Services
+            {t('standardizedTradeServices', 'Standardized Trade Services')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Official base tariffs for all household trades. Transparent labour rates, zero hidden fees.
+            {t('servicesSubtext', 'Official base tariffs for all household trades. Transparent labour rates, zero hidden fees.')}
           </p>
 
           {/* Filter Pills */}
           <div className="flex items-center justify-center gap-1.5 flex-wrap mt-5">
             {[
-              { id: 'all', label: 'All Services (12)' },
-              { id: 'popular', label: '🔥 Popular' },
-              { id: 'electrical', label: '⚡ Electrical & AC' },
-              { id: 'plumbing', label: '🚰 Plumbing' },
-              { id: 'home', label: '🔨 Carpentry & Home' },
-              { id: 'emergency', label: '🚨 Emergency 24/7' },
+              { id: 'all', label: t('filterAll', 'All Services (12)') },
+              { id: 'popular', label: t('filterPopular', '🔥 Popular') },
+              { id: 'electrical', label: t('filterElectrical', '⚡ Electrical & AC') },
+              { id: 'plumbing', label: t('filterPlumbing', '🚰 Plumbing') },
+              { id: 'home', label: t('filterHome', '🔨 Carpentry & Home') },
+              { id: 'emergency', label: t('filterEmergency', '🚨 Emergency 24/7') },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -549,12 +549,12 @@ export default function Home() {
 
                     {cat.popular && (
                       <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                        Popular
+                        {t('badgePopular', 'Popular')}
                       </span>
                     )}
                     {cat.emergency && (
                       <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-600 text-white animate-pulse">
-                        24/7 Rapid
+                        {t('badgeRapid', '24/7 Rapid')}
                       </span>
                     )}
                   </div>
@@ -570,7 +570,7 @@ export default function Home() {
                 <div className="pt-3 border-t border-slate-100 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Fixed Base</span>
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">{t('fixedBase', 'Fixed Base')}</span>
                       <span className="font-black text-slate-950 text-base font-mono">{cat.starting}</span>
                     </div>
                   </div>
@@ -579,7 +579,7 @@ export default function Home() {
                     to={`/book-service?category=${encodeURIComponent(cat.categoryName)}&district=${encodeURIComponent(selectedDistrict || selectedLocation?.district || 'Khordha')}`}
                     className="w-full bg-[#0F294A] hover:bg-blue-900 text-white rounded-xl py-2.5 px-3 text-xs font-bold text-center flex items-center justify-center gap-1.5 transition shadow-2xs hover:shadow-xs"
                   >
-                    <span>Book Service</span>
+                    <span>{t('bookServiceBtn', 'Book Service')}</span>
                     <ArrowRight size={13} />
                   </Link>
                 </div>
@@ -595,22 +595,22 @@ export default function Home() {
               <div className="flex items-center justify-between gap-2 mb-2.5">
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                   <ShieldCheck size={11} />
-                  93-2-5 Model
+                  {t('model9325Badge', '93-2-5 Model')}
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">Labour Capped ₹199-₹349</span>
+                <span className="text-[11px] text-slate-400 font-mono">{t('labourCapped', 'Labour Capped ₹199-₹349')}</span>
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">
-                Regulated Fixed Rate Card
+                {t('transparentRateCard', 'Regulated Fixed Rate Card')}
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                Know the exact price of every replacement capacitor, PCB, and gas charge upfront. Zero surge pricing and direct 93% living wage artisan payout.
+                {t('transparentRateCardDesc', 'Know the exact price of every replacement capacitor, PCB, and gas charge upfront. Zero surge pricing and direct 93% living wage artisan payout.')}
               </p>
             </div>
             <Link
               to="/rate-card"
               className="inline-flex items-center justify-between text-xs font-bold text-emerald-400 hover:text-emerald-300 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl border border-white/10 transition"
             >
-              <span>View Itemized Rate Card</span>
+              <span>{t('viewItemizedRateCard', 'View Itemized Rate Card')}</span>
               <ArrowRight size={13} />
             </Link>
           </div>
@@ -621,22 +621,22 @@ export default function Home() {
               <div className="flex items-center justify-between gap-2 mb-2.5">
                 <span className="civic-authority-chip">
                   <Snowflake size={12} className="text-slate-300" />
-                  <span>Standard Operating Procedure</span>
+                  <span>{t('sopBadge', 'Standard Operating Procedure')}</span>
                 </span>
-                <span className="text-[11px] text-emerald-300 font-medium">30-Day Free Warranty</span>
+                <span className="text-[11px] text-emerald-300 font-medium">{t('freeWarranty30Day', '30-Day Free Warranty')}</span>
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">
-                Foam-Jet AC Deep Overhaul Process
+                {t('acProtocolTitle', 'Foam-Jet AC Deep Overhaul Process')}
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                High-pressure coil wash with leak-proof protection apron, calibrated digital gas audit, and delta-T cold airflow verification.
+                {t('acProtocolDesc', 'High-pressure coil wash with leak-proof protection apron, calibrated digital gas audit, and delta-T cold airflow verification.')}
               </p>
             </div>
             <Link
               to="/services/1"
               className="inline-flex items-center justify-between text-xs font-bold text-blue-300 hover:text-blue-200 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl border border-white/10 transition"
             >
-              <span>Explore 5-Step AC Process</span>
+              <span>{t('exploreAcProcess', 'Explore 5-Step AC Process')}</span>
               <ArrowRight size={13} />
             </Link>
           </div>
@@ -647,7 +647,7 @@ export default function Home() {
             to="/services"
             className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 font-bold text-xs px-6 py-2.5 rounded-xl shadow-2xs hover:bg-slate-50 transition home-interactive-card"
           >
-            <span>Browse All 47 Granular Trade Services</span>
+            <span>{t('browseAllServices', 'Browse All 47 Granular Trade Services')}</span>
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -660,13 +660,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="scroll-reveal text-center max-w-2xl mx-auto mb-10">
             <span className="inline-block text-[11px] font-bold text-emerald-900 uppercase tracking-wider px-3 py-1 bg-emerald-100 rounded-full mb-2">
-              Transparent &amp; Simple
+              {t('howItWorksBadge', 'Transparent & Simple')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              How Prithvi Fix Works
+              {t('howItWorksHeading', 'How Prithvi Fix Works')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
-              Book skilled cooperative artisans in 3 easy steps with zero surge pricing.
+              {t('howItWorksSubtitle', 'Book skilled cooperative artisans in 3 easy steps with zero surge pricing.')}
             </p>
           </div>
 
@@ -676,9 +676,9 @@ export default function Home() {
               <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
                 1
               </div>
-              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">1. Select Your Repair</h3>
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">{t('howStep1Title', '1. Select Your Repair')}</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Search your problem (e.g. leaking tap or AC repair). View transparent fixed base tariffs upfront—no hidden charges.
+                {t('howStep1Desc', 'Search your problem (e.g. leaking tap or AC repair). View transparent fixed base tariffs upfront—no hidden charges.')}
               </p>
             </div>
 
@@ -687,9 +687,9 @@ export default function Home() {
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 2
               </div>
-              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">2. Nearby Pro Dispatched</h3>
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">{t('howStep2Title', '2. Nearby Pro Dispatched')}</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                A certified, police background-verified cooperative technician arrives at your door at the requested time.
+                {t('howStep2Desc', 'A certified, police background-verified cooperative technician arrives at your door at the requested time.')}
               </p>
             </div>
 
@@ -698,9 +698,9 @@ export default function Home() {
               <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-extrabold text-base mb-3 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 3
               </div>
-              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">3. Pay Fixed Rate &amp; Relax</h3>
+              <h3 className="font-extrabold text-base text-slate-900 mb-1.5">{t('howStep3Title', '3. Pay Fixed Rate & Relax')}</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Pay standard regulated rates via UPI or cash only after job completion. Enjoy our 30-day free repair warranty.
+                {t('howStep3Desc', 'Pay standard regulated rates via UPI or cash only after job completion. Enjoy our 30-day free repair warranty.')}
               </p>
             </div>
           </div>
@@ -714,13 +714,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto text-center">
           <div className="scroll-reveal">
             <span className="inline-block text-[11px] font-bold text-amber-900 uppercase tracking-wider px-3 py-1 bg-amber-100 rounded-full mb-2">
-              Why Cooperative
+              {t('whyCooperative', 'Why Cooperative')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Cooperative Standards vs. Private Aggregators
+              {t('comparisonHeading', 'Cooperative Standards vs. Private Aggregators')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl mx-auto">
-              Fair tariffs for citizens, dignified earnings and direct social security for skilled workers.
+              {t('comparisonSubtitle', 'Fair tariffs for citizens, dignified earnings and direct social security for skilled workers.')}
             </p>
           </div>
 
@@ -730,31 +730,31 @@ export default function Home() {
               <div className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-900 text-white">
                 PRITHVI FIX
               </div>
-              <h3 className="font-extrabold text-lg text-blue-950 mb-4">Labour Cooperative Model</h3>
+              <h3 className="font-extrabold text-lg text-blue-950 mb-4">{t('labourCoopModel', 'Labour Cooperative Model')}</h3>
               <ul className="space-y-3 text-xs text-slate-700">
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <Check size={12} />
                   </div>
-                  <span><strong>Regulated Fixed Tariffs:</strong> Zero surge pricing during rains, rush hours, or holidays.</span>
+                  <span>{t('compRegulatedFixedTariffs', 'Regulated Fixed Tariffs: Zero surge pricing during rains, rush hours, or holidays.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <Check size={12} />
                   </div>
-                  <span><strong>100% Skill Verified:</strong> Biometric Aadhaar &amp; police background verification.</span>
+                  <span>{t('compSkillVerified', '100% Skill Verified: Biometric Aadhaar & police background verification.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <Check size={12} />
                   </div>
-                  <span><strong>100% Fair Pay to Artisans:</strong> Direct social security &amp; accident insurance.</span>
+                  <span>{t('compFairPay', '100% Fair Pay to Artisans: Direct social security & accident insurance.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <Check size={12} />
                   </div>
-                  <span><strong>30-Day Free Warranty:</strong> Dedicated nodal dispute &amp; re-repair desk.</span>
+                  <span>{t('compWarranty', '30-Day Free Warranty: Dedicated nodal dispute & re-repair desk.')}</span>
                 </li>
               </ul>
             </div>
@@ -762,33 +762,33 @@ export default function Home() {
             {/* Commercial Apps Card */}
             <div className="scroll-reveal-right home-interactive-card p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 shadow-2xs">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Commercial Gig Apps
+                {t('commercialGigApps', 'Commercial Gig Apps')}
               </div>
-              <h3 className="font-extrabold text-lg text-slate-700 mb-4">Private Aggregators</h3>
+              <h3 className="font-extrabold text-lg text-slate-700 mb-4">{t('privateAggregators', 'Private Aggregators')}</h3>
               <ul className="space-y-3 text-xs text-slate-500">
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                     <X size={12} />
                   </div>
-                  <span><strong>Dynamic Surge Multipliers:</strong> 1.5x–2.5x price surge during peak demand.</span>
+                  <span>{t('compDynamicSurge', 'Dynamic Surge Multipliers: 1.5x–2.5x price surge during peak demand.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                     <X size={12} />
                   </div>
-                  <span><strong>High Intermediary Cuts:</strong> 25%–35% deducted from worker earnings.</span>
+                  <span>{t('compHighCuts', 'High Intermediary Cuts: 25%–35% deducted from worker earnings.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                     <X size={12} />
                   </div>
-                  <span><strong>No Social Security:</strong> Contractual gig work without health or accident cover.</span>
+                  <span>{t('compNoSocialSecurity', 'No Social Security: Contractual gig work without health or accident cover.')}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                     <X size={12} />
                   </div>
-                  <span><strong>Bot-Only Redressal:</strong> Inflexible chat bots without cooperative nodal officer review.</span>
+                  <span>{t('compBotOnly', 'Bot-Only Redressal: Inflexible chat bots without cooperative nodal officer review.')}</span>
                 </li>
               </ul>
             </div>
@@ -814,13 +814,13 @@ export default function Home() {
             </div>
             <div className="space-y-1">
               <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                Assisted Phone Booking
+                {t('assistedPhoneBooking', 'Assisted Phone Booking')}
               </span>
               <h3 className="text-lg font-extrabold text-slate-900">
-                Prefer to book by phone? Call our Toll-Free Helpline
+                {t('preferBookByPhone', 'Prefer to book by phone? Call our Toll-Free Helpline')}
               </h3>
               <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                Dial <strong className="font-mono text-slate-900">1800-345-7788</strong> (toll-free, 8 AM to 8 PM) or visit your nearest Gram Panchayat Mo Seva Kendra / CSC kiosk for in-person assisted bookings.
+                {t('assistedPhoneDesc', 'Dial 1800-345-7788 (toll-free, 8 AM to 8 PM) or visit your nearest Gram Panchayat Mo Seva Kendra / CSC kiosk for in-person assisted bookings.')}
               </p>
             </div>
           </div>
@@ -831,13 +831,13 @@ export default function Home() {
               className="btn bg-[#0F294A] hover:bg-blue-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
             >
               <PhoneCall size={14} />
-              <span>Call 1800-345-7788</span>
+              <span>{t('call1800Btn', 'Call 1800-345-7788')}</span>
             </a>
             <Link
               to="/help"
               className="btn bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1"
             >
-              <span>Kiosk Directory</span>
+              <span>{t('kioskDirectoryBtn', 'Kiosk Directory')}</span>
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -854,28 +854,28 @@ export default function Home() {
               <div className="text-2xl sm:text-3xl font-bold text-white font-mono">
                 {dbStats?.verifiedWorkers || 50}+
               </div>
-              <div className="text-xs text-slate-300 font-medium mt-1">Verified Artisans</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">{t('statVerifiedWorkers', 'Verified Artisans')}</div>
             </div>
 
             <div className="scroll-reveal-card p-4 rounded-xl bg-white/5 border border-white/10 home-interactive-card">
               <div className="text-2xl sm:text-3xl font-black text-white font-mono">
                 12
               </div>
-              <div className="text-xs text-slate-300 font-medium mt-1">Trade Specializations</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">{t('statSpecializations', 'Trade Specializations')}</div>
             </div>
 
             <div className="scroll-reveal-card p-4 rounded-xl bg-white/5 border border-white/10 home-interactive-card">
               <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
                 30
               </div>
-              <div className="text-xs text-slate-300 font-medium mt-1">Districts Covered</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">{t('statDistrictsCovered', 'Districts Covered')}</div>
             </div>
 
             <div className="scroll-reveal-card p-4 rounded-xl bg-white/5 border border-white/10 home-interactive-card">
               <div className="text-2xl sm:text-3xl font-bold text-emerald-400 font-mono">
                 99.4%
               </div>
-              <div className="text-xs text-slate-300 font-medium mt-1">Citizen Satisfaction</div>
+              <div className="text-xs text-slate-300 font-medium mt-1">{t('statSatisfaction', 'Citizen Satisfaction')}</div>
             </div>
           </div>
         </div>
@@ -888,13 +888,13 @@ export default function Home() {
         <div className="scroll-reveal-scale home-interactive-card max-w-7xl mx-auto p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-5 text-left">
           <div className="space-y-1">
             <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">
-              Artisan Cooperative Membership
+              {t('artisanMembershipBadge', 'Artisan Cooperative Membership')}
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold leading-tight">
-              Are you a certified or skilled trade artisan?
+              {t('artisanCalloutHeading', 'Are you a certified or skilled trade artisan?')}
             </h3>
             <p className="text-xs text-amber-100 max-w-lg leading-relaxed">
-              Join your regional Labour Cooperative. Get regular bookings, guaranteed regulated tariffs, ESIC health coverage, and zero agency exploitation.
+              {t('artisanCalloutDesc', 'Join your regional Labour Cooperative. Get regular bookings, guaranteed regulated tariffs, ESIC health coverage, and zero agency exploitation.')}
             </p>
           </div>
 
@@ -903,7 +903,7 @@ export default function Home() {
               to="/register?role=worker"
               className="w-full md:w-auto btn bg-slate-950 hover:bg-black text-white text-xs font-black px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 border border-white/20"
             >
-              <span>Join as an Artisan</span>
+              <span>{t('joinAsArtisanBtn', 'Join as an Artisan')}</span>
               <ArrowRight size={14} />
             </Link>
           </div>

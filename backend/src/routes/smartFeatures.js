@@ -5,13 +5,14 @@ const {
   getWorkforceAllocation,
   approveMutualAid,
 } = require('../controllers/smartFeaturesController');
-const { handleAIChat } = require('../controllers/aiChatController');
+const { handleAIChat, handleImageDiagnosis } = require('../controllers/aiChatController');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const { aiChatLimiter } = require('../middleware/rateLimiter');
 
-// Public AI Chatbot Assistant for citizens, workers, and visitors (rate limited)
+// Public AI Chatbot & Image Vision Diagnostics for citizens, workers, and visitors (rate limited)
 router.post('/ai-chat', aiChatLimiter, handleAIChat);
+router.post('/ai-diagnose-image', aiChatLimiter, handleImageDiagnosis);
 
 // Protected routes (require authenticated login)
 router.use(authenticate);

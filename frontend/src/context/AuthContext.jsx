@@ -80,6 +80,19 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const data = await api.getMe();
+      if (data && data.user) {
+        setUser(data.user);
+        setWorkerProfile(data.workerProfile || null);
+      }
+      return data;
+    } catch (err) {
+      console.warn('Failed to refresh user:', err.message);
+    }
+  };
+
   const logout = async () => {
     try {
       await api.logout();
@@ -100,6 +113,7 @@ export function AuthProvider({ children }) {
         demoLogin,
         register,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
         isCustomer: user?.role === 'CUSTOMER',
         isWorker: user?.role === 'WORKER',

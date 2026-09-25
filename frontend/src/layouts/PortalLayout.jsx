@@ -86,6 +86,8 @@ export default function PortalLayout() {
         navWorkOrders: 'Active Work Orders',
         navWelfare: 'Social Security & Welfare',
         navWorkerHelp: 'Worker Helpline',
+        navProfile: 'My Profile',
+        navAddresses: 'Saved Addresses',
         
         viewPublicSite: 'View Public Website',
         helplineTitle: 'Citizen Support',
@@ -110,6 +112,8 @@ export default function PortalLayout() {
         navWorkOrders: 'सक्रिय कार्य आदेश',
         navWelfare: 'कल्याण कोष व सामाजिक सुरक्षा',
         navWorkerHelp: 'श्रमिक हेल्पलाइन',
+        navProfile: 'मेरी प्रोफ़ाइल',
+        navAddresses: 'सहेजे गए पते',
         
         viewPublicSite: 'मुख्य वेबसाइट देखें',
         helplineTitle: 'नागरिक सहायता',
@@ -134,6 +138,8 @@ export default function PortalLayout() {
         navWorkOrders: 'ସକ୍ରିୟ କାର୍ଯ୍ୟ ଅର୍ଡର',
         navWelfare: 'କଲ୍ୟାଣ ପାଣ୍ଠି ଓ ସୁରକ୍ଷା',
         navWorkerHelp: 'ଶ୍ରମିକ ହେଲ୍ପଲାଇନ୍',
+        navProfile: 'ମୋ ପ୍ରୋଫାଇଲ୍',
+        navAddresses: 'ସେଭ୍ ଠିକଣା',
         
         viewPublicSite: 'ମୂଳ ୱେବସାଇଟ୍ ଦେଖନ୍ତୁ',
         helplineTitle: 'ନାଗରିକ ସହାୟତା',
@@ -158,6 +164,8 @@ export default function PortalLayout() {
         navWorkOrders: 'সক্রিয় কাজের আদেশ',
         navWelfare: 'কল্যাণ তহবিল ও সামাজিক সুরক্ষা',
         navWorkerHelp: 'কর্মী হেল্পলাইন',
+        navProfile: 'আমার প্রোফাইল',
+        navAddresses: 'সংরক্ষিত ঠিকানা',
         
         viewPublicSite: 'মূল ওয়েবসাইট দেখুন',
         helplineTitle: 'নাগরিক সহায়তা',
@@ -182,6 +190,8 @@ export default function PortalLayout() {
         navWorkOrders: 'సక్రియ పని ఆర్డర్లు',
         navWelfare: 'సంక్షేమ నిధి & సామాజిక భద్రత',
         navWorkerHelp: 'కార్మిక హెల్ప్‌లైన్',
+        navProfile: 'నా ప్రొఫైల్',
+        navAddresses: 'సేవ్ చిరునామాలు',
         
         viewPublicSite: 'ప్రజా వెబ్‌సైట్‌ను చూడండి',
         helplineTitle: 'పౌర సహాయం',
@@ -265,6 +275,7 @@ export default function PortalLayout() {
         navItems: [
           { to: '/worker/dashboard', label: dict.navWorkOrders, icon: Briefcase, end: true },
           { to: '/worker/welfare', label: dict.navWelfare, icon: HeartPulse },
+          { to: '/profile', label: dict.navProfile, icon: User },
           { to: '/help', label: dict.navWorkerHelp, icon: HelpCircle },
         ],
       };
@@ -280,6 +291,8 @@ export default function PortalLayout() {
         { to: '/customer/bookings', label: dict.navMyBookings, icon: FileText, end: false },
         { to: '/book-service', label: dict.navBookService, icon: PlusCircle },
         { to: '/find-worker', label: dict.navFindWorker, icon: Search },
+        { to: '/profile', label: dict.navProfile, icon: User },
+        { to: '/customer/addresses', label: dict.navAddresses, icon: MapPin },
         { to: '/help', label: dict.navHelpdesk, icon: HelpCircle },
       ],
     };

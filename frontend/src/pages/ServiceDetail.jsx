@@ -474,7 +474,7 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        {/* ── 4. Transparent AC Diagnosis with Sahayak AI & Digital Sensor (From PDF) ── */}
+        {/* ── 4. Transparent AC Diagnosis with Prithvi AI & Digital Sensor (From PDF) ── */}
         <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-800">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="max-w-2xl">
@@ -510,7 +510,7 @@ export default function ServiceDetail() {
               <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
                 <div className="font-semibold text-white mb-1">2. Live PSI Logged</div>
                 <p className="text-slate-300 text-[11px]">
-                  Sahayak AI records the operating pressure (e.g. 120-135 PSI for R32). If levels are optimal, gas refill is strictly disallowed.
+                  Prithvi AI records the operating pressure (e.g. 120-135 PSI for R32). If levels are optimal, gas refill is strictly disallowed.
                 </p>
               </div>
               <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">

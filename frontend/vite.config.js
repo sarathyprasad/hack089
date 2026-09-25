@@ -20,6 +20,8 @@ function spaFallbackPlugin() {
     'society/register',
     'society/timeline',
     'customer/bookings',
+    'customer/addresses',
+    'profile',
     'worker/dashboard',
     'worker/welfare',
     'apex/dashboard',

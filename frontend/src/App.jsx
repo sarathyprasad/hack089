@@ -31,6 +31,10 @@ const InstitutionalTenders = lazy(() => import('./pages/InstitutionalTenders'));
 const BookService = lazy(() => import('./pages/BookService'));
 const CustomerBookings = lazy(() => import('./pages/CustomerBookings'));
 const BookingDetail = lazy(() => import('./pages/BookingDetail'));
+const SavedAddresses = lazy(() => import('./pages/SavedAddresses'));
+
+// Shared Authenticated Pages (Customer + Worker)
+const MyProfile = lazy(() => import('./pages/MyProfile'));
 
 // Worker Pages (Lazy Loaded)
 const WorkerDashboard = lazy(() => import('./pages/WorkerDashboard'));
@@ -150,6 +154,24 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']}>
               <BookingDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/addresses"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <SavedAddresses />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Shared Profile Page (Customer + Worker) */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER']}>
+              <MyProfile />
             </ProtectedRoute>
           }
         />

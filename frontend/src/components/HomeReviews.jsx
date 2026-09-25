@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Star, ShieldCheck, CheckCircle2, Award, HeartHandshake,
   Volume2, VolumeX, Sparkles, User, Wrench, Zap, Droplets,
@@ -11,6 +12,7 @@ import {
 
 export default function HomeReviews() {
   const { speakText, stopSpeaking, isSpeaking, activeSpeakingId } = useAccessibility();
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'customer' | 'worker'
   const [selectedTrade, setSelectedTrade] = useState('all'); // 'all' | 'electrical' | 'plumbing' | 'home'
@@ -95,17 +97,14 @@ export default function HomeReviews() {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold mb-3 shadow-2xs">
             <Sparkles size={14} className="text-amber-500" />
-            <span>Community Voice • Dual-Perspective Trust</span>
+            <span>{t('heroTrustBadge', 'Community Voice • Dual-Perspective Trust')}</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-            Trusted by Citizens.{' '}
-            <span className="bg-gradient-to-r from-blue-800 via-indigo-700 to-amber-700 bg-clip-text text-transparent">
-              Empowering Artisans.
-            </span>
+            {t('reviewsHeading', 'Trusted by Citizens. Empowering Artisans.')}
           </h2>
           <p className="text-xs sm:text-sm md:text-base text-slate-600 mt-2 max-w-2xl mx-auto leading-relaxed">
-            Real feedback from households enjoying fixed transparent tariffs and skilled trade artisans building secure, dignified livelihoods through our labour cooperative.
+            {t('reviewsSub', 'Real feedback from households enjoying fixed transparent tariffs and skilled trade artisans building secure, dignified livelihoods through our labour cooperative.')}
           </p>
         </div>
 
@@ -117,9 +116,9 @@ export default function HomeReviews() {
               <span>4.9 / 5</span>
             </div>
             <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider mt-1">
-              Citizen Satisfaction
+              {t('statCitizenSat', 'Citizen Satisfaction')}
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Over 4,850+ verified bookings</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t('statVerifiedBookings', 'Over 4,850+ verified bookings')}</p>
           </div>
 
           <div className="pt-2 md:pt-0 md:px-4">
@@ -128,9 +127,9 @@ export default function HomeReviews() {
               <span>98.6%</span>
             </div>
             <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider mt-1">
-              Artisan Satisfaction
+              {t('statArtisanSat', 'Artisan Satisfaction')}
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Zero commission exploitation</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t('statZeroExploitation', 'Zero commission exploitation')}</p>
           </div>
 
           <div className="pt-2 md:pt-0 md:px-4">
@@ -139,9 +138,9 @@ export default function HomeReviews() {
               <span>93-2-5</span>
             </div>
             <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider mt-1">
-              Living Wage Payout
+              {t('statLivingWage', 'Living Wage Payout')}
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Direct daily bank/UPI transfer</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t('statDailyPayout', 'Direct daily bank/UPI transfer')}</p>
           </div>
 
           <div className="pt-2 md:pt-0 md:px-4">
@@ -150,9 +149,9 @@ export default function HomeReviews() {
               <span>100%</span>
             </div>
             <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider mt-1">
-              Verified & Guaranteed
+              {t('statVerifiedGuaranteed', 'Verified & Guaranteed')}
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Skill certified + 30-day free warranty</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t('statSkillWarranty', 'Skill certified + 30-day free warranty')}</p>
           </div>
         </div>
 
@@ -170,7 +169,7 @@ export default function HomeReviews() {
                 }`}
             >
               <Sparkles size={14} className={activeTab === 'all' ? 'text-amber-400' : 'text-slate-400'} />
-              <span>All Reviews</span>
+              <span>{t('tabAllReviews', 'All Reviews')}</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20 text-white ml-1">
                 {combinedList.length}
               </span>
@@ -185,7 +184,7 @@ export default function HomeReviews() {
                 }`}
             >
               <User size={14} className={activeTab === 'customer' ? 'text-blue-300' : 'text-slate-400'} />
-              <span>Customer Reviews</span>
+              <span>{t('tabCitizenVoices', 'Customer Reviews')}</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-900 font-bold ml-1">
                 {customerReviews.length}
               </span>
@@ -200,7 +199,7 @@ export default function HomeReviews() {
                 }`}
             >
               <Wrench size={14} className={activeTab === 'worker' ? 'text-amber-400' : 'text-slate-400'} />
-              <span>Worker Reviews</span>
+              <span>{t('tabArtisanVoices', 'Worker Reviews')}</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 font-bold ml-1">
                 {workerReviews.length}
               </span>
@@ -210,10 +209,10 @@ export default function HomeReviews() {
           {/* Trade Filter Pills */}
           <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
             {[
-              { id: 'all', label: 'All Trades' },
-              { id: 'electrical', label: '⚡ Electrical & AC' },
-              { id: 'plumbing', label: '🚰 Plumbing' },
-              { id: 'home', label: '🔨 Carpentry & Home' },
+              { id: 'all', label: t('filterAllTrades', 'All Trades') },
+              { id: 'electrical', label: t('filterElectrical', '⚡ Electrical & AC') },
+              { id: 'plumbing', label: t('filterPlumbing', '🚰 Plumbing') },
+              { id: 'home', label: t('filterHome', '🔨 Carpentry & Home') },
             ].map((trade) => (
               <button
                 key={trade.id}

@@ -857,15 +857,16 @@ async function seed() {
         latitude, longitude, verification_status, toolkit_compliance, availability, rating,
         total_reviews, total_jobs_completed, total_earnings, bio, tier,
         merit_points, strike_count, sos_active, primary_trade, society_id,
-        is_nlcf_affiliated, is_ncct_certified, tools_owned
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+        is_nlcf_affiliated, is_ncct_certified, tools_owned, federation_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
       [
         userId, workerCode, coopId, exp, w[4],
         w[7], w[8], vStatus, toolkitCompliance, avail, rating,
         totalReviews, jobsDone, earnings, `${w[0]} with verified cooperative guild credentials in ${w[4]}.`,
         tier, merit, 0, 0, trade, societyId,
         1, (i % 2 === 0 ? 1 : 0),
-        toolkitCompliance === 'VERIFIED_EQUIPPED' ? 'Standard ISI Certified Trade Toolkit & Safety Kit' : null
+        toolkitCompliance === 'VERIFIED_EQUIPPED' ? 'Standard ISI Certified Trade Toolkit & Safety Kit' : null,
+        1
       ]
     );
   }

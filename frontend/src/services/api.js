@@ -279,5 +279,12 @@ export const api = {
     return request(`/admin/bookings${query ? `?${query}` : ''}`);
   },
   getAdminAuditLogs: () => request('/admin/audit-logs'),
+
+  // Profile & Saved Addresses
+  updateProfile: (data) => request('/profile', { method: 'PUT', body: data }),
+  getSavedAddresses: () => request('/profile/addresses'),
+  createSavedAddress: (data) => request('/profile/addresses', { method: 'POST', body: data }),
+  updateSavedAddress: (id, data) => request(`/profile/addresses/${id}`, { method: 'PUT', body: data }),
+  deleteSavedAddress: (id) => request(`/profile/addresses/${id}`, { method: 'DELETE' }),
 };
 

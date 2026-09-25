@@ -9,7 +9,8 @@ import {
   Info, Sparkles, Building2, HelpCircle, Layers, ShieldAlert, Award,
   Search, X, Wrench, Droplets, Hammer, Paintbrush, SprayCan,
   LogIn, CheckSquare, Square, Navigation, Radio, Compass, Car,
-  Snowflake, Wind, Flower2, HeartPulse, Settings, LocateFixed, Lock, Phone
+  Snowflake, Wind, Flower2, HeartPulse, Settings, LocateFixed, Lock, Phone,
+  Home, Briefcase
 } from 'lucide-react';
 import LiveRouteMap from '../components/LiveRouteMap';
 import { useLocationContext } from '../context/LocationContext';
@@ -57,6 +58,32 @@ export default function BookService() {
     isDetectingLocation,
     detectCurrentLocation,
   } = useLocationContext();
+
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
+  // Fetch saved addresses if authenticated customer
+  useEffect(() => {
+    if (user && user.role === 'CUSTOMER') {
+      api.getSavedAddresses()
+        .then((res) => {
+          const list = res?.addresses || [];
+          setSavedAddresses(list);
+          const defaultAddr = list.find((a) => a.is_default);
+          if (defaultAddr && (!user.address || formData.address === 'Plot 104, Patia')) {
+            setFormData((prev) => ({
+              ...prev,
+              district: defaultAddr.district || prev.district,
+              city: defaultAddr.city || prev.city,
+              address: defaultAddr.full_address || prev.address,
+              pincode: defaultAddr.pincode || prev.pincode,
+            }));
+          }
+        })
+        .catch((err) => console.warn('Failed to load saved addresses for booking:', err));
+    } else {
+      setSavedAddresses([]);
+    }
+  }, [user]);
 
   // Sync with GPS current location detection if user taps current location
   useEffect(() => {
@@ -603,71 +630,69 @@ export default function BookService() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Page Header with Mode Switcher */}
+      {/* Clean Page Header */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-bold uppercase tracking-wider mb-2">
-              <ShieldCheck size={14} /> Rapid Dispatch Booking
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-2">
+              <ShieldCheck size={14} className="text-emerald-600" />
+              <span>{t('policeVerifiedBadge', 'Certified & Verified Cooperative Artisans')}</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">
-              {t('navServicesBooking') || 'Services & Booking'}
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {t('btnBookNow', 'Book a Service')}
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              Guaranteed 93-2-5 fair wage cooperative dispatch with verified local artisans
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              {t('heroSubtitle', 'Guaranteed 93-2-5 fair wage cooperative dispatch with verified local artisans')}
             </p>
           </div>
 
-          {/* Unified Mode Switcher */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold self-start md:self-auto shadow-inner">
-            <Link
-              to="/services"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/50 transition-all font-semibold"
-            >
-              <Layers size={15} className="text-emerald-600" />
-              <span>← Catalog & Tariffs</span>
-            </Link>
-            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white text-slate-900 shadow-sm font-bold border border-slate-200/60">
-              <Zap size={15} className="text-amber-500" />
-              <span>Instant Booking Wizard</span>
-            </div>
-          </div>
+          <Link
+            to="/services"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition shadow-2xs self-start md:self-auto"
+          >
+            <Layers size={15} className="text-emerald-600" />
+            <span>{t('viewServices', 'View Catalog & Tariffs')}</span>
+          </Link>
         </div>
       </div>
 
-      {/* Wizard Step Progress Tracker */}
+      {/* Clean Step Progress Bar */}
       <div className="mb-8">
         <div className="relative flex items-center justify-between max-w-2xl mx-auto px-4">
           {/* Background Connecting Track */}
           <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-slate-200 -z-0" />
           <div
-            className="absolute left-8 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-emerald-500 to-blue-900 transition-all duration-500 -z-0"
+            className="absolute left-8 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-emerald-500 to-[#0F294A] transition-all duration-500 -z-0"
             style={{
               width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%'
             }}
           />
 
           {[
-            { step: 1, title: 'Service & Problem', subtitle: 'Select Tariff' },
-            { step: 2, title: 'Location & Slot', subtitle: 'Address & Time' },
-            { step: 3, title: 'Review & Broadcast', subtitle: 'Nearby Worker Dispatch' },
+            { step: 1, title: t('step1_title', 'Select Service'), subtitle: t('step1_sub', 'Choose repair issue') },
+            { step: 2, title: t('step2_title', 'Location & Date'), subtitle: t('step2_sub', 'Address & schedule') },
+            { step: 3, title: t('step3_title', 'Confirmation'), subtitle: t('step3_sub', 'Review & dispatch') },
           ].map(({ step, title, subtitle }) => {
             const isDone = currentStep > step;
             const isCurrent = currentStep === step;
 
             return (
               <div key={step} className="flex flex-col items-center relative z-10">
-                <div
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (step < currentStep) setCurrentStep(step);
+                  }}
                   className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-sm ${
                     isDone
-                      ? 'bg-emerald-600 text-white shadow-emerald-200'
+                      ? 'bg-emerald-600 text-white shadow-emerald-200 cursor-pointer hover:bg-emerald-700'
                       : isCurrent
-                      ? 'bg-[#0F294A] text-white ring-4 ring-blue-100 shadow-blue-950/20 scale-110'
-                      : 'bg-white text-slate-400 border-2 border-slate-200'
+                      ? 'bg-[#0F294A] text-white ring-4 ring-blue-100 shadow-blue-950/20 scale-110 cursor-default'
+                      : 'bg-white text-slate-400 border-2 border-slate-200 cursor-not-allowed'
                   }`}
                 >
                   {isDone ? <Check size={16} className="stroke-[3]" /> : step}
-                </div>
+                </button>
                 <div className="text-center mt-2">
                   <div
                     className={`text-xs font-bold leading-tight ${
@@ -1050,6 +1075,70 @@ export default function BookService() {
                 </p>
               </label>
             </div>
+
+            {/* Quick Pick from Saved Addresses (Customer only) */}
+            {savedAddresses.length > 0 && (
+              <div className="p-3.5 bg-blue-50/70 border border-blue-200/90 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                    <MapPin size={14} className="text-blue-600" />
+                    Quick Pick from Saved Addresses
+                  </span>
+                  <Link
+                    to="/customer/addresses"
+                    className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1"
+                  >
+                    Manage Address Book →
+                  </Link>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = formData.address === addr.full_address;
+                    return (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            district: addr.district || prev.district,
+                            city: addr.city || prev.city,
+                            address: addr.full_address,
+                            pincode: addr.pincode || prev.pincode,
+                          }));
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition flex items-center gap-2 cursor-pointer shadow-2xs ${
+                          isSelected
+                            ? 'bg-[#0F294A] text-white border-[#0F294A] ring-2 ring-blue-300 shadow-xs'
+                            : 'bg-white text-slate-800 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
+                        }`}
+                      >
+                        {addr.label === 'Home' ? (
+                          <Home size={13} className={isSelected ? 'text-white' : 'text-blue-600'} />
+                        ) : addr.label === 'Office' ? (
+                          <Building2 size={13} className={isSelected ? 'text-white' : 'text-blue-600'} />
+                        ) : addr.label === 'Work Site' ? (
+                          <Briefcase size={13} className={isSelected ? 'text-white' : 'text-blue-600'} />
+                        ) : (
+                          <MapPin size={13} className={isSelected ? 'text-white' : 'text-blue-600'} />
+                        )}
+                        <span className="font-bold">{addr.label}</span>
+                        <span className="text-[10px] opacity-75 max-w-[150px] sm:max-w-[220px] truncate">
+                          {addr.full_address}
+                        </span>
+                        {!!addr.is_default && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                            isSelected ? 'bg-blue-800 text-blue-100' : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            Default
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
