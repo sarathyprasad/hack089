@@ -584,7 +584,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           ),
           const SizedBox(height: 10),
           _buildCheckRow('Statutory Police Background Verification Passed'),
-          _buildCheckRow('93-2-5 Fair Wage & Odisha Shramik Welfare Insured'),
+          _buildCheckRow('93-2-5 Fair Wage & Odisha Prithvi Welfare Insured'),
           _buildCheckRow('Genuine ISI-Standard Spare Parts with Co-op Warranty'),
           _buildCheckRow('30-Day Free Rework Guarantee Guaranteed by Apex Federation'),
         ],

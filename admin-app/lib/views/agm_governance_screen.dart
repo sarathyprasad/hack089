@@ -23,7 +23,7 @@ class _AgmGovernanceScreenState extends State<AgmGovernanceScreen> {
     },
     {
       'id': 'RES-2026-02',
-      'title': 'Enhancement of Shramik Accidental Welfare Cover to ₹10 Lakhs',
+      'title': 'Enhancement of Prithvi Accidental Welfare Cover to ₹10 Lakhs',
       'category': 'Welfare & Social Security',
       'summary': 'Statutory expansion of group accidental death and disability coverage from ₹5,00,000 to ₹10,00,000, funded via the 5% cooperative welfare reserve.',
       'votes_for': 130,

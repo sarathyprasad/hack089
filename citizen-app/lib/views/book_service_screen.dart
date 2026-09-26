@@ -640,8 +640,8 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
                   initialValue: _squadSize,
                   decoration: const InputDecoration(labelText: 'Artisan Deployment Squad'),
                   items: const [
-                    DropdownMenuItem(value: 1, child: Text('1 Master Shramik (Standard)')),
-                    DropdownMenuItem(value: 2, child: Text('2 Shramiks (Heavy / Fast Turnaround)')),
+                    DropdownMenuItem(value: 1, child: Text('1 Master Artisan (Standard)')),
+                    DropdownMenuItem(value: 2, child: Text('2 Artisans (Heavy / Fast Turnaround)')),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _squadSize = val);

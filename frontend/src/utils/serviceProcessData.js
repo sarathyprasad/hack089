@@ -80,7 +80,7 @@ export function getProcessStepsForService(service) {
           step: 5,
           title: 'Post-Clean Delta-T Calibration & Clean-up',
           desc: 'Operating grill temperature drop is calibrated (min 10°C drop), room is left spotless, and 30-day warranty armed.',
-          points: ['Laser thermometer delta-T verification', 'Room & flooring wiped dry', '30-Day Shram Suraksha warranty armed']
+          points: ['Laser thermometer delta-T verification', 'Room & flooring wiped dry', '30-Day Prithvi Suraksha warranty armed']
         }
       ]
     };
@@ -121,7 +121,7 @@ export function getProcessStepsForService(service) {
           step: 5,
           title: 'Cover Plate Sealing & Digital Warranty Arming',
           desc: 'Faceplate snapped into place with flush screw alignment, live demonstration of all switches, and 30-day warranty armed.',
-          points: ['Aesthetic scratch-free plate alignment', 'Customer live operational test', '30-Day Shram Suraksha Cover issued']
+          points: ['Aesthetic scratch-free plate alignment', 'Customer live operational test', '30-Day Prithvi Suraksha Cover issued']
         }
       ]
     };
@@ -325,7 +325,7 @@ export function getProcessStepsForService(service) {
         step: 5,
         title: 'Spotless Clean-up & 30-Day Warranty Sign-Off',
         desc: 'Work area swept clean, all packaging debris removed, customer verifies work via arrival OTP, and 30-day warranty armed.',
-        points: ['Debris and packaging completely removed', 'Customer satisfaction OTP verification', '30-Day Shram Suraksha warranty issued']
+        points: ['Debris and packaging completely removed', 'Customer satisfaction OTP verification', '30-Day Prithvi Suraksha warranty issued']
       }
     ]
   };

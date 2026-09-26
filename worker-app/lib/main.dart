@@ -34,7 +34,7 @@ class WorkerApp extends StatelessWidget {
     final localeProvider = context.watch<LocaleProvider>();
 
     return MaterialApp.router(
-      title: 'Prithvi Fix — Shramik Portal',
+      title: 'Prithvi Fix — Worker Portal',
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router,
       locale: localeProvider.locale,

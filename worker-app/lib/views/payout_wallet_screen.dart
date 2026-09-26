@@ -87,7 +87,7 @@ class _PayoutWalletScreenState extends State<PayoutWalletScreen> {
             },
           ),
           title: Text(
-            context.tr('walletCashout', 'Shramik Wallet & Cashout'),
+            context.tr('walletCashout', 'Prithvi Wallet & Cashout'),
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
@@ -398,7 +398,7 @@ class _PayoutWalletScreenState extends State<PayoutWalletScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ODISHA SHRAMIK WELFARE RESERVE',
+                  'ODISHA PRITHVI WELFARE RESERVE',
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

@@ -229,7 +229,7 @@ app.get('/download', (req, res) => {
 
     <a href="/apks/PrithviFix_Worker.apk" class="btn worker" download="PrithviFix_Worker.apk">
       <div>
-        <div class="btn-title">2. Prithvi Fix Shramik</div>
+        <div class="btn-title">2. Prithvi Fix Worker</div>
         <div class="btn-desc">Dark/Light mode, SOS radar & toolkits (54 MB)</div>
       </div>
       <div class="btn-icon">⚡</div>

@@ -89,7 +89,7 @@ export default function RateCard() {
           <div className="rc-section-header">
             <span className="rc-label-badge">
               <ShieldCheck size={13} />
-              {t('rcShramSuraksha', 'Shram Suraksha Cover')}
+              {t('rcShramSuraksha', 'Prithvi Suraksha Cover')}
             </span>
             <h2 className="rc-section-title">{t('rcEndToEnd', 'End-to-End Service Protection')}</h2>
             <p className="rc-section-sub">{t('rcBacking', 'Every booking is backed by our cooperative safety net')}</p>

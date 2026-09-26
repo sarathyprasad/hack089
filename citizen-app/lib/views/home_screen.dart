@@ -1156,7 +1156,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                       ),
                       Text(
-                        'NCCT Certified & Police Verified Shramik Artisans',
+                        'NCCT Certified & Police Verified Prithvi Artisans',
                         style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
                       ),
                     ],

@@ -191,7 +191,7 @@ class _WorkerSplashScreenState extends State<WorkerSplashScreen>
                     ),
                   ),
                   child: Text(
-                    'Shramik Artisan Portal',
+                    'Prithvi Artisan Portal',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,

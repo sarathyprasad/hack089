@@ -115,7 +115,7 @@ class ProfileScreen extends StatelessWidget {
                           const Icon(Icons.verified_rounded, size: 14, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'Verified Shramik Artisan',
+                            'Verified Prithvi Artisan',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,

@@ -56,7 +56,7 @@ class AuthProvider extends ChangeNotifier {
 
           // 🔒 Admin App only accepts COOPERATIVE_ADMIN, ADMIN, or SUPER_ADMIN
           if (role != 'COOPERATIVE_ADMIN' && role != 'ADMIN' && role != 'SUPER_ADMIN') {
-            _errorMessage = 'Access restricted: This application is exclusively for Cooperative Administrators & Federation Officers. Please use the Citizen or Shramik mobile app.';
+            _errorMessage = 'Access restricted: This application is exclusively for Cooperative Administrators & Federation Officers. Please use the Citizen or Prithvi Worker mobile app.';
             _isLoading = false;
             notifyListeners();
             return false;

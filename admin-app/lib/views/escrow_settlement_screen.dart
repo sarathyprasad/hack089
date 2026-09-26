@@ -302,7 +302,7 @@ class _EscrowSettlementScreenState extends State<EscrowSettlementScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Shramik Welfare Fund (5%)', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+                    Text('Prithvi Welfare Fund (5%)', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
                     Text('₹62,445.00', style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),

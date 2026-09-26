@@ -226,12 +226,12 @@ class WorkerDrawer extends StatelessWidget {
                 const SizedBox(height: 4),
                 _DrawerItem(
                   icon: Icons.support_agent_outlined,
-                  title: context.tr('help', 'Shramik Helpdesk'),
+                  title: context.tr('help', 'Prithvi Helpdesk'),
                   subtitle: context.tr('tollFreeLabel', '24/7 Co-op Secretary helpline'),
                   onTap: () {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Dialing Shramik Helpline: 1800-345-HELP...')),
+                      const SnackBar(content: Text('Dialing Prithvi Helpline: 1800-345-HELP...')),
                     );
                   },
                 ),
@@ -313,7 +313,7 @@ class WorkerDrawer extends StatelessWidget {
                 _DrawerItem(
                   icon: Icons.logout,
                   title: context.tr('logout', 'Log Out'),
-                  subtitle: context.tr('signOutBtn', 'Sign out of Shramik Terminal'),
+                  subtitle: context.tr('signOutBtn', 'Sign out of Prithvi Worker Terminal'),
                   iconColor: AppColors.textMuted,
                   textColor: AppColors.textMuted,
                   onTap: () async {
@@ -348,7 +348,7 @@ class WorkerDrawer extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Set backend IP address to connect Shramik app over Wi-Fi:',
+                        'Set backend IP address to connect Prithvi Worker app over Wi-Fi:',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -422,7 +422,7 @@ class WorkerDrawer extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      context.tr('fairWageFooter', 'Prithvi Fix Shramik v2.4.0 • 93% Fair Wage'),
+                      context.tr('fairWageFooter', 'Prithvi Fix Worker v2.4.0 • 93% Fair Wage'),
                       style: GoogleFonts.outfit(
                         fontSize: 10,
                         color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,

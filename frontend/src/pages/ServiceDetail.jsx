@@ -106,7 +106,7 @@ const FAQS = [
   },
   {
     q: 'What if the same issue occurs again within 30 days?',
-    a: 'Under our 30-Day Shram Suraksha Cover, if the same issue arises within 30 days of service due to the artisan\'s workmanship, a certified Master Artisan will re-inspect and re-service at ₹0 labour fee. You just need to raise the issue from your dashboard.'
+    a: 'Under our 30-Day Prithvi Suraksha Cover, if the same issue arises within 30 days of service due to the artisan\'s workmanship, a certified Master Artisan will re-inspect and re-service at ₹0 labour fee. You just need to raise the issue from your dashboard.'
   },
   {
     q: 'How can I verify the repair quote shared by the professional?',
@@ -122,7 +122,7 @@ const FAQS = [
   },
   {
     q: 'What happens if anything is damaged during the service?',
-    a: 'All bookings are automatically covered under Shram Suraksha Cover with up to ₹10,000 property damage protection. In the unlikely event of accidental damage, claims are settled with 1-click documentation through your dashboard. No lengthy paperwork or insurance calls required.'
+    a: 'All bookings are automatically covered under Prithvi Suraksha Cover with up to ₹10,000 property damage protection. In the unlikely event of accidental damage, claims are settled with 1-click documentation through your dashboard. No lengthy paperwork or insurance calls required.'
   },
   {
     q: 'Can I watch the artisan work to understand the problem?',
@@ -593,7 +593,7 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        {/* ── 6. 30-Day Warranty & Shram Suraksha Cover Card (From PDF) ── */}
+        {/* ── 6. 30-Day Warranty & Prithvi Suraksha Cover Card ── */}
         <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-2xl p-6 sm:p-8 border border-emerald-900/50 shadow-md">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start gap-4">

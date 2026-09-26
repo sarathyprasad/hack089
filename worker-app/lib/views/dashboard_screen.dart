@@ -161,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    context.tr('shramikPortal', 'Shramik Terminal'),
+                    context.tr('shramikPortal', 'Prithvi Worker Terminal'),
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

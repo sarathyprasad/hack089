@@ -101,7 +101,7 @@ class _SafetyChecklistSheetState extends State<SafetyChecklistSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Completing this checklist activates ₹5,00,000 active job accidental cover under the Odisha Shramik Welfare Nidhi.',
+                      'Completing this checklist activates ₹5,00,000 active job accidental cover under the Odisha Prithvi Welfare Nidhi.',
                       style: GoogleFonts.inter(fontSize: 11, color: AppColors.textPrimary),
                     ),
                   ),
@@ -166,7 +166,7 @@ class _SafetyChecklistSheetState extends State<SafetyChecklistSheet> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             backgroundColor: AppColors.success,
-                            content: Text('Safety compliance verified! ₹5L Shramik Insurance Active.'),
+                            content: Text('Safety compliance verified! ₹5L Prithvi Insurance Active.'),
                           ),
                         );
                       }

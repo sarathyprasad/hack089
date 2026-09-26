@@ -140,7 +140,7 @@ class _SosBeaconSheetState extends State<SosBeaconSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sahakari Shramik Suraksha SOS',
+                        'Sahakari Prithvi Suraksha SOS',
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontSize: 16,

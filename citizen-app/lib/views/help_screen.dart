@@ -110,7 +110,7 @@ class HelpScreen extends StatelessWidget {
             ),
             _buildFaqTile(
               question: 'How does the 93-2-5 fair wage formula work?',
-              answer: '93% of every rupee paid goes directly to the artisan as their take-home wage. 5% is deposited into the Odisha Shramik Welfare Fund for family healthcare, child education, and pensions. 2% maintains state technology servers.',
+              answer: '93% of every rupee paid goes directly to the artisan as their take-home wage. 5% is deposited into the Odisha Prithvi Welfare Fund for family healthcare, child education, and pensions. 2% maintains state technology servers.',
             ),
 
             const SizedBox(height: 20),

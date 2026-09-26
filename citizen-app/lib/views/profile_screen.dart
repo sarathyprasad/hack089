@@ -215,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: _buildImpactCard(
                     title: 'Welfare Contributed',
                     value: '₹410',
-                    subtitle: 'To Shramik Nidhi',
+                    subtitle: 'To Prithvi Nidhi',
                     icon: Icons.favorite_border,
                     color: AppColors.warning,
                   ),

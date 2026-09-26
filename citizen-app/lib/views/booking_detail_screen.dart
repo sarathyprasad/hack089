@@ -209,7 +209,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final completionOtp = b['completion_otp']?.toString() ?? '7394';
     final serviceName = b['service_name'] ?? 'Home Maintenance Service';
     final workerName = b['worker_name'] ?? 'Assigned Artisan';
-    final cooperative = b['cooperative_name'] ?? 'Local Shramik Samiti';
+    final cooperative = b['cooperative_name'] ?? 'Local Prithvi Cooperative Samiti';
     final price = (b['total_price'] ?? 299.0) as num;
 
     return PopScope(

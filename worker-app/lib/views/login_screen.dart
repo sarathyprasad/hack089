@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(context.tr('shramikPortal', 'Shramik Portal'), style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary), textAlign: TextAlign.center),
+              Text(context.tr('shramikPortal', 'Prithvi Worker Portal'), style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary), textAlign: TextAlign.center),
               const SizedBox(height: 6),
               Text(context.tr('portalSubHeader', 'Worker Member Terminal'), style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary), textAlign: TextAlign.center),
               const SizedBox(height: 40),

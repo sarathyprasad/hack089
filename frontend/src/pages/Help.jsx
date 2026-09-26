@@ -120,7 +120,7 @@ const FAQS = [
   },
   {
     category: 'Workers & Quality',
-    q: 'What is the 30-Day Shram Suraksha Cover?',
+    q: 'What is the 30-Day Prithvi Suraksha Cover?',
     a: "Every completed booking comes with a 30-day workmanship warranty. If the same issue recurs within 30 days due to the artisan's fault, a certified artisan revisits and fixes it at ₹0 labour cost. Property damage during service is covered up to ₹10,000."
   },
   {

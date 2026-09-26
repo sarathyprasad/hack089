@@ -1710,7 +1710,7 @@ export default function FederationPortal() {
           <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-2xl p-6 text-white shadow-md border border-emerald-800/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <span className="px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 w-max">
-                <ShieldCheck size={14} className="text-emerald-400" /> NLCF Shramik Suraksha Bima Shield
+                <ShieldCheck size={14} className="text-emerald-400" /> NLCF Prithvi Suraksha Bima Shield
               </span>
               <h2 className="text-xl font-extrabold text-white">
                 Federation Group Health &amp; Accidental Insurance Desk
@@ -2963,7 +2963,7 @@ export default function FederationPortal() {
                   <ShieldAlert size={18} className="text-amber-600" /> Lodge Emergency Relief Claim
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Instant advance sanction under NLCF Shramik Suraksha Bima.
+                  Instant advance sanction under NLCF Prithvi Suraksha Bima.
                 </p>
               </div>
               <button
@@ -3096,7 +3096,7 @@ export default function FederationPortal() {
                   <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 font-bold block">
                     National Labour Cooperatives Federation
                   </span>
-                  <h3 className="text-sm font-extrabold text-white">Shramik Arogya Suraksha Card</h3>
+                  <h3 className="text-sm font-extrabold text-white">Prithvi Arogya Suraksha Card</h3>
                 </div>
               </div>
               <button

@@ -1672,7 +1672,7 @@ export default function Register() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Shramik / Ration Card No. (Optional)
+                  Prithvi Artisan / Ration Card No. (Optional)
                 </label>
                 <div className="relative flex items-center">
                   <FileText size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />

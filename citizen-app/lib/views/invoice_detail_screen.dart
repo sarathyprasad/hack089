@@ -253,9 +253,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        Text('CERTIFIED SHRAMIK:', style: GoogleFonts.inter(fontSize: 9, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                                        Text('CERTIFIED ARTISAN:', style: GoogleFonts.inter(fontSize: 9, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
                                         Text(_booking?['worker_name'] ?? 'Assigned Artisan', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        Text('ID: ${_booking?['worker_id'] ?? 'OD-SHR-2026-089'}', style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                        Text('ID: ${_booking?['worker_id'] ?? 'OD-ART-2026-089'}', style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.primary, fontWeight: FontWeight.w600)),
                                       ],
                                     ),
                                   ),
@@ -309,7 +309,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                               ),
                               const SizedBox(height: 8),
                               _buildMiniSplitRow('Direct Artisan Take-Home Wage (93%):', '₹${workerWage.toStringAsFixed(2)}'),
-                              _buildMiniSplitRow('Odisha Shramik Welfare & Healthcare Fund (5%):', '₹${welfareFund.toStringAsFixed(2)}'),
+                              _buildMiniSplitRow('Odisha Prithvi Welfare & Healthcare Fund (5%):', '₹${welfareFund.toStringAsFixed(2)}'),
                               _buildMiniSplitRow('State Cooperative Tech Infrastructure (2%):', '₹${platformFee.toStringAsFixed(2)}'),
                             ],
                           ),
