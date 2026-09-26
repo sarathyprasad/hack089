@@ -510,57 +510,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFEFF6FF),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(Icons.engineering_rounded, size: 11, color: Color(0xFF1D4ED8)),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '${loc.artisanCount}+ Artisans',
-                                                    style: GoogleFonts.inter(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: const Color(0xFF1D4ED8),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                                              decoration: BoxDecoration(
-                                                color: loc.multiplier > 1.0
-                                                    ? const Color(0xFFFEF2F2)
-                                                    : loc.multiplier < 1.0
-                                                        ? const Color(0xFFF0FDF4)
-                                                        : const Color(0xFFF8FAFC),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                loc.rateMultiplierText,
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: loc.multiplier > 1.0
-                                                      ? const Color(0xFFB91C1C)
-                                                      : loc.multiplier < 1.0
-                                                          ? const Color(0xFF15803D)
-                                                          : AppColors.textMuted,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+
                                       ],
                                     ),
                                   ),

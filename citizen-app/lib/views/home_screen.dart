@@ -397,41 +397,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 // Text Branding
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Prithvi',
-                          style: GoogleFonts.outfit(
-                            fontSize: 17.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Fix',
-                          style: GoogleFonts.outfit(
-                            fontSize: 17.5,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFFFBBF24), // Vibrant Amber gold
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ],
-                    ),
                     Text(
-                      context.tr('citizenPortal', 'CITIZEN PORTAL'),
-                      style: GoogleFonts.inter(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        letterSpacing: 0.9,
+                      'Prithvi',
+                      style: GoogleFonts.outfit(
+                        fontSize: 17.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Fix',
+                      style: GoogleFonts.outfit(
+                        fontSize: 17.5,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFFBBF24), // Vibrant Amber gold
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ],
