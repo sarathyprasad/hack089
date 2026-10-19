@@ -1,55 +1,51 @@
-# 🚀 Render & Managed PostgreSQL Deployment Guide
+# 🚀 Render.com Cloud Deployment Guide — Prithvi Fix
 
-This guide explains how to deploy **Shram Setu** to [Render.com](https://render.com) with a **Managed PostgreSQL Database** and live auto-deployments.
+This guide explains how to deploy the full-stack **Prithvi Fix Platform** to [Render.com](https://render.com) using either the automated **1-Click Blueprint** or manual configuration.
 
 ---
 
 ## 🌟 Option A: 1-Click Blueprint Deployment (Recommended)
 
-Render uses the included `render.yaml` file to automatically provision both the **Managed PostgreSQL database** and the **Web Service** in a single click.
+Render uses the included [`render.yaml`](./render.yaml) file to automatically provision both the **Managed PostgreSQL database** and the **Full-Stack Web Service** in a single click.
 
-### Step 1: Push Project to GitHub
-Initialize and push this project directory to your GitHub repository:
+### Step 1: Ensure Latest Code on GitHub
+Ensure your repository is pushed to your GitHub `main` branch:
 ```bash
-git init
-git add .
-git commit -m "Deploy Shram Setu to Render"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git status
 git push -u origin main
 ```
 
 ### Step 2: Deploy on Render
 1. Log in to [Render Dashboard](https://dashboard.render.com/).
-2. Click the **"New +"** button in the top navigation and select **"Blueprint"**.
-3. Connect your GitHub repository.
-4. Render will detect `render.yaml` and show:
-   * **Database**: `shram-setu-db` (PostgreSQL)
-   * **Web Service**: `shram-setu-app` (Node.js)
+2. Click the **"New +"** button in the top navigation bar and select **"Blueprint"**.
+3. Connect your GitHub repository (`sarathyprasad/hacktoberfest2026`).
+4. Render will detect `render.yaml` and display:
+   - **Database**: `prithvi-fix-db` (PostgreSQL)
+   - **Web Service**: `prithvi-fix-app` (Node.js)
 5. Click **"Apply"**.
 6. Render will automatically:
-   * Provision the PostgreSQL database.
-   * Build the frontend React app into `dist`.
-   * Install backend dependencies.
-   * Run database migrations and seed demo data (`npm run seed`).
-   * Start the live web application on `https://shram-setu-app.onrender.com`.
+   - Provision the PostgreSQL database.
+   - Build the frontend React SPA into `dist`.
+   - Install backend dependencies.
+   - Run migrations and seed data (`npm run seed`).
+   - Start the live web application on `https://prithvi-fix-app.onrender.com`.
 
 ---
 
 ## 🛠️ Option B: Manual Setup on Render Dashboard
 
-If you prefer to configure each component manually:
+If you prefer to configure each component step-by-step:
 
 ### Step 1: Create Managed PostgreSQL Database
 1. In Render Dashboard, click **"New +"** ➔ **"PostgreSQL"**.
-2. Fill in details:
-   * **Name**: `shram-setu-db`
-   * **Database**: `shram_setu`
-   * **User**: `shram_user`
-   * **Region**: *Singapore* (or nearest to you)
-   * **Plan**: *Free*
+2. Configure parameters:
+   - **Name**: `prithvi-fix-db`
+   - **Database**: `prithvifix`
+   - **User**: `prithvi_user`
+   - **Region**: *Singapore* (or nearest to you)
+   - **Plan**: *Free*
 3. Click **"Create Database"**.
-4. Once created, copy the **Internal Database URL** (e.g. `postgres://shram_user:password@dpg-xxxx-a:5432/shram_setu`).
+4. Once provisioned, copy the **Internal Database URL** (e.g. `postgres://prithvi_user:password@dpg-xxxx-a:5432/prithvifix`).
 
 ---
 
@@ -57,21 +53,21 @@ If you prefer to configure each component manually:
 1. In Render Dashboard, click **"New +"** ➔ **"Web Service"**.
 2. Connect your GitHub repository.
 3. Configure the service:
-   * **Name**: `shram-setu-app`
-   * **Region**: Same region as your database (*Singapore*)
-   * **Branch**: `main`
-   * **Runtime**: `Node`
-   * **Build Command**: `npm run build`
-   * **Start Command**: `npm run seed && npm start`
+   - **Name**: `prithvi-fix-app`
+   - **Region**: Same region as your database (*Singapore*)
+   - **Branch**: `main`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm run seed && npm start`
 4. Add **Environment Variables**:
 
 | Variable Key | Value | Notes |
 | :--- | :--- | :--- |
 | `NODE_ENV` | `production` | Enables production optimizations |
-| `DATABASE_URL` | *Paste your Render Internal Database URL* | Connects backend to managed PostgreSQL |
-| `JWT_SECRET` | *Click "Generate"* or type a secret key | Signs authentication tokens |
-| `CORS_ALLOW_ALL` | `true` | Allows web requests |
-| `PORT` | `10000` | Port used by Render |
+| `DATABASE_URL` | *Paste your Internal Database URL* | Connects backend to managed PostgreSQL |
+| `JWT_SECRET` | *Click "Generate"* or type a secret key | Signs authentication session tokens |
+| `CORS_ALLOW_ALL` | `true` | Allows web requests from custom domains |
+| `PORT` | `10000` | Port assigned by Render |
 
 5. Click **"Create Web Service"**.
 
@@ -79,24 +75,27 @@ If you prefer to configure each component manually:
 
 ## 🔍 Verification & Health Check
 
-Once deployment completes, open your Render app URL (e.g. `https://shram-setu-app.onrender.com`):
+Once deployment completes, open your live Render app URL (e.g. `https://prithvi-fix-app.onrender.com`):
 
-1. **Frontend App**: Visit `https://shram-setu-app.onrender.com`
-2. **API Health Check**: Visit `https://shram-setu-app.onrender.com/api/health`
+1. **Frontend App**: Visit `https://prithvi-fix-app.onrender.com`
+2. **API Health Check**: Visit `https://prithvi-fix-app.onrender.com/api/health`
    ```json
    {
      "status": "ok",
-     "message": "Shram Setu API is running on PostgreSQL",
+     "message": "Prithvi Fix API is running on PostgreSQL",
      "database": "PostgreSQL",
      "environment": "production"
    }
    ```
-3. **Database Stats**: Visit `https://shram-setu-app.onrender.com/api/db/stats` to verify seeded tables and worker profiles.
+3. **Database Telemetry**: Visit `https://prithvi-fix-app.onrender.com/api/db/stats` to verify seeded tables and worker profiles.
 
 ---
 
 ## 🔑 Demo Credentials on Live App
 
-* **Citizen Portal**: `ananya@example.com` / `password123`
-* **Artisan Portal**: `ramesh@example.com` / `password123` (Master Electrician)
-* **Federation Admin Desk**: `admin@sevasetu.gov.in` / `admin123`
+The live application includes 1-click demo login buttons, or enter credentials manually:
+
+* 👤 **Citizen / Customer**: `customer@demo.local` / `password123`
+* 👷 **Skilled Artisan**: `ramesh.w@demo.local` / `password123`
+* 🏛️ **DCO Khordha**: `dco.khordha@demo.local` / `password123`
+* 🏢 **Apex Federation Head**: `fedhead@demo.local` / `password123`

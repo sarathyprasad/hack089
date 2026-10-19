@@ -1,7 +1,7 @@
 databases:
-  - name: shram-setu-db
-    databaseName: shram_setu
-    user: shram_user
+  - name: prithvi-fix-db
+    databaseName: prithvifix
+    user: prithvi_user
     plan: free
     region: singapore # or oregon / frankfurt
     ipAllowList: [] # allow all connections
@@ -9,7 +9,7 @@ databases:
 services:
   # Full-Stack Web Service (Backend + Static Frontend SPA)
   - type: web
-    name: shram-setu-app
+    name: prithvi-fix-app
     env: node
     plan: free
     region: singapore # or oregon / frankfurt
@@ -20,7 +20,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: shram-setu-db
+          name: prithvi-fix-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true

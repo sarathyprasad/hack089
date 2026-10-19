@@ -1,35 +1,36 @@
-# 🚀 PostgreSQL, pgAdmin & ngrok Live Hosting Guide
-> **Shram Setu — Cooperative Gig Services Platform**
+# 🐘 PostgreSQL, pgAdmin & ngrok Live Hosting Guide — Prithvi Fix
+
+This guide covers local database setup, pgAdmin 4 inspection, running the local development servers, and sharing the application publicly via **ngrok**.
 
 ---
 
 ## 📌 Prerequisites Check
-Make sure you have:
-1. **Node.js** installed (`node -v`)
-2. **PostgreSQL** & **pgAdmin 4** installed (Default port: `5432`)
-3. **ngrok** installed (`ngrok version` or [download from ngrok.com](https://ngrok.com))
+Ensure you have the following installed:
+1. **Node.js** v18+ (`node -v`)
+2. **PostgreSQL** & **pgAdmin 4** (`psql -V` or check PostgreSQL service on port `5432`)
+3. **ngrok** (`ngrok version` or download from [ngrok.com](https://ngrok.com))
 
 ---
 
 ## 🛠️ Step 1: Configure PostgreSQL Credentials
 
-Open [`backend/.env`](file:///f:/prototype/prototype/backend/.env) and set your PostgreSQL password:
+Open [`backend/.env`](./backend/.env) (or copy from `backend/.env.example`) and set your credentials:
 
 ```env
 PGHOST=localhost
 PGPORT=5432
 PGUSER=postgres
 PGPASSWORD=your_actual_postgres_password
-PGDATABASE=sahakari_shramsetu
+PGDATABASE=prithvifix
 ```
 
-*(If you installed PostgreSQL with the default password `postgres` or `admin`, set `PGPASSWORD=postgres` or whatever password you chose during installation).*
+*(If you installed PostgreSQL with default password `postgres` or `admin`, set `PGPASSWORD=postgres` or whatever password was chosen during PostgreSQL setup).*
 
 ---
 
 ## 🐘 Step 2: Database Initialization & Seeding (Auto-Setup)
 
-You don't need to manually create tables in pgAdmin. Our migration script creates the database `sahakari_shramsetu`, all 12 tables, indexes, and full demo data automatically.
+You do **not** need to manually create tables or queries in pgAdmin. The built-in migration script will automatically create the database `prithvifix`, all 12 relational tables, statutory indexes, and realistic demo data.
 
 Run this command in the backend folder:
 
@@ -40,8 +41,8 @@ npm run seed
 
 ### ✅ Expected Output:
 ```
-🔨 Target database "sahakari_shramsetu" not found. Creating it now...
-✅ Database "sahakari_shramsetu" created successfully.
+🔨 Target database "prithvifix" not found. Creating it now...
+✅ Database "prithvifix" created successfully.
 ✅ PostgreSQL migration complete — all 12 tables and indexes verified.
 🧹 Clearing existing tables...
 🌱 Populating demo data...
@@ -66,9 +67,9 @@ npm run seed
 
 1. Open **pgAdmin 4**.
 2. Expand **Servers** ➔ **PostgreSQL 15 / 16** (Enter your master password).
-3. Under **Databases**, you will see **`sahakari_shramsetu`**.
-4. Expand **`sahakari_shramsetu`** ➔ **Schemas** ➔ **public** ➔ **Tables**.
-5. Right-click on any table (e.g., `bookings`, `workers`, `users`) and choose **View/Edit Data** ➔ **All Rows**.
+3. Under **Databases**, you will see **`prithvifix`**.
+4. Expand **`prithvifix`** ➔ **Schemas** ➔ **public** ➔ **Tables**.
+5. Right-click on any table (e.g. `bookings`, `workers`, `societies`, `users`) and choose **View/Edit Data** ➔ **All Rows**.
 
 ---
 
@@ -94,10 +95,10 @@ Open your browser at **`http://localhost:5173`**.
 
 ## 🌐 Step 5: Make it Live on the Internet via ngrok
 
-With ngrok, you can share your working website with anyone on mobile, client devices, or external stakeholders.
+With ngrok, you can share your working application with anyone on mobile devices or remote evaluators.
 
 ### Method A: Single-Tunnel Fast Share (Recommended)
-Since Vite proxies `/api` to the backend on port 5000, you only need to tunnel the frontend:
+Because Vite proxies `/api` requests directly to backend port 5000, you only need to tunnel the frontend:
 
 ```bash
 ngrok http 5173
@@ -107,11 +108,12 @@ ngrok will output a public HTTPS URL:
 ```
 Forwarding                    https://a1b2-c3d4.ngrok-free.app -> http://localhost:5173
 ```
-Anyone opening `https://a1b2-c3d4.ngrok-free.app` will be able to use the full website, make bookings, register workers, and view invoices!
+Anyone opening `https://a1b2-c3d4.ngrok-free.app` will be able to access the full platform, create bookings, test DCO approvals, and view Form IV invoices!
 
 ---
 
 ### Method B: Separate Frontend & Backend Tunnels
+
 If you prefer exposing both servers on separate tunnels:
 
 **1. Tunnel Backend (Port 5000):**
@@ -135,13 +137,14 @@ ngrok http 5173
 
 ## 🔑 Pre-Configured Demo Credentials
 
-The login page contains 1-click quick-login buttons, or use these credentials:
+The login page includes 1-click quick-login buttons, or use these credentials:
 
 | Role | Email | Password | Access & Features |
-|---|---|---|---|
-| 👤 **Customer** | `customer@demo.local` | `demo123` | Bookings, Smart Matching Wizard, UPI Payments, Form IV Invoices, Reviews |
-| 👷 **Worker** | `ramesh.w@demo.local` | `demo123` | Duty Toggle, Job Dispatch Inbox, Earnings, Social Security Welfare Centre |
-| 🏢 **Coop Admin** | `admin@demo.local` | `demo123` | Worker Verification Audit, Multi-District Oversight, AI Demand Forecasting |
+| :--- | :--- | :--- | :--- |
+| 👤 **Customer** | `customer@demo.local` | `password123` | Bookings, Smart Matching Wizard, UPI Payments, Form IV Invoices, Reviews |
+| 👷 **Artisan** | `ramesh.w@demo.local` | `password123` | Duty Toggle, Job Dispatch Inbox, Earnings, Social Security Welfare Centre |
+| 🏛️ **DCO Khordha** | `dco.khordha@demo.local` | `password123` | District Worker Verification, Society Accreditation, Statutory Inquiries |
+| 🏢 **Apex Admin** | `fedhead@demo.local` | `password123` | Multi-District Oversight, AI Demand Forecasting, Mutual Aid Dispatch |
 
 ---
 

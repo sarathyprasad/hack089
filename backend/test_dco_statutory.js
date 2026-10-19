@@ -1,4 +1,6 @@
-require('dotenv').config({ path: 'c:/Users/hites/Music/prototypev5/backend/.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { query } = require('./src/db/connection');
 const jwt = require('jsonwebtoken');
 

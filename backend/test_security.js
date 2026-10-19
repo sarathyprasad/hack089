@@ -1,7 +1,7 @@
 const http = require('http');
 
 /**
- * Automated Security Test Suite for Shram Setu Backend API.
+ * Automated Security Test Suite for Prithvi Fix Backend API.
  * Validates RBAC, Anti-IDOR, PII Masking, Rate Limiting, and Token Revocation.
  */
 
@@ -50,7 +50,7 @@ function assert(condition, message) {
 }
 
 async function runTests() {
-  console.log('\n🔒 Starting Shram Setu Security Verification Suite...\n');
+  console.log('\n🔒 Starting Prithvi Fix Security Verification Suite...\n');
 
   // Test 1: Unauthenticated Federation Admin Route
   console.log('1. Testing RBAC on Federation Admin Console...');
